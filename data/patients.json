@@ -1,0 +1,105 @@
+[
+  {
+    "id": "maria-fields",
+    "name": "Maria Fields",
+    "relationship": "Mother",
+    "dob": "04/12/1955",
+    "age": 70,
+    "phone": "",
+    "address": "",
+    "emergencyContact": {
+      "name": "J Fields",
+      "phone": "",
+      "relationship": "Son"
+    },
+    "doctors": [
+      {
+        "name": "Dr. Martinez",
+        "specialty": "Primary Care",
+        "office": "Alamo Heights Family Medicine",
+        "phone": "",
+        "fax": "",
+        "portal": "",
+        "notes": "Routine visits every 3 months"
+      }
+    ],
+    "insurance": {
+      "provider": "United Healthcare",
+      "plan": "Choice Plus PPO",
+      "memberId": "",
+      "groupNumber": "",
+      "phone": "1-800-444-9137",
+      "portalUrl": "https://www.uhc.com/member",
+      "copay": {
+        "office": "$30",
+        "specialist": "$50",
+        "imaging": "$75",
+        "er": "$250"
+      }
+    },
+    "pharmacy": {
+      "name": "H-E-B Pharmacy",
+      "location": "Huebner Rd",
+      "phone": "",
+      "transferRx": false
+    },
+    "medications": [
+      {
+        "name": "Lisinopril",
+        "dose": "10mg",
+        "frequency": "daily",
+        "prescriber": "Dr. Martinez",
+        "purpose": "Blood pressure",
+        "refillDate": "",
+        "pharmacy": "H-E-B"
+      },
+      {
+        "name": "Metformin",
+        "dose": "500mg",
+        "frequency": "twice daily",
+        "prescriber": "Dr. Martinez",
+        "purpose": "Type 2 Diabetes",
+        "refillDate": "",
+        "pharmacy": "H-E-B"
+      },
+      {
+        "name": "Vitamin D3",
+        "dose": "2000IU",
+        "frequency": "daily",
+        "prescriber": "Dr. Martinez",
+        "purpose": "Supplement",
+        "refillDate": "",
+        "pharmacy": "H-E-B"
+      }
+    ],
+    "conditions": [
+      "Hypertension",
+      "Type 2 Diabetes",
+      "Pulmonary nodule (monitoring)"
+    ],
+    "allergies": [
+      "Penicillin",
+      "Sulfa drugs"
+    ],
+    "surgeries": [],
+    "familyHistory": [],
+    "preferredHospital": "Methodist Hospital",
+    "preferredLanguage": "English",
+    "visits": [
+      {
+        "date": "2/1/26",
+        "doctor": "Dr. Martinez",
+        "type": "Routine follow-up",
+        "notes": ""
+      },
+      {
+        "date": "1/15/26",
+        "doctor": "Radiology",
+        "type": "Chest X-ray",
+        "notes": "Pulmonary nodule noted, CT follow-up recommended"
+      }
+    ],
+    "documents": [],
+    "portalAccess": []
+  }
+]

@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Health Agent — Smart Setup</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#050505;color:#f5f5f5;min-height:100vh}
+.header{padding:1rem 2rem;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:800;font-size:1.1rem;color:#2dd4bf;text-decoration:none}
+.back{color:#888;text-decoration:none;font-size:.8rem}.back:hover{color:#2dd4bf}
+.container{max-width:700px;margin:2rem auto;padding:0 2rem}
+h1{font-size:1.8rem;font-weight:800;margin-bottom:.3rem}
+.subtitle{color:#666;font-size:.9rem;margin-bottom:2.5rem;line-height:1.6}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.scan-card{background:#0a0a0a;border:2px dashed #222;border-radius:12px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.scan-card:hover{border-color:#2dd4bf;background:#0d0d0d}
+.scan-card.done{border-color:#4ade80;border-style:solid}
+.scan-card.processing{border-color:#fbbf24;border-style:solid}
+.scan-icon{font-size:2.5rem;margin-bottom:.8rem}
+.scan-card h3{font-size:.9rem;font-weight:700;margin-bottom:.3rem}
+.scan-card p{font-size:.7rem;color:#666;line-height:1.5}
+.scan-card .check{position:absolute;top:.8rem;right:.8rem;width:24px;height:24px;background:#4ade80;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:.8rem;color:#050505;font-weight:bold}
+.scan-card.done .check{display:flex}
+.scan-card input{display:none}
+.scan-card .spinner{display:none;width:24px;height:24px;border:2px solid #333;border-top-color:#fbbf24;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto}
+.scan-card.processing .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.extracted-data{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;display:none}
+.extracted-data.show{display:block}
+.extracted-data h3{font-size:.85rem;color:#2dd4bf;margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.data-row{display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-size:.82rem}
+.data-row:last-child{border-bottom:none}
+.data-label{color:#666;font-weight:500}
+.data-value{color:#e5e5e5;font-weight:500;text-align:right;max-width:60%}
+.data-value.missing{color:#f87171;font-style:italic}
+
+.or-divider{text-align:center;color:#333;font-size:.75rem;padding:1.5rem 0;position:relative}
+.or-divider::before,.or-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:#1a1a1a}
+.or-divider::before{left:0}.or-divider::after{right:0}
+
+.manual-btn{display:block;width:100%;padding:.8rem;background:transparent;border:1px solid #222;border-radius:8px;color:#888;font-size:.82rem;cursor:pointer;font-family:inherit;transition:all .2s;text-align:center;text-decoration:none;margin-bottom:1rem}
+.manual-btn:hover{border-color:#2dd4bf;color:#2dd4bf}
+
+.save-btn{display:block;width:100%;padding:1rem;background:#2dd4bf;color:#050505;border:none;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:1rem}
+.save-btn:hover{transform:translateY(-1px);box-shadow:0 6px 25px rgba(45,212,191,.3)}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+.progress{display:flex;gap:.3rem;margin-bottom:2rem}
+.progress-dot{flex:1;height:4px;background:#1a1a1a;border-radius:2px;transition:background .3s}
+.progress-dot.done{background:#2dd4bf}
+
+.results-area{margin-top:1.5rem}
+.result-card{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:1rem;margin-bottom:.8rem}
+.result-card h4{font-size:.78rem;color:#2dd4bf;margin-bottom:.5rem}
+.result-card p{font-size:.75rem;color:#999;line-height:1.5}
+.edit-btn{padding:.2rem .5rem;background:transparent;border:1px solid #333;border-radius:4px;color:#888;font-size:.6rem;cursor:pointer;float:right}.edit-btn:hover{border-color:#2dd4bf;color:#2dd4bf}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#2dd4bf;color:#050505;padding:.7rem 1.5rem;border-radius:8px;font-size:.82rem;font-weight:600;z-index:999;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style></head><body>
+<div class="header"><a href="/" class="logo">+ Health Agent</a><a href="/" class="back">← Back to Chat</a></div>
+<div class="container">
+<h1>Smart Setup</h1>
+<p class="subtitle">Skip the typing. Just scan your documents and I'll fill everything in automatically. Take photos with your phone or upload existing images.</p>
+
+<div class="progress"><div class="progress-dot" id="p1"></div><div class="progress-dot" id="p2"></div><div class="progress-dot" id="p3"></div><div class="progress-dot" id="p4"></div><div class="progress-dot" id="p5"></div></div>
+
+<div class="scan-grid">
+  <div class="scan-card" id="card-insurance" onclick="document.getElementById('file-insurance').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">🪪</div>
+    <h3>Insurance Card</h3>
+    <p>Front and back of insurance card. I'll extract provider, plan, member ID, group number, and copay info.</p>
+    <input type="file" id="file-insurance" accept="image/*,.pdf" capture="environment" onchange="scanDoc(event,'insurance')">
+  </div>
+  <div class="scan-card" id="card-id" onclick="document.getElementById('file-id').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">🪪</div>
+    <h3>Patient ID / License</h3>
+    <p>Driver's license or ID card. I'll get name, DOB, address automatically.</p>
+    <input type="file" id="file-id" accept="image/*,.pdf" capture="environment" onchange="scanDoc(event,'id')">
+  </div>
+  <div class="scan-card" id="card-meds" onclick="document.getElementById('file-meds').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">💊</div>
+    <h3>Medication Bottles</h3>
+    <p>Photo of each prescription bottle label. I'll read the medication, dose, prescriber, and pharmacy.</p>
+    <input type="file" id="file-meds" accept="image/*" capture="environment" multiple onchange="scanDoc(event,'meds')">
+  </div>
+  <div class="scan-card" id="card-records" onclick="document.getElementById('file-records').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">📋</div>
+    <h3>Medical Records / Notes</h3>
+    <p>Doctor's notes, lab results, discharge papers. I'll extract conditions, history, and care instructions.</p>
+    <input type="file" id="file-records" accept="image/*,.pdf" capture="environment" multiple onchange="scanDoc(event,'records')">
+  </div>
+  <div class="scan-card" id="card-bills" onclick="document.getElementById('file-bills').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">💰</div>
+    <h3>Bills / EOBs</h3>
+    <p>Medical bills or Explanation of Benefits. I'll track what's owed and what insurance covered.</p>
+    <input type="file" id="file-bills" accept="image/*,.pdf" capture="environment" onchange="scanDoc(event,'bills')">
+  </div>
+  <div class="scan-card" id="card-referral" onclick="document.getElementById('file-referral').click()">
+    <div class="check">✓</div><div class="spinner"></div>
+    <div class="scan-icon">📝</div>
+    <h3>Orders / Referrals</h3>
+    <p>CT orders, MRI referrals, specialist referrals. I'll read what was ordered and start your action plan.</p>
+    <input type="file" id="file-referral" accept="image/*,.pdf" capture="environment" onchange="scanDoc(event,'referral')">
+  </div>
+</div>
+
+<div class="results-area" id="results"></div>
+
+<div class="or-divider">or</div>
+<a href="/settings" class="manual-btn">Enter information manually instead →</a>
+
+<button class="save-btn" id="saveBtn" onclick="saveExtracted()" disabled>Save All Extracted Information</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let extractedData = {};
+let scanCount = 0;
+
+async function scanDoc(event, type) {
+  const files = event.target.files;
+  if (!files.length) return;
+
+  const card = document.getElementById('card-' + type);
+  card.classList.add('processing');
+  card.classList.remove('done');
+
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('scanType', type);
+
+    try {
+      const res = await fetch('/api/scan', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.extracted) {
+        if (!extractedData[type]) extractedData[type] = [];
+        extractedData[type].push(data.extracted);
+        renderResults();
+      }
+    } catch (e) {
+      console.error('Scan error:', e);
+    }
+  }
+
+  card.classList.remove('processing');
+  card.classList.add('done');
+  scanCount++;
+  updateProgress();
+  document.getElementById('saveBtn').disabled = false;
+  toast(type.charAt(0).toUpperCase() + type.slice(1) + ' scanned successfully');
+}
+
+function updateProgress() {
+  for (let i = 1; i <= Math.min(scanCount, 5); i++) {
+    document.getElementById('p' + i).classList.add('done');
+  }
+}
+
+function renderResults() {
+  const el = document.getElementById('results');
+  let html = '';
+
+  if (extractedData.insurance) {
+    extractedData.insurance.forEach(d => {
+      html += '<div class="result-card"><h4>🪪 Insurance Card</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+  if (extractedData.id) {
+    extractedData.id.forEach(d => {
+      html += '<div class="result-card"><h4>🪪 Patient ID</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+  if (extractedData.meds) {
+    extractedData.meds.forEach(d => {
+      html += '<div class="result-card"><h4>💊 Medication</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+  if (extractedData.records) {
+    extractedData.records.forEach(d => {
+      html += '<div class="result-card"><h4>📋 Medical Record</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+  if (extractedData.bills) {
+    extractedData.bills.forEach(d => {
+      html += '<div class="result-card"><h4>💰 Bill/EOB</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+  if (extractedData.referral) {
+    extractedData.referral.forEach(d => {
+      html += '<div class="result-card"><h4>📝 Order/Referral</h4><p>' + formatExtracted(d) + '</p></div>';
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function formatExtracted(obj) {
+  if (typeof obj === 'string') return obj.replace(/\n/g, '<br>');
+  return Object.entries(obj).map(([k, v]) => '<b>' + k + ':</b> ' + (v || '<span style="color:#f87171">Not found</span>')).join('<br>');
+}
+
+async function saveExtracted() {
+  try {
+    const res = await fetch('/api/save-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(extractedData)
+    });
+    const data = await res.json();
+    toast('All information saved to patient profile!');
+    setTimeout(() => window.location.href = '/', 2000);
+  } catch (e) {
+    toast('Save error: ' + e.message);
+  }
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script></body></html>
