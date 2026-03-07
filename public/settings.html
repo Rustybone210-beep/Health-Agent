@@ -1,0 +1,180 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Health Agent — Settings</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#050505;color:#f5f5f5;min-height:100vh}
+.header{padding:1rem 2rem;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:800;font-size:1.1rem;color:#2dd4bf;text-decoration:none}
+.back{color:#888;text-decoration:none;font-size:.8rem;transition:color .2s}.back:hover{color:#2dd4bf}
+.container{max-width:800px;margin:2rem auto;padding:0 2rem}
+h1{font-size:1.5rem;font-weight:800;margin-bottom:.3rem}
+.subtitle{color:#666;font-size:.85rem;margin-bottom:2rem}
+.section{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}
+.section h2{font-size:.95rem;font-weight:700;color:#2dd4bf;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.65rem;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:.6rem .8rem;background:#111;border:1px solid #1e1e1e;border-radius:6px;color:#f5f5f5;font-family:inherit;font-size:.85rem;outline:none;transition:border .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#2dd4bf}
+.field input::placeholder,.field textarea::placeholder{color:#333}
+.field textarea{min-height:80px;resize:vertical}
+.field select{cursor:pointer}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.add-btn{padding:.5rem 1rem;background:transparent;border:1px dashed #333;border-radius:6px;color:#888;font-size:.75rem;cursor:pointer;width:100%;transition:all .2s;font-family:inherit;margin-top:.5rem}
+.add-btn:hover{border-color:#2dd4bf;color:#2dd4bf}
+.save-btn{padding:.8rem 2rem;background:#2dd4bf;color:#050505;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.save-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(45,212,191,.3)}
+.doctor-card,.med-card,.portal-card{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:1rem;margin-bottom:.8rem}
+.doctor-card h3,.med-card h3,.portal-card h3{font-size:.82rem;color:#2dd4bf;margin-bottom:.5rem}
+.remove-btn{background:transparent;border:1px solid #333;color:#f87171;font-size:.65rem;padding:.2rem .5rem;border-radius:4px;cursor:pointer;float:right}
+.remove-btn:hover{border-color:#f87171}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#2dd4bf;color:#050505;padding:.7rem 1.5rem;border-radius:8px;font-size:.82rem;font-weight:600;z-index:999;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.portal-info{font-size:.7rem;color:#666;margin-top:.3rem;line-height:1.5}
+</style></head><body>
+<div class="header"><a href="/" class="logo">+ Health Agent</a><a href="/" class="back">← Back to Chat</a></div>
+<div class="container">
+<h1>Patient Settings</h1>
+<p class="subtitle">Enter your family member's information. The more detail you provide, the better your Health Agent can help.</p>
+
+<div class="section"><h2>👤 Patient Information</h2>
+<div class="row"><div class="field"><label>Full Name</label><input id="pName" placeholder="Maria Fields"></div><div class="field"><label>Relationship</label><select id="pRel"><option>Mother</option><option>Father</option><option>Spouse</option><option>Self</option><option>Child</option><option>Other</option></select></div></div>
+<div class="row3"><div class="field"><label>Date of Birth</label><input id="pDob" placeholder="04/12/1955"></div><div class="field"><label>Phone</label><input id="pPhone" placeholder="(210) 555-0000"></div><div class="field"><label>Preferred Language</label><select id="pLang"><option>English</option><option>Spanish</option><option>Other</option></select></div></div>
+<div class="field"><label>Address</label><input id="pAddr" placeholder="123 Main St, San Antonio, TX 78201"></div>
+</div>
+
+<div class="section"><h2>🏥 Doctors & Providers</h2>
+<div id="doctorList"></div>
+<button class="add-btn" onclick="addDoctorForm()">+ Add Doctor</button>
+</div>
+
+<div class="section"><h2>🛡️ Insurance</h2>
+<div class="row"><div class="field"><label>Insurance Provider</label><input id="insProvider" placeholder="United Healthcare"></div><div class="field"><label>Plan Name</label><input id="insPlan" placeholder="Choice Plus PPO"></div></div>
+<div class="row3"><div class="field"><label>Member ID</label><input id="insId" placeholder="UHC-984521673"></div><div class="field"><label>Group Number</label><input id="insGroup" placeholder="GRP-12345"></div><div class="field"><label>Insurance Phone</label><input id="insPhone" placeholder="1-800-444-9137"></div></div>
+<div class="field"><label>Insurance Portal URL</label><input id="insPortal" placeholder="https://www.uhc.com/member"></div>
+<div class="row"><div class="field"><label>Office Visit Copay</label><input id="copayOffice" placeholder="$30"></div><div class="field"><label>Specialist Copay</label><input id="copaySpec" placeholder="$50"></div></div>
+<div class="row"><div class="field"><label>Imaging Copay</label><input id="copayImg" placeholder="$75"></div><div class="field"><label>ER Copay</label><input id="copayEr" placeholder="$250"></div></div>
+</div>
+
+<div class="section"><h2>💊 Medications</h2>
+<div id="medList"></div>
+<button class="add-btn" onclick="addMedForm()">+ Add Medication</button>
+</div>
+
+<div class="section"><h2>🏪 Pharmacy</h2>
+<div class="row"><div class="field"><label>Pharmacy Name</label><input id="pharmName" placeholder="H-E-B Pharmacy"></div><div class="field"><label>Location</label><input id="pharmLoc" placeholder="Huebner Rd"></div></div>
+<div class="field"><label>Pharmacy Phone</label><input id="pharmPhone" placeholder="(210) 555-0000"></div>
+</div>
+
+<div class="section"><h2>⚠️ Medical History</h2>
+<div class="field"><label>Active Conditions (one per line)</label><textarea id="conditions" placeholder="Hypertension&#10;Type 2 Diabetes&#10;Pulmonary nodule (monitoring)"></textarea></div>
+<div class="field"><label>Allergies (one per line)</label><textarea id="allergies" placeholder="Penicillin&#10;Sulfa drugs"></textarea></div>
+<div class="field"><label>Past Surgeries (one per line)</label><textarea id="surgeries" placeholder="Appendectomy 1998&#10;Knee replacement 2019"></textarea></div>
+<div class="field"><label>Family Medical History</label><textarea id="famHistory" placeholder="Father - heart disease&#10;Mother - diabetes"></textarea></div>
+</div>
+
+<div class="section"><h2>🏥 Preferred Facilities</h2>
+<div class="field"><label>Preferred Hospital</label><input id="prefHosp" placeholder="Methodist Hospital"></div>
+<div class="field"><label>Preferred Imaging Center</label><input id="prefImaging" placeholder=""></div>
+<div class="field"><label>Preferred Lab</label><input id="prefLab" placeholder=""></div>
+</div>
+
+<div class="section"><h2>🔗 Patient Portal Access</h2>
+<p class="portal-info">Add links to patient portals where you can access medical records, test results, and messaging. Health Agent doesn't log into these — it helps you know which portal to check and what to look for.</p>
+<div id="portalList"></div>
+<button class="add-btn" onclick="addPortalForm()">+ Add Patient Portal</button>
+</div>
+
+<div class="section"><h2>👨‍👩‍👦 Emergency Contact</h2>
+<div class="row3"><div class="field"><label>Name</label><input id="ecName" placeholder="J Fields"></div><div class="field"><label>Phone</label><input id="ecPhone" placeholder="(210) 555-0000"></div><div class="field"><label>Relationship</label><input id="ecRel" placeholder="Son"></div></div>
+</div>
+
+<div style="text-align:center;margin:2rem 0"><button class="save-btn" onclick="saveAll()">Save All Settings</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let doctors=[{name:"Dr. Martinez",specialty:"Primary Care",office:"Alamo Heights Family Medicine",phone:"",fax:"",portal:"",notes:""}];
+let meds=[{name:"Lisinopril",dose:"10mg",frequency:"daily",prescriber:"Dr. Martinez",purpose:"Blood pressure",refillDate:"",pharmacy:"H-E-B"},{name:"Metformin",dose:"500mg",frequency:"twice daily",prescriber:"Dr. Martinez",purpose:"Type 2 Diabetes",refillDate:"",pharmacy:"H-E-B"},{name:"Vitamin D3",dose:"2000IU",frequency:"daily",prescriber:"Dr. Martinez",purpose:"Supplement",refillDate:"",pharmacy:"H-E-B"}];
+let portals=[];
+
+function renderDoctors(){
+  const el=document.getElementById('doctorList');
+  el.innerHTML=doctors.map((d,i)=>'<div class="doctor-card"><button class="remove-btn" onclick="doctors.splice('+i+',1);renderDoctors()">Remove</button><h3>'+d.name+'</h3><div class="row"><div class="field"><label>Name</label><input value="'+(d.name||'')+'" onchange="doctors['+i+'].name=this.value"></div><div class="field"><label>Specialty</label><input value="'+(d.specialty||'')+'" onchange="doctors['+i+'].specialty=this.value"></div></div><div class="row"><div class="field"><label>Office/Facility</label><input value="'+(d.office||'')+'" onchange="doctors['+i+'].office=this.value"></div><div class="field"><label>Phone</label><input value="'+(d.phone||'')+'" onchange="doctors['+i+'].phone=this.value" placeholder="(210) 555-0000"></div></div><div class="row"><div class="field"><label>Fax</label><input value="'+(d.fax||'')+'" onchange="doctors['+i+'].fax=this.value"></div><div class="field"><label>Patient Portal URL</label><input value="'+(d.portal||'')+'" onchange="doctors['+i+'].portal=this.value" placeholder="https://"></div></div><div class="field"><label>Notes</label><input value="'+(d.notes||'')+'" onchange="doctors['+i+'].notes=this.value" placeholder="Visit frequency, special instructions..."></div></div>').join('');
+}
+
+function renderMeds(){
+  const el=document.getElementById('medList');
+  el.innerHTML=meds.map((m,i)=>'<div class="med-card"><button class="remove-btn" onclick="meds.splice('+i+',1);renderMeds()">Remove</button><h3>'+m.name+' '+m.dose+'</h3><div class="row3"><div class="field"><label>Medication</label><input value="'+(m.name||'')+'" onchange="meds['+i+'].name=this.value"></div><div class="field"><label>Dose</label><input value="'+(m.dose||'')+'" onchange="meds['+i+'].dose=this.value"></div><div class="field"><label>Frequency</label><input value="'+(m.frequency||'')+'" onchange="meds['+i+'].frequency=this.value"></div></div><div class="row3"><div class="field"><label>Prescriber</label><input value="'+(m.prescriber||'')+'" onchange="meds['+i+'].prescriber=this.value"></div><div class="field"><label>Purpose</label><input value="'+(m.purpose||'')+'" onchange="meds['+i+'].purpose=this.value"></div><div class="field"><label>Next Refill Date</label><input value="'+(m.refillDate||'')+'" onchange="meds['+i+'].refillDate=this.value" placeholder="MM/DD/YY"></div></div></div>').join('');
+}
+
+function renderPortals(){
+  const el=document.getElementById('portalList');
+  el.innerHTML=portals.map((p,i)=>'<div class="portal-card"><button class="remove-btn" onclick="portals.splice('+i+',1);renderPortals()">Remove</button><h3>'+p.name+'</h3><div class="row"><div class="field"><label>Portal Name</label><input value="'+(p.name||'')+'" onchange="portals['+i+'].name=this.value" placeholder="MyChart, UHC Member Portal..."></div><div class="field"><label>URL</label><input value="'+(p.url||'')+'" onchange="portals['+i+'].url=this.value" placeholder="https://"></div></div><div class="field"><label>What can you access here?</label><input value="'+(p.access||'')+'" onchange="portals['+i+'].access=this.value" placeholder="Test results, messaging, appointments..."></div></div>').join('');
+}
+
+function addDoctorForm(){doctors.push({name:"",specialty:"",office:"",phone:"",fax:"",portal:"",notes:""});renderDoctors();}
+function addMedForm(){meds.push({name:"",dose:"",frequency:"",prescriber:"",purpose:"",refillDate:"",pharmacy:""});renderMeds();}
+function addPortalForm(){portals.push({name:"",url:"",access:""});renderPortals();}
+
+async function saveAll(){
+  const patient={
+    id:"maria-fields",
+    name:document.getElementById('pName').value||"Maria Fields",
+    relationship:document.getElementById('pRel').value,
+    dob:document.getElementById('pDob').value,
+    phone:document.getElementById('pPhone').value,
+    address:document.getElementById('pAddr').value,
+    preferredLanguage:document.getElementById('pLang').value,
+    doctors:doctors,
+    insurance:{provider:document.getElementById('insProvider').value,plan:document.getElementById('insPlan').value,memberId:document.getElementById('insId').value,groupNumber:document.getElementById('insGroup').value,phone:document.getElementById('insPhone').value,portalUrl:document.getElementById('insPortal').value,copay:{office:document.getElementById('copayOffice').value,specialist:document.getElementById('copaySpec').value,imaging:document.getElementById('copayImg').value,er:document.getElementById('copayEr').value}},
+    medications:meds,
+    pharmacy:{name:document.getElementById('pharmName').value,location:document.getElementById('pharmLoc').value,phone:document.getElementById('pharmPhone').value},
+    conditions:(document.getElementById('conditions').value||"").split("\n").filter(Boolean),
+    allergies:(document.getElementById('allergies').value||"").split("\n").filter(Boolean),
+    surgeries:(document.getElementById('surgeries').value||"").split("\n").filter(Boolean),
+    familyHistory:(document.getElementById('famHistory').value||"").split("\n").filter(Boolean),
+    preferredHospital:document.getElementById('prefHosp').value,
+    preferredImaging:document.getElementById('prefImaging').value||"",
+    preferredLab:document.getElementById('prefLab').value||"",
+    portalAccess:portals,
+    emergencyContact:{name:document.getElementById('ecName').value,phone:document.getElementById('ecPhone').value,relationship:document.getElementById('ecRel').value}
+  };
+  try{
+    const r=await fetch('/api/patient/maria-fields',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(patient)});
+    const d=await r.json();
+    const t=document.getElementById('toast');t.textContent='Settings saved!';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+  }catch(e){alert('Save error: '+e.message);}
+}
+
+async function loadSettings(){
+  try{
+    const r=await fetch('/api/patient/maria-fields');
+    const p=await r.json();
+    if(!p||p.error)return;
+    document.getElementById('pName').value=p.name||'';
+    document.getElementById('pRel').value=p.relationship||'Mother';
+    document.getElementById('pDob').value=p.dob||'';
+    document.getElementById('pPhone').value=p.phone||'';
+    document.getElementById('pAddr').value=p.address||'';
+    document.getElementById('pLang').value=p.preferredLanguage||'English';
+    if(p.insurance){document.getElementById('insProvider').value=p.insurance.provider||'';document.getElementById('insPlan').value=p.insurance.plan||'';document.getElementById('insId').value=p.insurance.memberId||'';document.getElementById('insGroup').value=p.insurance.groupNumber||'';document.getElementById('insPhone').value=p.insurance.phone||'';document.getElementById('insPortal').value=p.insurance.portalUrl||'';if(p.insurance.copay){document.getElementById('copayOffice').value=p.insurance.copay.office||'';document.getElementById('copaySpec').value=p.insurance.copay.specialist||'';document.getElementById('copayImg').value=p.insurance.copay.imaging||'';document.getElementById('copayEr').value=p.insurance.copay.er||'';}}
+    if(p.pharmacy){document.getElementById('pharmName').value=p.pharmacy.name||'';document.getElementById('pharmLoc').value=p.pharmacy.location||'';document.getElementById('pharmPhone').value=p.pharmacy.phone||'';}
+    document.getElementById('conditions').value=(p.conditions||[]).join("\n");
+    document.getElementById('allergies').value=(p.allergies||[]).join("\n");
+    document.getElementById('surgeries').value=(p.surgeries||[]).join("\n");
+    document.getElementById('famHistory').value=(p.familyHistory||[]).join("\n");
+    document.getElementById('prefHosp').value=p.preferredHospital||'';
+    document.getElementById('prefImaging').value=p.preferredImaging||'';
+    document.getElementById('prefLab').value=p.preferredLab||'';
+    if(p.doctors)doctors=p.doctors;
+    if(p.medications)meds=p.medications;
+    if(p.portalAccess)portals=p.portalAccess;
+    if(p.emergencyContact){document.getElementById('ecName').value=p.emergencyContact.name||'';document.getElementById('ecPhone').value=p.emergencyContact.phone||'';document.getElementById('ecRel').value=p.emergencyContact.relationship||'';}
+    renderDoctors();renderMeds();renderPortals();
+  }catch(e){console.error(e);}
+}
+
+renderDoctors();renderMeds();renderPortals();
+loadSettings();
+</script></body></html>
