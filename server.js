@@ -189,6 +189,32 @@ app.get("/api/pending", (req, res) => res.json(pendingUpdates));
 
 app.get("/", (req, res) => res.sendFile(path.join(__dirname,"public","index.html")));
 app.get("/settings", (req, res) => res.sendFile(path.join(__dirname,"public","settings.html")));
+// Voice calling
+const { startPhoneCall, getCallStatus } = require("./tools/voice");
 
+app.post("/api/call", async (req, res) => {
+  try {
+    const { phoneNumber, reason } = req.body;
+    if (!phoneNumber) return res.status(400).json({ error: "Phone number required" });
+    const patient = getPatient("maria-fields") || {};
+    const result = await startPhoneCall(phoneNumber, reason, {
+      name: patient.name,
+      dob: patient.dob,
+      insurance: patient.insurance ? patient.insurance.provider + " " + (patient.insurance.plan || "") : "on file"
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/call/:id", async (req, res) => {
+  try {
+    const result = await getCallStatus(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Health Agent v9 running at http://localhost:" + PORT));
