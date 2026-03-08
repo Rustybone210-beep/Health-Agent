@@ -1,12 +1,12 @@
 [
   {
     "id": "maria-fields",
-    "name": "Maria Fields",
+    "name": "Linda Fields",
     "relationship": "Mother",
     "dob": "04/12/1955",
     "age": 70,
     "phone": "",
-    "address": "",
+    "address": "13203 Sunset MDW, San Antonio TX 78209",
     "emergencyContact": {
       "name": "J Fields",
       "phone": "",
@@ -70,6 +70,14 @@
         "purpose": "Supplement",
         "refillDate": "",
         "pharmacy": "H-E-B"
+      },
+      {
+        "name": "Lamotrigine",
+        "dose": "100mg",
+        "frequency": "Take 1 tablet by mouth twice daily",
+        "prescriber": "",
+        "pharmacy": "Walgreens, 13203 Stone Oak Pkwy, San Antonio TX, (210) 403-0002",
+        "rxNumber": "3055844-04838"
       }
     ],
     "conditions": [
