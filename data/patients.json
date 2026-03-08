@@ -1,12 +1,12 @@
 [
   {
     "id": "maria-fields",
-    "name": "Linda Fields",
+    "name": "LINDA FIELDS",
     "relationship": "Mother",
-    "dob": "04/12/1955",
+    "dob": "11/03/1949",
     "age": 70,
     "phone": "",
-    "address": "13203 Sunset MDW, San Antonio TX 78209",
+    "address": "13203 SUNSET MDW, SAN ANTONIO TX 78258",
     "emergencyContact": {
       "name": "J Fields",
       "phone": "",
@@ -24,9 +24,9 @@
       }
     ],
     "insurance": {
-      "provider": "United Healthcare",
-      "plan": "Choice Plus PPO",
-      "memberId": "",
+      "provider": "Medicare",
+      "plan": "Medicare Supplement Plan G",
+      "memberId": "6VG3-TR1-TK42",
       "groupNumber": "",
       "phone": "1-800-444-9137",
       "portalUrl": "https://www.uhc.com/member",
@@ -72,11 +72,11 @@
         "pharmacy": "H-E-B"
       },
       {
-        "name": "Lamotrigine",
-        "dose": "100mg",
-        "frequency": "Take 1 tablet by mouth twice daily",
+        "name": "LAMOTRIGINE",
+        "dose": "100MG",
+        "frequency": "TAKE 1 TABLET BY MOUTH TWICE DAILY",
         "prescriber": "",
-        "pharmacy": "Walgreens, 13203 Stone Oak Pkwy, San Antonio TX, (210) 403-0002",
+        "pharmacy": "Walgreens",
         "rxNumber": "3055844-04838"
       }
     ],
