@@ -21,4 +21,28 @@ function listDrafts() {
   });
 }
 
-module.exports = { saveDraft, listDrafts };
+
+
+// === REAL EMAIL SENDING WITH RESEND (added for #3) ===
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function sendRealEmail(to, subject, htmlBody) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'Health Agent <onboarding@resend.dev>', // change to your verified email later
+      to: [to],
+      subject: subject,
+      html: htmlBody,
+    });
+
+    if (error) throw error;
+    console.log(`✅ Email sent to ${to} | Message ID: ${data.id}`);
+    return { success: true, messageId: data.id };
+  } catch (error) {
+    console.error("❌ Email send failed:", error);
+    throw error;
+  }
+}
+
+module.exports = { saveDraft, listDrafts, sendRealEmail };
