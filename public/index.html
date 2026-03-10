@@ -3,6 +3,10 @@
 <div class="nav-title">Agent Tools</div>
 <div class="nav-item active" onclick="qa('What can you help me with?')"><span class="nav-icon">💬</span> New Chat</div>
 <div class="nav-item" onclick="startVoiceCall()" style="background:rgba(45,212,191,.15);color:#2dd4bf;font-weight:700;border:1px solid #2dd4bf;"><span class="nav-icon">📞</span> Call Provider Now</div>
+  <!-- 📧 Send Email Button -->
+  <div class="nav-item" onclick="startEmailSend()" style="background:rgba(147,51,234,.15);color:#a855f7;font-weight:700;border:1px solid #a855f7;">
+    <span class="nav-icon">📧</span> Send Email Now
+  </div>
 <div class="nav-item" onclick="qa('Schedule mom a CT scan for the pulmonary nodule follow-up')"><span class="nav-icon">📅</span> Schedule Appointment</div>
 <div class="nav-item" onclick="qa('United Healthcare denied mom MRI claim. Draft a full appeal letter.')"><span class="nav-icon">🛡️</span> Fight Insurance Denial</div>
 <div class="nav-item" onclick="qa('Refill mom Lisinopril 10mg and compare pharmacy prices')"><span class="nav-icon">💊</span> Prescription Refill</div>
@@ -107,4 +111,18 @@ function clearChat(){chat.innerHTML='';hist=[];addMsg('agent','Fresh start. All 
 async function loadPatientCard(){try{const r=await fetch('/api/patient/maria-fields');const p=await r.json();if(p&&p.name){const el=document.getElementById('patientCard');const meds=(p.medications||[]).map(m=>m.name).join(', ');const conds=(p.conditions||[]).join(', ');const allergies=(p.allergies||[]).join(', ');const doc=p.doctors&&p.doctors[0]?p.doctors[0].name+(p.doctors[0].office?' - '+p.doctors[0].office:''):'No doctor set';const ins=p.insurance?p.insurance.provider+(p.insurance.plan?' '+p.insurance.plan:''):'No insurance set';el.innerHTML='<h4>'+p.name+(p.relationship?' ('+p.relationship+')':'')+'</h4><p>DOB: '+(p.dob||'Not set')+'<br>'+doc+'<br>'+ins+'<br>Meds: '+(meds||'None')+'<br>Allergies: '+(allergies||'None')+'<br>Conditions: '+(conds||'None')+'</p>';}}catch(e){}}
 loadPatientCard();
 async function startVoiceCall(){const phone=prompt("Enter phone number (e.g. +12103157759):","+12103157759");if(!phone)return;const reason=prompt("What should the agent say?","Schedule appointment for Linda Fields");addMsg('user','📞 Calling '+phone+'...');try{const r=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phoneNumber:phone,reason:reason})});const d=await r.json();if(d.callId){addMsg('agent','📞 **Call initiated!** Call ID: '+d.callId+'. The AI agent is now on the phone.');}else{addMsg('agent','Call error: '+(d.error||'Unknown error'));}}catch(e){addMsg('agent','Call failed: '+e.message);}}
+async function startEmailSend(){
+  const to=prompt("Recipient email address:","insurance@provider.com");
+  if(!to)return;
+  const subject=prompt("Email subject:","Appeal for Linda Fields - Denied Claim");
+  if(!subject)return;
+  const body=prompt("Email body (paste your draft here):","");
+  if(!body)return;
+  addMsg('user',`📧 Sending email to ${to}...`);
+  try{
+    const r=await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,htmlBody:body.replace(/\n/g,'<br>')})});
+    const d=await r.json();
+    addMsg('agent',d.message||"✅ Email sent successfully!");
+  }catch(e){addMsg('agent',"Failed to send email.");}
+}
 </script></body></html>
