@@ -22,7 +22,7 @@ const upload = multer({ dest: "uploads/", limits: { fileSize: 10*1024*1024 } });
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-let pendingUpdates = {};
+let pendingUpdates = {};let pendingEmailDraft = null;
 
 function buildSystemPrompt() {
   const patient = getPatient("maria-fields") || {};
@@ -37,6 +37,17 @@ TRACKED DATA:
 - Saved Drafts: ${JSON.stringify(listDrafts())}
 
 CAPABILITIES: Document/image analysis, action plans with phone scripts, appeal letters, appointment tracking, insurance tracking, medication management, global doctor search, medical translation, appointment prep, cost comparison.
+EMAIL SENDING: You can send real emails on behalf of the user. When the user asks you to email someone:
+1. Draft the complete email with a clear SUBJECT: line and BODY
+2. Show the draft to the user
+3. Ask them to type 'send' to confirm
+4. Format your draft like this so the system can detect it:
+   EMAIL_DRAFT
+   TO: recipient@email.com
+   SUBJECT: Your subject here
+   BODY: Your email body here
+   END_EMAIL_DRAFT
+When the user types 'send' after seeing a draft, the system will send it automatically.
 VOICE CALLING: You can make real phone calls. When the user asks you to call a provider, tell them to click the 📞 Call Provider Now button in the sidebar, or provide the phone number and tell them you're ready to call.
 
 EMAIL SENDING: You can send real emails. When you draft an appeal letter or any communication, ask the user if they want you to send it. If they say yes, you will send it via the /api/send-email endpoint.
@@ -87,9 +98,46 @@ app.post("/api/chat", async (req, res) => {
       return;
     }
 
+    // Autonomous email sending - handle 'send' confirmation
+    console.log("DEBUG - lower:", lower, "pendingEmailDraft:", pendingEmailDraft ? "EXISTS with TO:" + pendingEmailDraft.to : "NULL");if ((lower === 'send' || lower === 'yes send' || lower === 'send it') && pendingEmailDraft) {
+      try {
+        await sendRealEmail(pendingEmailDraft.to, pendingEmailDraft.subject, pendingEmailDraft.htmlBody);
+        const sentMsg = "**✅ Email sent successfully!** Message delivered to " + pendingEmailDraft.to;
+        res.json({ reply: sentMsg });
+        pendingEmailDraft = null;
+        return;
+      } catch (e) {
+        res.json({ reply: "❌ Failed to send email: " + e.message });
+        pendingEmailDraft = null;
+        return;
+      }
+    }
+
     const messages = (history || []).concat([{ role: "user", content: message }]);
     const response = await client.messages.create({ model: "claude-sonnet-4-20250514", max_tokens: 4096, system: buildSystemPrompt(), messages });
     const reply = response.content[0].text;
+        // Check for autonomous EMAIL_DRAFT format from the AI
+    if (reply.includes("EMAIL_DRAFT")) {
+      const match = reply.match(/EMAIL_DRAFT\s*TO:\s*(.*?)\s*SUBJECT:\s*(.*?)\s*BODY:\s*([\s\S]*?)\s*END_EMAIL_DRAFT/i);
+      if (match) {
+        pendingEmailDraft = {
+          to: match[1].trim(),
+          subject: match[2].trim(),
+          htmlBody: match[3].trim().replace(/\n/g, '<br>')
+        };
+      }
+    }
+        // Check for autonomous EMAIL_DRAFT format from the AI
+    if (reply.includes("EMAIL_DRAFT")) {
+      const match = reply.match(/EMAIL_DRAFT\s*TO:\s*(.*?)\s*SUBJECT:\s*(.*?)\s*BODY:\s*([\s\S]*?)\s*END_EMAIL_DRAFT/i);
+      if (match) {
+        pendingEmailDraft = {
+          to: match[1].trim(),
+          subject: match[2].trim(),
+          htmlBody: match[3].trim().replace(/\n/g, '<br>')
+        };
+      }
+    }
     if (reply.toLowerCase().includes("subject:") && reply.toLowerCase().includes("dear")) {
       const lines = reply.split("\n"); let subject = "";
       for (const l of lines) { if (l.toLowerCase().startsWith("subject:")) subject = l.replace(/subject:\s*/i,""); }

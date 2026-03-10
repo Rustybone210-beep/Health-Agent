@@ -1,0 +1,45 @@
+TO: provider
+SUBJECT: URGENT: MRI Appeal for Linda Fields - Member ID: 6VG3-TR1-TK42
+DATE: 3/9/2026, 8:08:24 PM
+
+Dear Insurance Review Team,
+
+I am writing to formally appeal the denial of MRI imaging for my mother, **Linda Fields** (Member ID: 6VG3-TR1-TK42), DOB: 11/03/1949.
+
+**Patient Information:**
+- Name: Linda Fields
+- Member ID: 6VG3-TR1-TK42
+- Address: 13203 Sunset Mdw, San Antonio, TX 78258
+- Primary Care Physician: Dr. Martinez, Alamo Heights Family Medicine
+
+**Medical Justification for MRI:**
+Based on Linda's recent chest X-ray performed on 1/15/26, a **pulmonary nodule was identified** requiring CT follow-up imaging as recommended by the radiologist. Given her medical history of hypertension and Type 2 diabetes, along with the discovery of this pulmonary nodule, advanced imaging is medically necessary to:
+
+1. **Rule out malignancy** - Early detection is critical for optimal patient outcomes
+2. **Determine size, characteristics, and growth** of the identified nodule
+3. **Guide appropriate treatment planning** based on imaging findings
+4. **Establish baseline** for future monitoring
+
+**Current Medications & Conditions:**
+- Lisinopril 10mg daily (hypertension)
+- Metformin 500mg twice daily (Type 2 diabetes)
+- Lamotrigine 100mg twice daily
+- Known allergies: Penicillin, Sulfa drugs
+
+**Request for Immediate Review:**
+This is a time-sensitive medical issue. **Delayed diagnosis of pulmonary nodules can significantly impact treatment options and patient outcomes.** I respectfully request that you:
+
+1. **Expedite this appeal** given the potential urgency
+2. **Approve the MRI imaging** as medically necessary
+3. **Provide written confirmation** of approval within 48 hours
+
+I am prepared to provide additional medical documentation if needed. Please contact me immediately at your earliest convenience.
+
+Thank you for your prompt attention to this critical matter.
+
+Sincerely,
+J Fields
+Son and Healthcare Advocate for Linda Fields
+END_EMAIL_DRAFT
+
+Would you like me to **send** this appeal email now? Just type 'send' to confirm, or let me know if you'd like me to modify anything first.

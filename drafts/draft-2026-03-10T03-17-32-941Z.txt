@@ -1,0 +1,32 @@
+TO: provider
+SUBJECT: Request for CT Scan Results - Linda Fields (DOB: 11/03/1949)
+DATE: 3/9/2026, 10:17:32 PM
+
+Dear Healthcare Provider,
+
+I am writing to request the CT scan results for my mother, Linda Fields. Please find her information below:
+
+**Patient Information:**
+- Name: Linda Fields
+- Date of Birth: November 3, 1949
+- Address: 13203 Sunset Mdw, San Antonio, TX 78258
+
+**Request Details:**
+We are requesting copies of recent CT scan results that were recommended as follow-up to a chest X-ray performed on January 15, 2026, which noted a pulmonary nodule requiring CT follow-up.
+
+**Contact Information:**
+Please send the results to this email address or contact me if you need additional information or authorization forms.
+
+**Insurance Information (if needed):**
+- Insurance: Medicare Supplement Plan G
+- Member ID: 6VG3-TR1-TK42
+
+Thank you for your prompt attention to this request. Please let me know if you require any additional documentation or authorization forms to process this request.
+
+Sincerely,
+J Fields
+(Son and Healthcare Advocate for Linda Fields)
+
+END_EMAIL_DRAFT
+
+Please review this draft. If you'd like me to send this email, simply type 'send' and I'll deliver it to rustybone210@icloud.com.
