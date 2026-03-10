@@ -1,128 +1,1702 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Health Agent</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#050505;color:#f5f5f5;height:100vh;display:flex}.sidebar{width:260px;background:#0a0a0a;border-right:1px solid #1a1a1a;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}.sidebar-header{padding:1.2rem;border-bottom:1px solid #1a1a1a}.logo{font-weight:800;font-size:1.1rem;color:#2dd4bf}.logo-sub{font-size:.6rem;color:#555;margin-top:.2rem}.sidebar-nav{flex:1;padding:.6rem}.nav-title{font-size:.55rem;color:#555;text-transform:uppercase;letter-spacing:.12em;padding:.5rem .6rem;font-weight:600}.nav-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border-radius:8px;cursor:pointer;font-size:.78rem;color:#888;transition:all .15s}.nav-item:hover{background:#151515;color:#e5e5e5}.nav-item.active{background:rgba(45,212,191,.08);color:#2dd4bf}.nav-icon{width:18px;text-align:center}.patient-card{margin:.6rem;padding:.8rem;background:#111;border:1px solid #1a1a1a;border-radius:8px}.patient-card h4{font-size:.72rem;color:#2dd4bf;margin-bottom:.4rem}.patient-card p{font-size:.65rem;color:#666;line-height:1.5}.main{flex:1;display:flex;flex-direction:column;height:100vh}.topbar{padding:.7rem 1.2rem;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between}.topbar-left{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.9rem}.status-dot{width:7px;height:7px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}.top-btn{padding:.3rem .7rem;border:1px solid #222;border-radius:6px;background:transparent;color:#888;font-size:.65rem;cursor:pointer;font-family:inherit;transition:all .2s}.top-btn:hover{border-color:#2dd4bf;color:#2dd4bf}.topbar-right{display:flex;gap:.4rem}.chat{flex:1;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem}.chat::-webkit-scrollbar{width:3px}.chat::-webkit-scrollbar-thumb{background:#333;border-radius:3px}.msg{max-width:85%;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.msg.user{align-self:flex-end}.msg.agent{align-self:flex-start}.sender{font-size:.58rem;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem;font-weight:600}.bubble{padding:.8rem 1.1rem;border-radius:10px;font-size:.85rem;line-height:1.7}.agent .bubble{background:#111;border:1px solid #1e1e1e;color:#ddd}.user .bubble{background:#2dd4bf;color:#050505;font-weight:500}.agent .bubble b,.agent .bubble strong{color:#2dd4bf}.agent .bubble h2,.agent .bubble h3{color:#2dd4bf;margin:1rem 0 .3rem;font-size:.95rem}.agent .bubble ul,.agent .bubble ol{margin:.3rem 0 .3rem 1.2rem}.agent .bubble li{margin-bottom:.2rem}.typing-wrap{display:flex;align-items:center;gap:.3rem;padding:.4rem 0}.typing-wrap span{width:5px;height:5px;background:#2dd4bf;border-radius:50%;animation:bounce 1.4s infinite}.typing-wrap span:nth-child(2){animation-delay:.2s}.typing-wrap span:nth-child(3){animation-delay:.4s}@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-6px);opacity:1}}.input-area{padding:.8rem 1.2rem;border-top:1px solid #1a1a1a;background:#0a0a0a}.input-row{display:flex;gap:.5rem;align-items:center}.upload-area{display:flex;gap:.3rem}.upload-btn{width:38px;height:38px;border-radius:50%;background:#151515;border:1px solid #222;color:#888;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}.upload-btn:hover{border-color:#2dd4bf;color:#2dd4bf}.input-wrap{flex:1;display:flex;background:#111;border:1px solid #1e1e1e;border-radius:10px;padding:.4rem .7rem;transition:border-color .2s}.input-wrap:focus-within{border-color:#2dd4bf}.input-wrap input{flex:1;background:none;border:none;color:#f5f5f5;font-size:.88rem;outline:none;font-family:inherit}.input-wrap input::placeholder{color:#333}.send-btn{width:38px;height:38px;border-radius:50%;background:#2dd4bf;border:none;color:#050505;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.send-btn:hover{transform:scale(1.05)}input[type=file]{display:none}.quick-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}.qbtn{padding:.3rem .6rem;border:1px solid #1e1e1e;border-radius:100px;background:transparent;color:#888;font-size:.65rem;cursor:pointer;font-family:inherit;transition:all .15s}.qbtn:hover{border-color:#2dd4bf;color:#2dd4bf;background:rgba(45,212,191,.06)}.file-queue{margin-bottom:.5rem}.file-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .8rem;background:#151515;border:1px solid #222;border-radius:8px;font-size:.72rem;color:#2dd4bf;margin-bottom:.3rem}.file-item img{width:45px;height:45px;object-fit:cover;border-radius:4px;border:1px solid #333}.file-item .info{flex:1}.file-item .info b{display:block;font-size:.72rem}.file-item .info span{color:#888;font-size:.6rem}.file-item .remove{cursor:pointer;color:#f87171;font-size:1rem;padding:0 .3rem}.file-item.scanning{border-color:#fbbf24}.file-item.done{border-color:#4ade80}.file-item .status-icon{font-size:.9rem;flex-shrink:0}.scan-progress{margin-bottom:.5rem;font-size:.7rem;color:#2dd4bf;display:none}.scan-progress.show{display:flex;align-items:center;gap:.5rem}.scan-progress .pbar{flex:1;height:3px;background:#222;border-radius:2px;overflow:hidden}.scan-progress .pfill{height:100%;background:#2dd4bf;transition:width .3s;border-radius:2px}.input-hint{text-align:center;font-size:.55rem;color:#333;margin-top:.3rem}.notification{position:fixed;top:1rem;right:1rem;background:#111;border:1px solid #2dd4bf;border-radius:8px;padding:.6rem 1rem;font-size:.75rem;color:#2dd4bf;z-index:999;animation:slideIn .3s ease}@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}@media(max-width:768px){.sidebar{display:none}}</style></head><body>
-<div class="sidebar"><div class="sidebar-header"><div class="logo">+ Health Agent</div><div class="logo-sub">AI Healthcare Navigator v8</div></div><div class="sidebar-nav">
-<div class="nav-title">Agent Tools</div>
-<div class="nav-item active" onclick="qa('What can you help me with?')"><span class="nav-icon">💬</span> New Chat</div>
-<div class="nav-item" onclick="startVoiceCall()" style="background:rgba(45,212,191,.15);color:#2dd4bf;font-weight:700;border:1px solid #2dd4bf;"><span class="nav-icon">📞</span> Call Provider Now</div>
-  <!-- 📧 Send Email Button -->
-  <div class="nav-item" onclick="startEmailSend()" style="background:rgba(147,51,234,.15);color:#a855f7;font-weight:700;border:1px solid #a855f7;">
-    <span class="nav-icon">📧</span> Send Email Now
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Health Agent — Care Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+  /* ─── Reset & Base ─── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #171b26;
+    --surface2: #1e2333;
+    --border: #2a2f42;
+    --accent: #4a9eff;
+    --accent2: #00e5b0;
+    --warn: #ff9f43;
+    --danger: #ff6b6b;
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #4e5668;
+    --sidebar-w: 280px;
+    --topbar-h: 56px;
+    --font-sans: 'DM Sans', sans-serif;
+    --font-serif: 'DM Serif Display', serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ─── Layout ─── */
+  .app {
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+  }
+
+  /* ─── Topbar (mobile) ─── */
+  .topbar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--topbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    z-index: 100;
+  }
+
+  .topbar-title {
+    flex: 1;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hamburger-btn {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hamburger-btn span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    z-index: 50;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .brand-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .brand-name {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    color: var(--text);
+  }
+
+  /* Patient Selector */
+  .patient-selector {
+    position: relative;
+  }
+
+  .patient-select-btn {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .patient-select-btn:hover { background: var(--border); }
+
+  .patient-select-btn .patient-info { flex: 1; overflow: hidden; }
+  .patient-select-btn .patient-name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .patient-select-btn .patient-rel { font-size: 11px; color: var(--text2); }
+
+  .patient-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .patient-dropdown.open { display: block; }
+
+  .patient-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .patient-option:last-child { border-bottom: none; }
+  .patient-option:hover { background: var(--border); }
+  .patient-option.active { background: rgba(74, 158, 255, 0.1); }
+  .patient-option .opt-name { font-weight: 600; color: var(--text); }
+  .patient-option .opt-rel { font-size: 11px; color: var(--text2); }
+
+  .add-patient-btn {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .add-patient-btn:hover { background: var(--border); }
+
+  /* ─── Sidebar Scroll ─── */
+  .sidebar-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Patient Card */
+  .patient-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .card-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  .card-row .label {
+    color: var(--text3);
+    flex-shrink: 0;
+    width: 60px;
+  }
+
+  .card-row .val { color: var(--text); }
+
+  .med-pill {
+    display: inline-block;
+    background: rgba(74, 158, 255, 0.12);
+    border: 1px solid rgba(74, 158, 255, 0.2);
+    color: var(--accent);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin: 2px 2px;
+  }
+
+  .allergy-pill {
+    display: inline-block;
+    background: rgba(255, 107, 107, 0.12);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    color: var(--danger);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin: 2px 2px;
+  }
+
+  /* Chat History Section */
+  .history-section {
+    margin-bottom: 12px;
+  }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .history-header .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .new-chat-btn {
+    background: rgba(74, 158, 255, 0.12);
+    border: 1px solid rgba(74, 158, 255, 0.2);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .new-chat-btn:hover { background: rgba(74, 158, 255, 0.2); }
+
+  .history-item {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-bottom: 2px;
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    position: relative;
+  }
+  .history-item:hover { background: var(--surface2); color: var(--text); }
+  .history-item.active { background: rgba(74, 158, 255, 0.1); color: var(--text); }
+
+  .history-item .hist-icon { flex-shrink: 0; margin-top: 1px; font-size: 11px; }
+  .history-item .hist-content { flex: 1; overflow: hidden; }
+  .history-item .hist-preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .history-item .hist-time { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .history-item .hist-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    padding: 2px;
+    font-size: 12px;
+    transition: opacity 0.2s;
+  }
+  .history-item:hover .hist-delete { opacity: 1; }
+
+  /* Quick Actions */
+  .quick-actions {
+    margin-bottom: 12px;
+  }
+
+  .qa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .qa-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    color: var(--text2);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.3;
+  }
+  .qa-btn:hover { background: var(--border); color: var(--text); border-color: var(--accent); }
+  .qa-btn .qa-icon { display: block; font-size: 16px; margin-bottom: 4px; }
+
+  /* ─── Main Area ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  /* Desktop topbar */
+  .desktop-topbar {
+    height: var(--topbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .desktop-topbar .page-title {
+    flex: 1;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  /* ─── Notification Bell ─── */
+  .notif-btn {
+    position: relative;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    transition: color 0.2s;
+  }
+  .notif-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  /* Notification Panel */
+  .notif-panel {
+    display: none;
+    position: absolute;
+    top: calc(var(--topbar-h) + 4px);
+    right: 16px;
+    width: 340px;
+    max-height: 480px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    z-index: 300;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .notif-panel.open { display: flex; flex-direction: column; }
+
+  .notif-panel-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .notif-panel-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .notif-mark-all {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .notif-mark-all:hover { text-decoration: underline; }
+
+  .notif-list { overflow-y: auto; flex: 1; padding: 8px; }
+
+  .notif-item {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+    cursor: pointer;
+    position: relative;
+    border: 1px solid transparent;
+    transition: background 0.15s;
+  }
+  .notif-item:hover { background: var(--border); }
+  .notif-item.unread { background: rgba(74, 158, 255, 0.06); border-color: rgba(74, 158, 255, 0.15); }
+
+  .notif-item-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .notif-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .notif-item.read .notif-dot { opacity: 0; }
+
+  .notif-item-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .notif-item-msg { font-size: 12px; color: var(--text2); margin-bottom: 4px; line-height: 1.4; }
+  .notif-item-time { font-size: 10px; color: var(--text3); }
+
+  .notif-icon { font-size: 14px; }
+
+  .notif-empty { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+
+  /* ─── Chat Area ─── */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+    animation: msgIn 0.25s ease;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { margin-left: auto; flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .msg.user .msg-avatar { background: linear-gradient(135deg, var(--accent), #7c6ff7); }
+  .msg.ai .msg-avatar { background: linear-gradient(135deg, var(--accent2), #00a37a); }
+
+  .msg-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 100%;
+    word-wrap: break-word;
+  }
+
+  .msg.user .msg-bubble {
+    background: rgba(74, 158, 255, 0.12);
+    border-color: rgba(74, 158, 255, 0.25);
+  }
+
+  /* Special message cards */
+  .action-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .action-card.calendar { border-color: rgba(0, 229, 176, 0.3); }
+  .action-card.call { border-color: rgba(255, 159, 67, 0.3); }
+  .action-card.email { border-color: rgba(74, 158, 255, 0.3); }
+
+  .action-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .action-card-body { color: var(--text2); margin-bottom: 10px; line-height: 1.5; }
+
+  .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .action-btn {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .action-btn.primary { background: var(--accent); color: #fff; }
+  .action-btn.primary:hover { background: #3a8ef0; }
+  .action-btn.success { background: var(--accent2); color: #000; }
+  .action-btn.success:hover { background: #00c99a; }
+  .action-btn.secondary { background: var(--surface); border-color: var(--border); color: var(--text2); }
+  .action-btn.secondary:hover { background: var(--border); color: var(--text); }
+  .action-btn.warn { background: var(--warn); color: #000; }
+
+  .typing-indicator { display: flex; gap: 4px; padding: 12px 14px; }
+  .typing-indicator span {
+    width: 6px; height: 6px;
+    background: var(--text3);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+  }
+
+  /* ─── Input Bar ─── */
+  .input-bar {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    min-height: 44px;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text3); }
+
+  .icon-btn {
+    width: 44px; height: 44px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+  .icon-btn.send { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .icon-btn.send:hover { background: #3a8ef0; }
+
+  .action-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bottom-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .bottom-btn:hover { background: var(--border); color: var(--text); }
+  .bottom-btn.primary { background: rgba(74, 158, 255, 0.12); border-color: rgba(74, 158, 255, 0.3); color: var(--accent); }
+  .bottom-btn.primary:hover { background: rgba(74, 158, 255, 0.2); }
+
+  /* File upload indicator */
+  .upload-pending {
+    display: none;
+    padding: 6px 12px;
+    background: rgba(0, 229, 176, 0.08);
+    border: 1px solid rgba(0, 229, 176, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--accent2);
+    margin-top: 8px;
+    align-items: center;
+    gap: 6px;
+  }
+  .upload-pending.show { display: flex; }
+
+  /* ─── Overlays ─── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 40;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.show { display: block; }
+
+  /* ─── Add Patient Modal ─── */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal.open { display: flex; }
+
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+  }
+
+  .modal-box {
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    z-index: 1;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-family: var(--font-serif);
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .form-field { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 6px; }
+  .form-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .modal-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .modal-btn.cancel { background: var(--surface); border-color: var(--border); color: var(--text2); }
+  .modal-btn.save { background: var(--accent); color: #fff; }
+
+  /* ─── Calendar Connected Badge ─── */
+  .gcal-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(0, 229, 176, 0.12);
+    border: 1px solid rgba(0, 229, 176, 0.2);
+    color: var(--accent2);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .gcal-status.not-connected {
+    background: rgba(255, 159, 67, 0.12);
+    border-color: rgba(255, 159, 67, 0.2);
+    color: var(--warn);
+    cursor: pointer;
+  }
+
+  /* ─── Mobile Responsive ─── */
+  @media (max-width: 768px) {
+    .topbar { display: flex; }
+    .desktop-topbar { display: none; }
+
+    .app {
+      padding-top: var(--topbar-h);
+    }
+
+    .sidebar {
+      position: fixed;
+      top: var(--topbar-h);
+      left: 0;
+      bottom: 0;
+      transform: translateX(-100%);
+      z-index: 90;
+      width: min(var(--sidebar-w), 85vw);
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .main { width: 100%; }
+
+    .msg { max-width: 92%; }
+
+    .qa-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .action-row { flex-wrap: wrap; }
+    .bottom-btn { flex: none; }
+
+    .notif-panel {
+      right: 8px;
+      left: 8px;
+      width: auto;
+    }
+
+    .chat-area { padding: 12px; }
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ─── Hidden file input ─── */
+  #fileInput { display: none; }
+
+  /* ─── Status bar ─── */
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Mobile Topbar -->
+<header class="topbar" id="mobileTopbar">
+  <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="topbar-title">Health Agent</span>
+  <div class="topbar-actions">
+    <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnMobile">
+      🔔
+      <span class="notif-badge" id="notifBadgeMobile" style="display:none"></span>
+    </button>
   </div>
-<div class="nav-item" onclick="qa('Schedule mom a CT scan for the pulmonary nodule follow-up')"><span class="nav-icon">📅</span> Schedule Appointment</div>
-<div class="nav-item" onclick="qa('United Healthcare denied mom MRI claim. Draft a full appeal letter.')"><span class="nav-icon">🛡️</span> Fight Insurance Denial</div>
-<div class="nav-item" onclick="qa('Refill mom Lisinopril 10mg and compare pharmacy prices')"><span class="nav-icon">💊</span> Prescription Refill</div>
-<div class="nav-item" onclick="qa('Find a neurologist globally for peripheral neuropathy with telehealth options')"><span class="nav-icon">🌍</span> Find Global Doctor</div>
-<div class="nav-item" onclick="qa('Request complete medical records from Dr. Martinez. Draft the letter.')"><span class="nav-icon">📋</span> Request Records</div>
-<div class="nav-title" style="margin-top:.6rem">Quick Actions</div>
-<div class="nav-item" onclick="qa('Full dashboard - appointments, meds, claims, conditions, doctors')"><span class="nav-icon">📊</span> Full Dashboard</div>
-<div class="nav-item" onclick="qa('Check all medications for drug interactions')"><span class="nav-icon">⚠️</span> Drug Interactions</div>
-<div class="nav-item" onclick="qa('Appointment prep questions for pulmonary nodule visit')"><span class="nav-icon">❓</span> Appointment Prep</div>
-<div class="nav-item" onclick="qa('Explain pulmonary nodule - risks and monitoring protocol')"><span class="nav-icon">📖</span> Medical Explainer</div>
-<div class="nav-title" style="margin-top:.6rem">Scan & Add</div>
-<div class="nav-item" onclick="document.getElementById('fi').click()"><span class="nav-icon">📸</span> Scan Documents (Multi)</div>
-<div class="nav-item" onclick="window.location.href='/settings'"><span class="nav-icon">⚙️</span> Edit Profile</div>
-<div class="nav-title" style="margin-top:.6rem">Family</div>
-<div class="patient-card" id="patientCard"><h4>Loading...</h4><p>Fetching profile...</p></div>
-</div></div>
-<div class="main"><div class="topbar"><div class="topbar-left"><span class="status-dot"></span> Health Agent v8</div><div class="topbar-right"><button class="top-btn" onclick="clearChat()">New Chat</button><button class="top-btn" onclick="qa('Full dashboard')">Dashboard</button><button class="top-btn" onclick="qa('Show saved drafts')">Drafts</button><button class="top-btn" onclick="window.location.href='/settings'">Settings</button></div></div>
-<div class="chat" id="chat"><div class="msg agent"><div class="sender">Health Agent</div><div class="bubble">Hey J. Health Agent v8 is ready with all tools active.<br><br><b>Upload multiple documents at once</b> — select your insurance cards, prescription bottles, medical records, CT orders, all in one go. I'll scan each one, figure out what it is, extract the info, and update the profile automatically.<br><br>What do you need?<div class="quick-row"><button class="qbtn" onclick="document.getElementById('fi').click()">📸 Scan Documents</button><button class="qbtn" onclick="qa('Schedule mom CT scan')">📅 Schedule</button><button class="qbtn" onclick="qa('Fight insurance denial')">🛡️ Appeal</button><button class="qbtn" onclick="qa('Refill meds compare prices')">💊 Refill</button><button class="qbtn" onclick="qa('Find specialist globally')">🌍 Specialist</button><button class="qbtn" onclick="qa('Full dashboard')">📊 Dashboard</button></div></div></div></div>
-<div class="input-area"><div class="file-queue" id="fq"></div><div class="scan-progress" id="sp"><span id="spText">Scanning...</span><div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div></div><div class="input-row"><div class="upload-area"><div class="upload-btn" onclick="document.getElementById('fi').click()" title="Upload files">📎</div><div class="upload-btn" onclick="document.getElementById('ficam').click()" title="Take photo">📸</div></div><input type="file" id="fi" accept="image/*,.pdf,.txt,.doc,.docx" multiple onchange="filesSelected(event)"><input type="file" id="ficam" accept="image/*" capture="environment" onchange="filesSelected(event)"><div class="input-wrap"><input id="inp" placeholder="Tell me what you need..." onkeydown="if(event.key==='Enter')send()"></div><button class="send-btn" onclick="send()">→</button></div><div class="input-hint">📎 Select multiple files at once · 📸 Camera · Drop insurance cards, pill bottles, records all together</div></div></div>
+</header>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🏥</div>
+        <span class="brand-name">Health Agent</span>
+      </div>
+
+      <!-- Patient Selector -->
+      <div class="patient-selector" id="patientSelector">
+        <button class="patient-select-btn" onclick="togglePatientDropdown()">
+          <div class="patient-info">
+            <div class="patient-name" id="selectorName">Loading...</div>
+            <div class="patient-rel" id="selectorRel">—</div>
+          </div>
+          <span>▾</span>
+        </button>
+        <div class="patient-dropdown" id="patientDropdown">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-scroll">
+      <!-- Patient Card -->
+      <div class="patient-card" id="patientCard">
+        <div class="card-section-label">Patient Profile</div>
+        <div id="cardContent" style="color:var(--text3);font-size:12px;">Loading...</div>
+      </div>
+
+      <!-- Chat History -->
+      <div class="history-section">
+        <div class="history-header">
+          <span class="label">💬 History</span>
+          <button class="new-chat-btn" onclick="newChat()">+ New</button>
+        </div>
+        <div id="chatHistoryList">
+          <div style="font-size:12px;color:var(--text3);padding:6px 0;">No history yet</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <div class="card-section-label" style="margin-bottom:8px;">Quick Actions</div>
+        <div class="qa-grid">
+          <button class="qa-btn" onclick="qa('What are her current medications?')">
+            <span class="qa-icon">💊</span>Meds
+          </button>
+          <button class="qa-btn" onclick="qa('What are her upcoming appointments?')">
+            <span class="qa-icon">📅</span>Appts
+          </button>
+          <button class="qa-btn" onclick="qa('Draft a prior authorization appeal letter for Medicare')">
+            <span class="qa-icon">✉️</span>Letter
+          </button>
+          <button class="qa-btn" onclick="qa('What is her current insurance coverage?')">
+            <span class="qa-icon">🛡️</span>Insurance
+          </button>
+          <button class="qa-btn" onclick="qa('Call Dr. Martinez at Alamo Heights Family Medicine')">
+            <span class="qa-icon">📞</span>Call Doc
+          </button>
+          <button class="qa-btn" onclick="qa('Call Walgreens pharmacy at (210) 403-0002 about a refill')">
+            <span class="qa-icon">🏪</span>Pharmacy
+          </button>
+        </div>
+      </div>
+
+      <!-- Google Calendar Status -->
+      <div style="margin-bottom:12px;">
+        <div class="card-section-label" style="margin-bottom:6px;">Google Calendar</div>
+        <a id="gcalStatusLink" href="/auth/google" target="_blank" class="gcal-status not-connected" id="gcalStatus">
+          ⚠️ Connect Calendar
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─── -->
+  <main class="main">
+    <!-- Desktop Topbar -->
+    <div class="desktop-topbar">
+      <div class="status-dot"></div>
+      <span class="page-title">Linda Fields — Health Dashboard</span>
+      <span style="flex:1"></span>
+      <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">
+        🔔
+        <span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span>
+      </button>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-header">
+        <span class="notif-panel-title">🔔 Notifications</span>
+        <button class="notif-mark-all" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div class="notif-list" id="notifList">
+        <div class="notif-empty">No notifications</div>
+      </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-area" id="chatArea">
+      <div class="msg ai">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">
+          Hello! I'm your Health Agent for <strong>Linda Fields</strong>. I can help with medications, appointments, insurance, drafting letters, and more. How can I help you today?
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="input-bar">
+      <div class="input-row">
+        <textarea
+          class="chat-input"
+          id="chatInput"
+          placeholder="Ask about Linda's health, medications, appointments..."
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="icon-btn" onclick="triggerUpload()" title="Upload document">📎</button>
+        <button class="icon-btn send" onclick="sendMessage()" title="Send">➤</button>
+      </div>
+      <div class="action-row">
+        <button class="bottom-btn" onclick="startVoiceCall()">📞 Voice Call</button>
+        <button class="bottom-btn primary" onclick="startEmailSend()">✉️ Send Email</button>
+        <button class="bottom-btn" onclick="triggerUpload()">📄 Scan Doc</button>
+      </div>
+      <div class="upload-pending" id="uploadPending">
+        <span>📎</span>
+        <span id="uploadFileName">Uploading...</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Patient Modal -->
+<div class="modal" id="addPatientModal">
+  <div class="modal-backdrop" onclick="closeAddPatient()"></div>
+  <div class="modal-box">
+    <div class="modal-title">Add Family Member</div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="newName" placeholder="Jane Fields" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Relationship</label>
+        <input class="form-input" id="newRelation" placeholder="Mother, Father, Self..." />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Date of Birth</label>
+        <input class="form-input" id="newDob" placeholder="MM/DD/YYYY" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Primary Doctor</label>
+        <input class="form-input" id="newDoctor" placeholder="Dr. Smith" />
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Address</label>
+      <input class="form-input" id="newAddress" placeholder="Street, City, State ZIP" />
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Primary Insurance</label>
+        <input class="form-input" id="newInsurance" placeholder="Medicare, BCBS..." />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Pharmacy</label>
+        <input class="form-input" id="newPharmacy" placeholder="Walgreens..." />
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Conditions (comma separated)</label>
+      <input class="form-input" id="newConditions" placeholder="Hypertension, Diabetes..." />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Allergies (comma separated)</label>
+      <input class="form-input" id="newAllergies" placeholder="Penicillin, Sulfa..." />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeAddPatient()">Cancel</button>
+      <button class="modal-btn save" onclick="saveNewPatient()">Add Patient</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileUpload(this)" />
+
 <script>
-const chat=document.getElementById('chat'),inp=document.getElementById('inp');
-let hist=[],fileQueue=[];
+// ─── State ──────────────────────────────────────────────────
+let currentMessages = []; // active chat messages
+let currentSessionId = null;
+let currentPatientId = null;
+let allPatients = [];
+let notifications = [];
+let calendarConnected = false;
+let pendingCalendarEvent = null;
 
-function addMsg(r,t){const d=document.createElement('div');d.className='msg '+r;let h=t.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/##\s*(.*?)(\n|$)/g,'<h3>$1</h3>').replace(/\n- /g,'\n• ').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');d.innerHTML='<div class="sender">'+(r==='agent'?'Health Agent':'You')+'</div><div class="bubble">'+h+'</div>';chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
-function showTyping(){const d=document.createElement('div');d.className='msg agent';d.id='typ';d.innerHTML='<div class="sender">Health Agent</div><div class="typing-wrap"><span></span><span></span><span></span></div>';chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
-function hideTyping(){const t=document.getElementById('typ');if(t)t.remove()}
-function notify(msg){const n=document.createElement('div');n.className='notification';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3000);}
+// ─── Init ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadPatients();
+  await loadChatHistory();
+  await loadNotifications();
+  await checkCalendarStatus();
+});
 
-function filesSelected(e){
-  const files=Array.from(e.target.files);
-  files.forEach(f=>{
-    const id='f'+Date.now()+Math.random().toString(36).substr(2,5);
-    fileQueue.push({id,file:f,status:'ready'});
-  });
-  renderQueue();
+// ─── Patients ────────────────────────────────────────────────
+async function loadPatients() {
+  try {
+    const [patientsRes, currentRes] = await Promise.all([
+      fetch('/api/patients').then(r => r.json()),
+      fetch('/api/patients/current').then(r => r.json())
+    ]);
+    allPatients = patientsRes.patients || [];
+    currentPatientId = currentRes.currentId || allPatients[0]?.id;
+    renderPatientDropdown();
+    renderPatientCard(currentRes.patient);
+    updateTopbarTitle(currentRes.patient);
+  } catch (e) {
+    console.error('loadPatients error', e);
+  }
 }
 
-function renderQueue(){
-  const el=document.getElementById('fq');
-  if(!fileQueue.length){el.innerHTML='';return;}
-  el.innerHTML=fileQueue.map(f=>{
-    const icon=f.file.type.startsWith('image/')?'📸':'📄';
-    const statusIcon=f.status==='done'?'✅':f.status==='scanning'?'⏳':'⬜';
-    const cls=f.status==='done'?'done':f.status==='scanning'?'scanning':'';
-    let thumb='';
-    if(f.file.type.startsWith('image/')&&f.url){thumb='<img src="'+f.url+'">';}
-    return '<div class="file-item '+cls+'"><span class="status-icon">'+statusIcon+'</span>'+thumb+'<div class="info"><b>'+icon+' '+f.file.name+'</b><span>'+(f.file.size/1024).toFixed(0)+'KB'+(f.status==='done'?' — Scanned':f.status==='scanning'?' — Scanning...':' — Ready')+'</span></div>'+(f.status==='ready'?'<span class="remove" onclick="removeFile(\''+f.id+'\')">✕</span>':'')+'</div>';
-  }).join('');
-  // Generate thumbnails
-  fileQueue.forEach(f=>{
-    if(f.file.type.startsWith('image/')&&!f.url){f.url=URL.createObjectURL(f.file);renderQueue();}
-  });
+function renderPatientDropdown() {
+  const dd = document.getElementById('patientDropdown');
+  const current = allPatients.find(p => p.id === currentPatientId);
+
+  document.getElementById('selectorName').textContent = current?.name || 'No Patient';
+  document.getElementById('selectorRel').textContent = current?.relationship || current?.relation || 'Family Member';
+
+  dd.innerHTML = allPatients.map(p => `
+    <div class="patient-option ${p.id === currentPatientId ? 'active' : ''}" onclick="switchPatient('${p.id}')">
+      <div class="opt-name">${p.name}</div>
+      <div class="opt-rel">${p.relationship || p.relation || 'Family Member'} · DOB ${p.dob || '—'}</div>
+    </div>
+  `).join('') + `
+    <div class="add-patient-btn" onclick="openAddPatient()">＋ Add family member</div>
+  `;
 }
 
-function removeFile(id){fileQueue=fileQueue.filter(f=>f.id!==id);renderQueue();}
-
-async function scanAllFiles(){
-  const toScan=fileQueue.filter(f=>f.status==='ready');
-  if(!toScan.length)return;
-  const sp=document.getElementById('sp');sp.classList.add('show');
-  const total=toScan.length;
-  addMsg('user','📸 Scanning '+total+' document'+(total>1?'s':'')+'...');
-
-  for(let i=0;i<toScan.length;i++){
-    const f=toScan[i];
-    f.status='scanning';renderQueue();
-    document.getElementById('spText').textContent='Scanning '+(i+1)+' of '+total+': '+f.file.name;
-    document.getElementById('pfill').style.width=((i/total)*100)+'%';
-
-    const fd=new FormData();fd.append('document',f.file);
-    showTyping();
-    try{
-      const r=await fetch('/api/upload',{method:'POST',body:fd});
-      const d=await r.json();
-      hideTyping();
-      if(d.reply){
-        addMsg('agent',d.reply);
-        hist.push({role:'user',content:'Scanned: '+f.file.name});
-        hist.push({role:'assistant',content:d.reply});
-      }
-    }catch(e){hideTyping();addMsg('agent','Error scanning '+f.file.name+': '+e.message);}
-    f.status='done';renderQueue();
-  }
-
-  document.getElementById('pfill').style.width='100%';
-  document.getElementById('spText').textContent='All documents scanned!';
-  setTimeout(()=>{sp.classList.remove('show');fileQueue=[];renderQueue();},2000);
-  notify('All '+total+' documents scanned and profile updated');
-  loadPatientCard();
-  document.getElementById('fi').value='';
-  document.getElementById('ficam').value='';
+async function switchPatient(id) {
+  await fetch('/api/patients/switch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patientId: id })
+  });
+  currentPatientId = id;
+  closePatientDropdown();
+  await loadPatients();
+  await loadChatHistory();
+  clearChat();
+  const patient = allPatients.find(p => p.id === id);
+  if (patient) {
+    addMsg('ai', `Switched to <strong>${patient.name}</strong>'s profile. How can I help?`);
+  }
 }
 
-async function send(){
-  if(fileQueue.some(f=>f.status==='ready')){await scanAllFiles();return;}
-  const t=inp.value.trim();if(!t)return;inp.value='';addMsg('user',t);hist.push({role:'user',content:t});showTyping();
-  try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:t,history:hist.slice(0,-1)})});const d=await r.json();hideTyping();if(d.reply){addMsg('agent',d.reply);hist.push({role:'assistant',content:d.reply});if(d.reply.toLowerCase().includes('saved')||d.reply.toLowerCase().includes('draft'))notify('Draft saved');}else addMsg('agent','Something went wrong.');}catch(e){hideTyping();addMsg('agent','Error: '+e.message);}
+function renderPatientCard(patient) {
+  if (!patient) return;
+  const meds = (patient.medications || []).map(m =>
+    `<span class="med-pill">${m.name} ${m.dose || ''}</span>`
+  ).join('');
+  const allergies = (patient.allergies || []).map(a =>
+    `<span class="allergy-pill">⚠️ ${a}</span>`
+  ).join('');
+
+  document.getElementById('cardContent').innerHTML = `
+    <div class="card-row"><span class="label">Name</span><span class="val">${patient.name}</span></div>
+    <div class="card-row"><span class="label">DOB</span><span class="val">${patient.dob || '—'}</span></div>
+    <div class="card-row"><span class="label">Doctor</span><span class="val">${patient.primaryDoctor || '—'}</span></div>
+    <div class="card-row"><span class="label">Insurance</span><span class="val">${patient.insurance?.primary || '—'}</span></div>
+    ${meds ? `<div style="margin-top:8px"><div class="card-section-label">Medications</div>${meds}</div>` : ''}
+    ${allergies ? `<div style="margin-top:8px"><div class="card-section-label">Allergies</div>${allergies}</div>` : ''}
+  `;
 }
 
-function qa(t){inp.value=t;send();}
-function clearChat(){chat.innerHTML='';hist=[];addMsg('agent','Fresh start. All tools active.<div class="quick-row"><button class="qbtn" onclick="document.getElementById(\'fi\').click()">📸 Scan</button><button class="qbtn" onclick="qa(\'Schedule CT\')">📅</button><button class="qbtn" onclick="qa(\'Fight denial\')">🛡️</button><button class="qbtn" onclick="qa(\'Refill meds\')">💊</button><button class="qbtn" onclick="qa(\'Find specialist\')">🌍</button><button class="qbtn" onclick="qa(\'Dashboard\')">📊</button></div>');}
-async function loadPatientCard(){try{const r=await fetch('/api/patient/maria-fields');const p=await r.json();if(p&&p.name){const el=document.getElementById('patientCard');const meds=(p.medications||[]).map(m=>m.name).join(', ');const conds=(p.conditions||[]).join(', ');const allergies=(p.allergies||[]).join(', ');const doc=p.doctors&&p.doctors[0]?p.doctors[0].name+(p.doctors[0].office?' - '+p.doctors[0].office:''):'No doctor set';const ins=p.insurance?p.insurance.provider+(p.insurance.plan?' '+p.insurance.plan:''):'No insurance set';el.innerHTML='<h4>'+p.name+(p.relationship?' ('+p.relationship+')':'')+'</h4><p>DOB: '+(p.dob||'Not set')+'<br>'+doc+'<br>'+ins+'<br>Meds: '+(meds||'None')+'<br>Allergies: '+(allergies||'None')+'<br>Conditions: '+(conds||'None')+'</p>';}}catch(e){}}
-loadPatientCard();
-async function startVoiceCall(){const phone=prompt("Enter phone number (e.g. +12103157759):","+12103157759");if(!phone)return;const reason=prompt("What should the agent say?","Schedule appointment for Linda Fields");addMsg('user','📞 Calling '+phone+'...');try{const r=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phoneNumber:phone,reason:reason})});const d=await r.json();if(d.callId){addMsg('agent','📞 **Call initiated!** Call ID: '+d.callId+'. The AI agent is now on the phone.');}else{addMsg('agent','Call error: '+(d.error||'Unknown error'));}}catch(e){addMsg('agent','Call failed: '+e.message);}}
-async function startEmailSend(){
-  const to=prompt("Recipient email address:","insurance@provider.com");
-  if(!to)return;
-  const subject=prompt("Email subject:","Appeal for Linda Fields - Denied Claim");
-  if(!subject)return;
-  const body=prompt("Email body (paste your draft here):","");
-  if(!body)return;
-  addMsg('user',`📧 Sending email to ${to}...`);
-  try{
-    const r=await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,htmlBody:body.replace(/\n/g,'<br>')})});
-    const d=await r.json();
-    addMsg('agent',d.message||"✅ Email sent successfully!");
-  }catch(e){addMsg('agent',"Failed to send email.");}
+function updateTopbarTitle(patient) {
+  const name = patient?.name || 'Health Dashboard';
+  const el = document.querySelector('.desktop-topbar .page-title');
+  if (el) el.textContent = `${name} — Health Dashboard`;
 }
-</script></body></html>
+
+function togglePatientDropdown() {
+  document.getElementById('patientDropdown').classList.toggle('open');
+}
+
+function closePatientDropdown() {
+  document.getElementById('patientDropdown').classList.remove('open');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#patientSelector')) closePatientDropdown();
+});
+
+// ─── Add Patient Modal ───────────────────────────────────────
+function openAddPatient() {
+  closePatientDropdown();
+  document.getElementById('addPatientModal').classList.add('open');
+}
+
+function closeAddPatient() {
+  document.getElementById('addPatientModal').classList.remove('open');
+}
+
+async function saveNewPatient() {
+  const name = document.getElementById('newName').value.trim();
+  if (!name) { alert('Name is required'); return; }
+
+  const patient = {
+    name,
+    relationship: document.getElementById('newRelation').value.trim() || 'Family Member',
+    dob: document.getElementById('newDob').value.trim(),
+    primaryDoctor: document.getElementById('newDoctor').value.trim(),
+    address: document.getElementById('newAddress').value.trim(),
+    insurance: { primary: document.getElementById('newInsurance').value.trim() },
+    pharmacy: { name: document.getElementById('newPharmacy').value.trim() },
+    conditions: document.getElementById('newConditions').value.split(',').map(s => s.trim()).filter(Boolean),
+    allergies: document.getElementById('newAllergies').value.split(',').map(s => s.trim()).filter(Boolean),
+    medications: []
+  };
+
+  try {
+    const res = await fetch('/api/patients/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patient)
+    });
+    const data = await res.json();
+    closeAddPatient();
+    allPatients.push(data.patient);
+    await switchPatient(data.patient.id);
+  } catch (e) {
+    alert('Error adding patient: ' + e.message);
+  }
+}
+
+// ─── Chat History ────────────────────────────────────────────
+async function loadChatHistory() {
+  try {
+    const data = await fetch('/api/chat-history').then(r => r.json());
+    renderChatHistory(data.sessions || []);
+  } catch (e) {}
+}
+
+function renderChatHistory(sessions) {
+  const list = document.getElementById('chatHistoryList');
+  // Filter to current patient
+  const filtered = sessions.filter(s => !s.patientId || s.patientId === currentPatientId);
+  if (!filtered.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0;">No history yet</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice(0, 20).map(s => `
+    <div class="history-item ${s.id === currentSessionId ? 'active' : ''}" onclick="loadSession('${s.id}')">
+      <span class="hist-icon">💬</span>
+      <div class="hist-content">
+        <div class="hist-preview">${escapeHtml(s.preview || 'Chat session')}</div>
+        <div class="hist-time">${formatRelTime(s.timestamp)}</div>
+      </div>
+      <button class="hist-delete" onclick="deleteSession(event, '${s.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function loadSession(id) {
+  try {
+    const session = await fetch(`/api/chat-history/${id}`).then(r => r.json());
+    currentSessionId = id;
+    currentMessages = session.messages || [];
+    clearChat(false);
+
+    // Replay messages
+    for (const m of currentMessages) {
+      addMsg(m.role === 'user' ? 'user' : 'ai', m.content, false);
+    }
+
+    closeSidebar();
+    await loadChatHistory(); // Refresh to show active
+  } catch (e) {
+    console.error('loadSession error', e);
+  }
+}
+
+async function deleteSession(e, id) {
+  e.stopPropagation();
+  await fetch(`/api/chat-history/${id}`, { method: 'DELETE' });
+  await loadChatHistory();
+}
+
+function newChat() {
+  // Save current chat first
+  if (currentMessages.length > 0) {
+    saveChatSession();
+  }
+  clearChat();
+  currentSessionId = null;
+  currentMessages = [];
+  loadChatHistory();
+}
+
+async function saveChatSession() {
+  if (!currentMessages.length) return;
+  await fetch('/api/save-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: currentMessages, patientId: currentPatientId })
+  });
+}
+
+// Auto-save every 30 seconds
+setInterval(() => {
+  if (currentMessages.length > 0) saveChatSession();
+}, 30000);
+
+// Save on page unload
+window.addEventListener('beforeunload', () => {
+  if (currentMessages.length > 0) {
+    navigator.sendBeacon('/api/save-chat', JSON.stringify({
+      messages: currentMessages,
+      patientId: currentPatientId
+    }));
+  }
+});
+
+// ─── Notifications ────────────────────────────────────────────
+async function loadNotifications() {
+  try {
+    const data = await fetch('/api/notifications').then(r => r.json());
+    notifications = data.notifications || [];
+    renderNotifications();
+    updateNotifBadge();
+  } catch (e) {}
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">✅ All clear — no notifications</div>';
+    return;
+  }
+
+  const typeIcons = {
+    medication: '💊',
+    appointment: '📅',
+    insurance: '🛡️',
+    general: '💡'
+  };
+
+  list.innerHTML = notifications.slice(0, 20).map(n => `
+    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="readNotif('${n.id}')">
+      <div class="notif-item-header">
+        <span class="notif-dot"></span>
+        <span class="notif-icon">${typeIcons[n.type] || '🔔'}</span>
+        <span class="notif-item-title">${escapeHtml(n.title)}</span>
+      </div>
+      <div class="notif-item-msg">${escapeHtml(n.message)}</div>
+      <div class="notif-item-time">${formatRelTime(n.createdAt)}</div>
+    </div>
+  `).join('');
+}
+
+function updateNotifBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  ['notifBadgeDesktop', 'notifBadgeMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = unread > 9 ? '9+' : unread;
+      el.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+async function readNotif(id) {
+  await fetch(`/api/notifications/read/${id}`, { method: 'POST' });
+  const n = notifications.find(n => n.id === id);
+  if (n) n.read = true;
+  renderNotifications();
+  updateNotifBadge();
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/read-all', { method: 'POST' });
+  notifications.forEach(n => n.read = true);
+  renderNotifications();
+  updateNotifBadge();
+}
+
+function toggleNotifications() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+
+// Close notif panel on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifPanel') && !e.target.closest('.notif-btn')) {
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+});
+
+// ─── Calendar ────────────────────────────────────────────────
+async function checkCalendarStatus() {
+  try {
+    const data = await fetch('/api/calendar/status').then(r => r.json());
+    calendarConnected = data.connected;
+    const el = document.getElementById('gcalStatus');
+    if (calendarConnected) {
+      el.textContent = '✅ Calendar Connected';
+      el.className = 'gcal-status';
+      el.removeAttribute('href');
+    }
+  } catch (e) {}
+}
+
+async function addToCalendar(event) {
+  if (!calendarConnected) {
+    window.open('/auth/google', '_blank');
+    addMsg('ai', '⚠️ Please connect Google Calendar first. A window opened for authorization — refresh the page and try again after connecting.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/calendar/add-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    });
+    const data = await res.json();
+    if (data.success) {
+      addMsg('ai', `✅ Added to Google Calendar: <strong>${event.title}</strong> on ${event.date}. <a href="${data.link}" target="_blank" style="color:var(--accent)">View event →</a>`);
+      await loadNotifications();
+    } else {
+      addMsg('ai', `❌ Couldn't add event: ${data.error}`);
+    }
+  } catch (e) {
+    addMsg('ai', `❌ Calendar error: ${e.message}`);
+  }
+}
+
+// ─── Chat ────────────────────────────────────────────────────
+function clearChat(addWelcome = true) {
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  if (addWelcome) {
+    const patient = allPatients.find(p => p.id === currentPatientId);
+    addMsg('ai', `Hello! I'm your Health Agent${patient ? ` for <strong>${patient.name}</strong>` : ''}. How can I help you today?`, false);
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  addMsg('user', text);
+  currentMessages.push({ role: 'user', content: text });
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="msg ai" id="${typingId}">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">
+        <div class="typing-indicator"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, patientId: currentPatientId })
+    });
+    const data = await res.json();
+
+    document.getElementById(typingId)?.remove();
+
+    const reply = data.reply || data.error || 'Something went wrong';
+    addMsg('ai', reply);
+    currentMessages.push({ role: 'assistant', content: reply });
+
+    // Handle calendar event suggestion
+    if (data.calendarEvent) {
+      pendingCalendarEvent = data.calendarEvent;
+      addCalendarCard(data.calendarEvent);
+    }
+
+    // Handle call request
+    if (data.callRequest) {
+      addCallCard(data.callRequest);
+    }
+
+    // Handle email pending
+    if (data.hasPendingEmail) {
+      addEmailActionCard();
+    }
+
+    // Refresh notifications after each message
+    await loadNotifications();
+
+  } catch (e) {
+    document.getElementById(typingId)?.remove();
+    addMsg('ai', `❌ Error: ${e.message}`);
+  }
+}
+
+function addMsg(role, html, scroll = true) {
+  const area = document.getElementById('chatArea');
+  const isUser = role === 'user';
+  area.insertAdjacentHTML('beforeend', `
+    <div class="msg ${isUser ? 'user' : 'ai'}">
+      <div class="msg-avatar">${isUser ? '👤' : '🤖'}</div>
+      <div class="msg-bubble">${html}</div>
+    </div>
+  `);
+  if (scroll) area.scrollTop = area.scrollHeight;
+}
+
+function addCalendarCard(event) {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card calendar">
+      <div class="action-card-title">📅 Add to Google Calendar?</div>
+      <div class="action-card-body">
+        <strong>${escapeHtml(event.title)}</strong><br/>
+        ${event.date} at ${event.time || '9:00 AM'} · ${event.duration || 60} minutes
+        ${event.description ? '<br/>' + escapeHtml(event.description) : ''}
+      </div>
+      <div class="action-btns">
+        <button class="action-btn success" onclick="addToCalendar(${JSON.stringify(event).replace(/"/g, '&quot;')})">✅ Add to Calendar</button>
+        <button class="action-btn secondary" onclick="this.closest('.action-card').remove()">Dismiss</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addCallCard(callReq) {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card call">
+      <div class="action-card-title">📞 Confirm Phone Call</div>
+      <div class="action-card-body">
+        Call <strong>${escapeHtml(callReq.name)}</strong> at ${escapeHtml(callReq.phone || 'unknown number')}<br/>
+        Reason: ${escapeHtml(callReq.reason || 'Medical inquiry')}
+      </div>
+      <div class="action-btns">
+        <button class="action-btn warn" onclick="confirmCall(this)">📞 Confirm Call</button>
+        <button class="action-btn secondary" onclick="cancelCall(this)">Cancel</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function confirmCall(btn) {
+  btn.closest('.action-card').remove();
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'confirm call', patientId: currentPatientId })
+  });
+  const data = await res.json();
+  addMsg('ai', data.reply);
+}
+
+async function cancelCall(btn) {
+  btn.closest('.action-card').remove();
+  await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'cancel call', patientId: currentPatientId })
+  });
+  addMsg('ai', 'Call cancelled.');
+}
+
+function addEmailActionCard() {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card email">
+      <div class="action-card-title">✉️ Email Draft Ready</div>
+      <div class="action-card-body">Your email has been drafted and saved. Ready to send?</div>
+      <div class="action-btns">
+        <button class="action-btn primary" onclick="sendDraftEmail(this)">📤 Send Email</button>
+        <button class="action-btn secondary" onclick="this.closest('.action-card').remove()">Save Draft</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function sendDraftEmail(btn) {
+  btn.closest('.action-card').remove();
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'send', patientId: currentPatientId })
+  });
+  const data = await res.json();
+  addMsg('ai', data.reply);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function qa(text) {
+  document.getElementById('chatInput').value = text;
+  closeSidebar();
+  sendMessage();
+}
+
+// ─── File Upload ─────────────────────────────────────────────
+function triggerUpload() {
+  document.getElementById('fileInput').click();
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const pending = document.getElementById('uploadPending');
+  const fileName = document.getElementById('uploadFileName');
+  fileName.textContent = `Processing: ${file.name}`;
+  pending.classList.add('show');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    pending.classList.remove('show');
+
+    if (data.pending) {
+      addMsg('ai', `📄 Document scanned: <strong>${file.name}</strong><br/><br/>I extracted the following information. Type <strong>"confirm"</strong> to save or <strong>"deny"</strong> to cancel:<br/><br/><pre style="font-size:11px;background:var(--bg);padding:8px;border-radius:6px;overflow:auto">${JSON.stringify(data.extracted, null, 2)}</pre>`);
+    } else {
+      addMsg('ai', `📄 ${data.message}`);
+    }
+  } catch (e) {
+    pending.classList.remove('show');
+    addMsg('ai', `❌ Upload error: ${e.message}`);
+  }
+
+  input.value = '';
+}
+
+// ─── Voice & Email ───────────────────────────────────────────
+async function startVoiceCall() {
+  const patient = allPatients.find(p => p.id === currentPatientId);
+  const phone = patient?.phone || prompt('Enter phone number to call:');
+  if (!phone) return;
+
+  try {
+    const res = await fetch('/api/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, reason: 'Health check call' })
+    });
+    const data = await res.json();
+    addMsg('ai', `📞 Call initiated! Call ID: ${data.id || 'started'}. Status: ${data.status || 'connecting...'}`);
+  } catch (e) {
+    addMsg('ai', `❌ Call failed: ${e.message}`);
+  }
+}
+
+function startEmailSend() {
+  qa('Draft an email to Dr. Martinez about Linda\'s recent lab results');
+}
+
+// ─── Mobile Sidebar ──────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatRelTime(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+</script>
+</body>
+</html>

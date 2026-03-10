@@ -1,0 +1,34 @@
+{
+  "notifications": [
+    {
+      "id": "1773165513593",
+      "type": "medication",
+      "title": "Medication Refill Reminder",
+      "message": "Chat mention: What are her current medications?",
+      "patientId": "maria-fields",
+      "dueDate": null,
+      "read": false,
+      "createdAt": "2026-03-10T17:58:33.593Z"
+    },
+    {
+      "id": "welcome-1",
+      "type": "general",
+      "title": "Health Agent Ready",
+      "message": "Your AI Health Agent is set up for Linda Fields. You can now manage medications, appointments, and more.",
+      "patientId": "maria-fields",
+      "dueDate": null,
+      "read": false,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "med-refill-1",
+      "type": "medication",
+      "title": "Medication Refill Due",
+      "message": "Metformin 500mg — check if refill is needed at Walgreens Stone Oak (210) 403-0002",
+      "patientId": "maria-fields",
+      "dueDate": null,
+      "read": false,
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

@@ -1,259 +1,733 @@
-require("dotenv").config();
-const express = require("express");
-const Anthropic = require("@anthropic-ai/sdk").default;
-const path = require("path");
-const multer = require("multer");
-const fs = require("fs");
-const { saveDraft, listDrafts, sendRealEmail } = require("./tools/email");
-const { createEvent } = require("./tools/calendar");
-const { getAppointments, addAppointment, listUpcoming } = require("./tools/appointments");
-const { getClaims, addClaim, updateClaim } = require("./tools/insurance");
-const { getMedications, addMedication } = require("./tools/medications");
-const { getPatients, getPatient, updatePatient, addPatient } = require("./tools/patients");
+// ============================================================
+// server.js — AI Health Agent (All Features — Corrected)
+// ============================================================
+require('dotenv').config();
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const Anthropic = require('@anthropic-ai/sdk').default;
 
-const app = express();
-app.use(express.json({limit:'10mb'}));
-app.use(express.static("public"));
-app.use("/drafts", express.static("drafts"));
-app.use("/calendar", express.static("calendar"));
-
-const upload = multer({ dest: "uploads/", limits: { fileSize: 10*1024*1024 } });
-["uploads","drafts","calendar","data"].forEach(d => { if(!fs.existsSync(d)) fs.mkdirSync(d); });
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-let pendingUpdates = {};let pendingEmailDraft = null;
-
-function buildSystemPrompt() {
-  const patient = getPatient("maria-fields") || {};
-  return `You are Health Agent — an AI healthcare navigator for J Fields managing care for his mother Linda Fields in San Antonio, TX.
-
-PATIENT PROFILE (verified data):
-${JSON.stringify(patient, null, 2)}
-
-TRACKED DATA:
-- Upcoming Appointments: ${JSON.stringify(listUpcoming())}
-- Insurance Claims: ${JSON.stringify(getClaims())}
-- Saved Drafts: ${JSON.stringify(listDrafts())}
-
-CAPABILITIES: Document/image analysis, action plans with phone scripts, appeal letters, appointment tracking, insurance tracking, medication management, global doctor search, medical translation, appointment prep, cost comparison.
-EMAIL SENDING: You can send real emails on behalf of the user. When the user asks you to email someone:
-1. Draft the complete email with a clear SUBJECT: line and BODY
-2. Show the draft to the user
-3. Ask them to type 'send' to confirm
-4. Format your draft like this so the system can detect it:
-   EMAIL_DRAFT
-   TO: recipient@email.com
-   SUBJECT: Your subject here
-   BODY: Your email body here
-   END_EMAIL_DRAFT
-When the user types 'send' after seeing a draft, the system will send it automatically.
-VOICE CALLING: You can make real phone calls. When the user asks you to call a provider, tell them to click the 📞 Call Provider Now button in the sidebar, or provide the phone number and tell them you're ready to call.
-
-EMAIL SENDING: You can send real emails. When you draft an appeal letter or any communication, ask the user if they want you to send it. If they say yes, you will send it via the /api/send-email endpoint.
-
-CRITICAL RULE FOR DOCUMENT SCANNING:
-When you read a document or image, you MUST:
-1. Show EXACTLY what you read — every word, every number
-2. Present the extracted data clearly
-3. DO NOT automatically save anything to the profile
-4. Instead, ask the user to CONFIRM the information is correct before saving
-5. If anything looks wrong or unclear, flag it and ask the user to verify
-6. Format the extracted data so the user can easily review each field
-
-NEVER assume data is correct. ALWAYS ask for confirmation. In healthcare, accuracy is everything.
-
-OTHER RULES: Never fabricate phone numbers or confirmation numbers. Never pretend to make calls. Use real SA facilities. Be honest. Use **bold** for important info. Always give clear next steps.`;
+// Conditionally load googleapis (only if installed)
+let google = null;
+try {
+  google = require('googleapis').google;
+} catch (e) {
+  console.log('⚠️  googleapis not installed — Google Calendar disabled. Run: npm install googleapis');
 }
 
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { message, history } = req.body;
-    const lower = message.toLowerCase().trim();
+const voice = require('./tools/voice');
+const emailTools = require('./tools/email');
+const calendarTools = require('./tools/calendar');
+const patientsTools = require('./tools/patients');
+const appointmentsTools = require('./tools/appointments');
+const medicationsTools = require('./tools/medications');
 
-    if ((lower === 'confirm' || lower === 'yes' || lower === 'save' || lower === 'correct' || lower.includes('confirm')) && Object.keys(pendingUpdates).length > 0) {
-      const patient = getPatient("maria-fields") || {};
-      const updates = pendingUpdates;
-      if (updates.name) patient.name = updates.name;
-      if (updates.dob) patient.dob = updates.dob;
-      if (updates.address) patient.address = updates.address;
-      if (updates.insurance) patient.insurance = { ...patient.insurance, ...updates.insurance };
-      if (updates.medication) {
-        if (!patient.medications) patient.medications = [];
-        const exists = patient.medications.find(m => m.name.toLowerCase() === updates.medication.name.toLowerCase());
-        if (exists) Object.assign(exists, updates.medication);
-        else patient.medications.push(updates.medication);
-      }
-      if (updates.conditions) {
-        patient.conditions = [...new Set([...(patient.conditions || []), ...updates.conditions])];
-      }
-      if (updates.doctor) {
-        if (!patient.doctors) patient.doctors = [];
-        const exists = patient.doctors.find(d => d.name === updates.doctor.name);
-        if (!exists) patient.doctors.push(updates.doctor);
-      }
-      updatePatient("maria-fields", patient);
-      pendingUpdates = {};
-      res.json({ reply: "**Profile updated successfully!** All confirmed information has been saved to Linda's profile.\n\nWould you like to scan more documents or do anything else?", profileUpdated: true });
-      return;
-    }
+const app = express();
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static('public'));
+app.use('/drafts', express.static('drafts'));
+app.use('/calendar', express.static('calendar'));
 
-    // Autonomous email sending - handle 'send' confirmation
-    console.log("DEBUG - lower:", lower, "pendingEmailDraft:", pendingEmailDraft ? "EXISTS with TO:" + pendingEmailDraft.to : "NULL");if ((lower === 'send' || lower === 'yes send' || lower === 'send it') && pendingEmailDraft) {
-      try {
-        await sendRealEmail(pendingEmailDraft.to, pendingEmailDraft.subject, pendingEmailDraft.htmlBody);
-        const sentMsg = "**✅ Email sent successfully!** Message delivered to " + pendingEmailDraft.to;
-        res.json({ reply: sentMsg });
-        pendingEmailDraft = null;
-        return;
-      } catch (e) {
-        res.json({ reply: "❌ Failed to send email: " + e.message });
-        pendingEmailDraft = null;
-        return;
-      }
-    }
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 10 * 1024 * 1024 } });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const messages = (history || []).concat([{ role: "user", content: message }]);
-    const response = await client.messages.create({ model: "claude-sonnet-4-20250514", max_tokens: 4096, system: buildSystemPrompt(), messages });
-    const reply = response.content[0].text;
-        // Check for autonomous EMAIL_DRAFT format from the AI
-    if (reply.includes("EMAIL_DRAFT")) {
-      const match = reply.match(/EMAIL_DRAFT\s*TO:\s*(.*?)\s*SUBJECT:\s*(.*?)\s*BODY:\s*([\s\S]*?)\s*END_EMAIL_DRAFT/i);
-      if (match) {
-        pendingEmailDraft = {
-          to: match[1].trim(),
-          subject: match[2].trim(),
-          htmlBody: match[3].trim().replace(/\n/g, '<br>')
-        };
-      }
-    }
-        // Check for autonomous EMAIL_DRAFT format from the AI
-    if (reply.includes("EMAIL_DRAFT")) {
-      const match = reply.match(/EMAIL_DRAFT\s*TO:\s*(.*?)\s*SUBJECT:\s*(.*?)\s*BODY:\s*([\s\S]*?)\s*END_EMAIL_DRAFT/i);
-      if (match) {
-        pendingEmailDraft = {
-          to: match[1].trim(),
-          subject: match[2].trim(),
-          htmlBody: match[3].trim().replace(/\n/g, '<br>')
-        };
-      }
-    }
-    if (reply.toLowerCase().includes("subject:") && reply.toLowerCase().includes("dear")) {
-      const lines = reply.split("\n"); let subject = "";
-      for (const l of lines) { if (l.toLowerCase().startsWith("subject:")) subject = l.replace(/subject:\s*/i,""); }
-      if (subject) { const start = reply.indexOf("Dear"); if (start > 0) saveDraft("provider", subject, reply.substring(start)); }
-    }
-    res.json({ reply });
-  } catch (error) { console.error("Chat error:", error.message); res.status(500).json({ error: error.message }); }
+// ─── Data File Paths ───────────────────────────────────────
+const CHAT_HISTORY_FILE = './data/chat_history.json';
+const NOTIFICATIONS_FILE = './data/notifications.json';
+const CURRENT_PATIENT_FILE = './data/current_patient.json';
+
+// ─── Ensure data directories exist ────────────────────────
+['./data', './drafts', './calendar', './uploads'].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-app.post("/api/upload", upload.single("document"), async (req, res) => {
+// ─── Session State ─────────────────────────────────────────
+let pendingUpdates = null;
+let pendingEmailDraft = null;
+let pendingCallRequest = null;
+let conversationHistory = [];
+
+// ─── Load chat history on startup ─────────────────────────
+function loadChatHistory() {
   try {
-    if (!req.file) return res.status(400).json({ error: "No file" });
-    const mime = req.file.mimetype, filePath = req.file.path;
-    let messages = [];
-    if (mime.startsWith("image/")) {
-      const base64 = fs.readFileSync(filePath).toString("base64");
-      messages = [{ role: "user", content: [
-        { type: "image", source: { type: "base64", media_type: mime === "image/jpg" ? "image/jpeg" : mime, data: base64 } },
-        { type: "text", text: "Read this medical document image carefully. Extract ALL text you can see. Be extremely precise with numbers, dates, and names.\n\nAfter extracting, present the information clearly and ask me to CONFIRM before saving anything." }
-      ]}];
-    } else if (mime === "application/pdf") {
-      const pdfParse = require("pdf-parse");
-      const pdf = await pdfParse(fs.readFileSync(filePath));
-      messages = [{ role: "user", content: "PDF content:\n" + pdf.text + "\n\nExtract all information. Present it clearly and ask me to CONFIRM before saving." }];
-    } else {
-      let text; try { text = fs.readFileSync(filePath,"utf-8").substring(0,5000); } catch(e) { text = "[Could not read]"; }
-      messages = [{ role: "user", content: text + "\n\nAnalyze and present findings. Ask for confirmation before saving." }];
+    if (fs.existsSync(CHAT_HISTORY_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CHAT_HISTORY_FILE, 'utf8'));
+      return data.sessions || [];
     }
-    const response = await client.messages.create({ model: "claude-sonnet-4-20250514", max_tokens: 4096, system: buildSystemPrompt(), messages });
-    const reply = response.content[0].text;
-    try {
-      const extractResponse = await client.messages.create({
-        model: "claude-sonnet-4-20250514", max_tokens: 1024,
-        messages: [{ role: "user", content: "From this analysis, extract ONLY the data that was found into JSON. Use these keys where applicable: name, dob, address, insuranceProvider, planName, memberId, groupNumber, insurancePhone, medicationName, dose, frequency, prescriber, pharmacy, rxNumber, conditions, doctorName, facility, procedure. Return ONLY valid JSON.\n\n" + reply }]
-      });
-      let jsonStr = extractResponse.content[0].text.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
-      const extracted = JSON.parse(jsonStr);
-      if (extracted.name) pendingUpdates.name = extracted.name;
-      if (extracted.dob) pendingUpdates.dob = extracted.dob;
-      if (extracted.address) pendingUpdates.address = extracted.address;
-      if (extracted.insuranceProvider || extracted.memberId) {
-        pendingUpdates.insurance = {};
-        if (extracted.insuranceProvider) pendingUpdates.insurance.provider = extracted.insuranceProvider;
-        if (extracted.planName) pendingUpdates.insurance.plan = extracted.planName;
-        if (extracted.memberId) pendingUpdates.insurance.memberId = extracted.memberId;
-        if (extracted.groupNumber) pendingUpdates.insurance.groupNumber = extracted.groupNumber;
-        if (extracted.insurancePhone) pendingUpdates.insurance.phone = extracted.insurancePhone;
-      }
-      if (extracted.medicationName) {
-        pendingUpdates.medication = { name: extracted.medicationName, dose: extracted.dose || "", frequency: extracted.frequency || "", prescriber: extracted.prescriber || "", pharmacy: extracted.pharmacy || "", rxNumber: extracted.rxNumber || "" };
-      }
-      if (extracted.conditions) {
-        pendingUpdates.conditions = Array.isArray(extracted.conditions) ? extracted.conditions : [extracted.conditions];
-      }
-      if (extracted.doctorName) {
-        pendingUpdates.doctor = { name: extracted.doctorName, facility: extracted.facility || "", specialty: "", phone: "" };
-      }
-    } catch(e) { console.log("Extract parse (non-critical):", e.message); }
-    try { fs.unlinkSync(filePath); } catch(e) {}
-    res.json({ reply, fileName: req.file.originalname, pendingReview: true });
-  } catch (error) { console.error("Upload error:", error.message); res.status(500).json({ error: error.message }); }
-});
+  } catch (e) {}
+  return [];
+}
 
-app.get("/api/patient/:id", (req, res) => res.json(getPatient(req.params.id) || {error:"not found"}));
-app.put("/api/patient/:id", (req, res) => res.json(updatePatient(req.params.id, req.body) || {error:"not found"}));
-app.post("/api/patient", (req, res) => res.json(addPatient(req.body)));
-app.post("/api/appointment", (req, res) => res.json(addAppointment(req.body)));
-app.get("/api/appointments", (req, res) => res.json(listUpcoming()));
-app.post("/api/claim", (req, res) => res.json(addClaim(req.body)));
-app.get("/api/claims", (req, res) => res.json(getClaims()));
-app.get("/api/drafts", (req, res) => res.json(listDrafts()));
-app.get("/api/dashboard", (req, res) => {
-  res.json({ patient: getPatient("maria-fields"), appointments: listUpcoming(), claims: getClaims(), medications: getMedications(), drafts: listDrafts() });
-});
-app.get("/api/pending", (req, res) => res.json(pendingUpdates));
-
-app.get("/", (req, res) => res.sendFile(path.join(__dirname,"public","index.html")));
-app.get("/settings", (req, res) => res.sendFile(path.join(__dirname,"public","settings.html")));
-
-// Voice calling
-const { startPhoneCall, getCallStatus } = require("./tools/voice");
-
-app.post("/api/send-email", async (req, res) => {
-  const { to, subject, htmlBody } = req.body;
+function saveChatSession(patientId, messages) {
   try {
-    const result = await sendRealEmail(to, subject, htmlBody);
-    res.json({ success: true, message: "Email sent successfully!" });
+    let data = { sessions: [] };
+    if (fs.existsSync(CHAT_HISTORY_FILE)) {
+      data = JSON.parse(fs.readFileSync(CHAT_HISTORY_FILE, 'utf8'));
+    }
+    const session = {
+      id: Date.now().toString(),
+      patientId,
+      timestamp: new Date().toISOString(),
+      preview: messages.find(m => m.role === 'user')?.content?.substring(0, 60) || 'Chat session',
+      messages
+    };
+    data.sessions.unshift(session);
+    data.sessions = data.sessions.slice(0, 50);
+    fs.writeFileSync(CHAT_HISTORY_FILE, JSON.stringify(data, null, 2));
+    return session.id;
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    console.error('Error saving chat history:', e);
+  }
+}
+
+// ─── Notifications ─────────────────────────────────────────
+function loadNotifications() {
+  try {
+    if (fs.existsSync(NOTIFICATIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return { notifications: [] };
+}
+
+function saveNotifications(data) {
+  fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify(data, null, 2));
+}
+
+function addNotification(type, title, message, patientId = null, dueDate = null) {
+  const data = loadNotifications();
+  const notif = {
+    id: Date.now().toString(),
+    type,
+    title,
+    message,
+    patientId,
+    dueDate,
+    read: false,
+    createdAt: new Date().toISOString()
+  };
+  data.notifications.unshift(notif);
+  saveNotifications(data);
+  return notif;
+}
+
+// ─── Patient helpers ────────────────────────────────────────
+function getCurrentPatientId() {
+  try {
+    if (fs.existsSync(CURRENT_PATIENT_FILE)) {
+      return JSON.parse(fs.readFileSync(CURRENT_PATIENT_FILE, 'utf8')).patientId || 'maria-fields';
+    }
+  } catch (e) {}
+  return 'maria-fields';
+}
+
+function setCurrentPatientId(id) {
+  fs.writeFileSync(CURRENT_PATIENT_FILE, JSON.stringify({ patientId: id }));
+}
+
+function getAllPatients() {
+  try {
+    const data = JSON.parse(fs.readFileSync('./data/patients.json', 'utf8'));
+    if (Array.isArray(data)) return data;
+    if (data.patients) return data.patients;
+    return [data];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveAllPatients(patients) {
+  try {
+    const raw = fs.readFileSync('./data/patients.json', 'utf8');
+    const existing = JSON.parse(raw);
+    if (existing.patients) {
+      fs.writeFileSync('./data/patients.json', JSON.stringify({ ...existing, patients }, null, 2));
+    } else {
+      fs.writeFileSync('./data/patients.json', JSON.stringify(patients, null, 2));
+    }
+  } catch (e) {
+    fs.writeFileSync('./data/patients.json', JSON.stringify({ patients }, null, 2));
+  }
+}
+
+// ─── System Prompt ─────────────────────────────────────────
+function buildSystemPrompt(patient) {
+  const p = patient || {};
+  return `You are Health Agent — an AI healthcare navigator and caregiver command center. You help manage healthcare for patients and their families.
+
+PATIENT PROFILE:
+- Name: ${p.name || 'Unknown'}
+- DOB: ${p.dob || 'Unknown'}
+- Address: ${p.address || 'Unknown'}
+- Insurance: ${p.insurance?.primary || ''} ${p.insurance?.secondary ? '+ ' + p.insurance.secondary : ''}
+- Member ID: ${p.insurance?.memberId || ''}
+- Conditions: ${(p.conditions || []).join(', ')}
+- Allergies: ${(p.allergies || []).join(', ')}
+- Doctor: ${p.primaryDoctor || 'Unknown'} at ${p.clinic || 'Unknown'}
+- Preferred Hospital: ${p.preferredHospital || 'Unknown'}
+- Pharmacy: ${p.pharmacy?.name || 'Unknown'} ${p.pharmacy?.phone || ''}
+- Medications: ${(p.medications || []).map(m => m.name + ' ' + m.dose + ' ' + (m.frequency || '')).join(', ')}
+
+YOUR CAPABILITIES:
+1. DOCUMENT ANALYSIS - Read uploaded medical documents, prescriptions, insurance cards, lab results
+2. ACTION PLANS - Step-by-step plans with exact phone scripts
+3. APPEAL LETTERS - Draft formal insurance appeals with medical necessity arguments
+4. EMAIL SENDING - Draft and send real emails (use EMAIL_DRAFT format below)
+5. PHONE CALLS - Trigger real phone calls to providers (use CALL_REQUEST format below)
+6. CALENDAR - Detect appointment dates and suggest adding to Google Calendar (use CALENDAR_EVENT format)
+7. MEDICATION MANAGEMENT - Track meds, check interactions, refill reminders
+8. INSURANCE TRACKING - Track claims, denials, appeals
+9. MEDICAL TRANSLATION - Explain medical jargon in plain English
+10. APPOINTMENT PREP - Checklists and questions to ask
+
+CALL_REQUEST FORMAT: When user asks to call someone, respond with:
+CALL_REQUEST:{"name":"Provider Name","phone":"+12105551234","reason":"Reason for calling"}
+Then explain what the AI agent will say on the call. User will confirm before the call is made.
+
+EMAIL_DRAFT FORMAT: When drafting an email, include:
+EMAIL_DRAFT:{"to":"email@example.com","subject":"Subject Line","body":"Full email body text here"}
+Then ask user to type 'send' to confirm, or suggest changes.
+
+CALENDAR_EVENT FORMAT: When an appointment date is mentioned, include:
+CALENDAR_EVENT:{"title":"Appointment Title","date":"YYYY-MM-DD","time":"HH:MM","duration":60,"description":"Details"}
+
+CRITICAL RULES:
+- NEVER fabricate phone numbers or confirmation numbers
+- NEVER pretend to make phone calls — use CALL_REQUEST format and let the system handle it
+- Be honest about what you can and cannot do
+- Always ask for confirmation before sending emails or making calls
+- Use **bold** for important information
+- Always end with clear next steps
+- You are an advocate for the patient — fight hard for their care`;
+}
+
+// ─── Google OAuth2 Setup ────────────────────────────────────
+let oauth2Client = null;
+let googleTokens = null;
+const TOKEN_FILE = './data/google_tokens.json';
+
+if (google && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'http://localhost:3000/oauth2callback'
+  );
+  if (fs.existsSync(TOKEN_FILE)) {
+    try {
+      googleTokens = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
+      oauth2Client.setCredentials(googleTokens);
+    } catch (e) {}
+  }
+} else {
+  console.log('⚠️  Google Calendar not configured — add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env');
+}
+
+// ─── ROUTES ────────────────────────────────────────────────
+
+// Chat history
+app.get('/api/chat-history', (req, res) => {
+  res.json({ sessions: loadChatHistory() });
+});
+
+app.get('/api/chat-history/:id', (req, res) => {
+  const data = loadChatHistory();
+  const session = data.find(s => s.id === req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  res.json(session);
+});
+
+app.delete('/api/chat-history/:id', (req, res) => {
+  try {
+    let data = { sessions: loadChatHistory() };
+    data.sessions = data.sessions.filter(s => s.id !== req.params.id);
+    fs.writeFileSync(CHAT_HISTORY_FILE, JSON.stringify(data, null, 2));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.post("/api/call", async (req, res) => {
+app.post('/api/save-chat', (req, res) => {
+  const { messages, patientId } = req.body;
+  if (!messages?.length) return res.json({ success: false });
+  const id = saveChatSession(patientId || getCurrentPatientId(), messages);
+  res.json({ success: true, id });
+});
+
+// ─── Notifications ──────────────────────────────────────────
+app.get('/api/notifications', (req, res) => {
+  res.json(loadNotifications());
+});
+
+app.post('/api/notifications/read/:id', (req, res) => {
+  const data = loadNotifications();
+  const notif = data.notifications.find(n => n.id === req.params.id);
+  if (notif) notif.read = true;
+  saveNotifications(data);
+  res.json({ success: true });
+});
+
+app.post('/api/notifications/read-all', (req, res) => {
+  const data = loadNotifications();
+  data.notifications.forEach(n => n.read = true);
+  saveNotifications(data);
+  res.json({ success: true });
+});
+
+app.delete('/api/notifications/:id', (req, res) => {
+  const data = loadNotifications();
+  data.notifications = data.notifications.filter(n => n.id !== req.params.id);
+  saveNotifications(data);
+  res.json({ success: true });
+});
+
+app.post('/api/notifications/add', (req, res) => {
+  const { type, title, message, patientId, dueDate } = req.body;
+  const notif = addNotification(type, title, message, patientId, dueDate);
+  res.json({ success: true, notification: notif });
+});
+
+// ─── Patients (Multi-patient) ───────────────────────────────
+app.get('/api/patients', (req, res) => {
+  res.json({ patients: getAllPatients() });
+});
+
+app.get('/api/patients/current', (req, res) => {
+  const id = getCurrentPatientId();
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === id) || patients[0];
+  res.json({ patient, currentId: id });
+});
+
+app.post('/api/patients/switch', (req, res) => {
+  const { patientId } = req.body;
+  setCurrentPatientId(patientId);
+  conversationHistory = [];
+  res.json({ success: true, patientId });
+});
+
+app.post('/api/patients/add', (req, res) => {
   try {
-    const { phoneNumber, reason } = req.body;
-    if (!phoneNumber) return res.status(400).json({ error: "Phone number required" });
-    const patient = getPatient("maria-fields") || {};
-    const result = await startPhoneCall(phoneNumber, reason, {
-      name: patient.name,
-      dob: patient.dob,
-      insurance: patient.insurance ? patient.insurance.provider + " " + (patient.insurance.plan || "") : "on file"
+    const newPatient = req.body;
+    if (!newPatient.id) {
+      newPatient.id = newPatient.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+    }
+    const patients = getAllPatients();
+    patients.push(newPatient);
+    saveAllPatients(patients);
+    res.json({ success: true, patient: newPatient });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/patients/:id', (req, res) => {
+  try {
+    const patients = getAllPatients();
+    const idx = patients.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Patient not found' });
+    patients[idx] = { ...patients[idx], ...req.body };
+    saveAllPatients(patients);
+    res.json({ success: true, patient: patients[idx] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Legacy patient endpoint (for sidebar card)
+app.get('/api/patient', (req, res) => {
+  const currentPatientId = getCurrentPatientId();
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === currentPatientId) || patients[0];
+  res.json(patient || {});
+});
+
+// Also support the old /api/patient/:id format
+app.get('/api/patient/:id', (req, res) => {
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === req.params.id);
+  res.json(patient || { error: 'not found' });
+});
+
+app.put('/api/patient/:id', (req, res) => {
+  try {
+    const patients = getAllPatients();
+    const idx = patients.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Patient not found' });
+    patients[idx] = { ...patients[idx], ...req.body };
+    saveAllPatients(patients);
+    res.json(patients[idx]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Chat (main) ────────────────────────────────────────────
+app.post('/api/chat', async (req, res) => {
+  const { message, patientId } = req.body;
+  const lower = message.toLowerCase().trim();
+
+  // Handle confirm for pending profile updates
+  if (lower === 'confirm' && pendingUpdates) {
+    try {
+      const patients = getAllPatients();
+      const idx = patients.findIndex(p => p.id === pendingUpdates.id);
+      if (idx >= 0) {
+        patients[idx] = { ...patients[idx], ...pendingUpdates.updates };
+        saveAllPatients(patients);
+      }
+      pendingUpdates = null;
+      return res.json({ reply: '✅ Patient profile updated successfully!' });
+    } catch (e) {
+      return res.json({ reply: '❌ Error updating profile: ' + e.message });
+    }
+  }
+
+  if ((lower === 'deny' || lower === 'cancel') && pendingUpdates) {
+    pendingUpdates = null;
+    return res.json({ reply: 'Updates cancelled. No changes were made.' });
+  }
+
+  // Handle send for pending email
+  if (lower === 'send' && pendingEmailDraft) {
+    try {
+      const result = await emailTools.sendRealEmail(
+        pendingEmailDraft.to,
+        pendingEmailDraft.subject,
+        pendingEmailDraft.body
+      );
+      const sentTo = pendingEmailDraft.to;
+      pendingEmailDraft = null;
+      return res.json({ reply: '✅ **Email sent successfully!** Delivered to ' + sentTo });
+    } catch (e) {
+      pendingEmailDraft = null;
+      return res.json({ reply: '❌ Failed to send email: ' + e.message });
+    }
+  }
+
+  // Handle confirm for pending call
+  if (lower === 'confirm call' && pendingCallRequest) {
+    try {
+      const callResult = await voice.startPhoneCall(
+        pendingCallRequest.phone,
+        pendingCallRequest.reason
+      );
+      const callName = pendingCallRequest.name;
+      pendingCallRequest = null;
+      return res.json({
+        reply: '📞 Calling ' + callName + ' now... Call ID: ' + (callResult.callId || callResult.id || 'started'),
+        callId: callResult.callId || callResult.id
+      });
+    } catch (e) {
+      pendingCallRequest = null;
+      return res.json({ reply: '❌ Failed to start call: ' + e.message });
+    }
+  }
+
+  if (lower === 'cancel call' && pendingCallRequest) {
+    pendingCallRequest = null;
+    return res.json({ reply: 'Call cancelled.' });
+  }
+
+  // Get current patient
+  const currentPatientId = patientId || getCurrentPatientId();
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === currentPatientId) || patients[0];
+
+  conversationHistory.push({ role: 'user', content: message });
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: buildSystemPrompt(patient),
+      messages: conversationHistory
     });
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    const reply = response.content[0].text;
+    conversationHistory.push({ role: 'assistant', content: reply });
+
+    // Detect EMAIL_DRAFT
+    const emailMatch = reply.match(/EMAIL_DRAFT:(\{[\s\S]*?\})/);
+    if (emailMatch) {
+      try {
+        pendingEmailDraft = JSON.parse(emailMatch[1]);
+        emailTools.saveDraft(pendingEmailDraft.to, pendingEmailDraft.subject, pendingEmailDraft.body);
+      } catch (e) {
+        console.log('Email draft parse error:', e.message);
+      }
+    }
+
+    // Detect CALL_REQUEST
+    const callMatch = reply.match(/CALL_REQUEST:(\{[\s\S]*?\})/);
+    if (callMatch) {
+      try {
+        pendingCallRequest = JSON.parse(callMatch[1]);
+        return res.json({
+          reply: reply.replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
+          callRequest: pendingCallRequest
+        });
+      } catch (e) {
+        console.log('Call request parse error:', e.message);
+      }
+    }
+
+    // Detect CALENDAR_EVENT
+    const calMatch = reply.match(/CALENDAR_EVENT:(\{[\s\S]*?\})/);
+    let calendarEvent = null;
+    if (calMatch) {
+      try {
+        calendarEvent = JSON.parse(calMatch[1]);
+      } catch (e) {}
+    }
+
+    // Auto-detect medication refill mentions and create notifications
+    if (reply.toLowerCase().includes('refill') || reply.toLowerCase().includes('prescription')) {
+      addNotification(
+        'medication',
+        'Medication Refill Reminder',
+        'Chat mention: ' + message.substring(0, 80),
+        currentPatientId,
+        null
+      );
+    }
+
+    res.json({
+      reply: reply.replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
+      calendarEvent,
+      hasPendingEmail: !!pendingEmailDraft,
+      hasPendingCall: !!pendingCallRequest
+    });
+  } catch (e) {
+    console.error('Chat error:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.get("/api/call/:id", async (req, res) => {
+// ─── Upload / Vision ─────────────────────────────────────────
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const currentPatientId = getCurrentPatientId();
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === currentPatientId) || patients[0];
+
   try {
-    const result = await getCallStatus(req.params.id);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const filePath = req.file.path;
+    const mime = req.file.mimetype;
+    let messages = [];
+
+    if (mime.startsWith('image/')) {
+      const base64 = fs.readFileSync(filePath).toString('base64');
+      messages = [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mime === 'image/jpg' ? 'image/jpeg' : mime, data: base64 } },
+          { type: 'text', text: 'Extract all medical information from this document for patient ' + (patient.name || 'the patient') + '. Read EVERY word. Be precise with numbers, dates, and names.\n\nReturn a JSON object with fields: name, dob, address, insurance, medications, conditions, allergies, doctors, pharmacy.\nOnly include fields you can clearly read. Format as: EXTRACTED_DATA:{json}\n\nAlso explain what the document is and what actions should be taken.' }
+        ]
+      }];
+    } else if (mime === 'application/pdf') {
+      try {
+        const pdfParse = require('pdf-parse');
+        const pdf = await pdfParse(fs.readFileSync(filePath));
+        messages = [{ role: 'user', content: 'PDF content:\n' + pdf.text + '\n\nExtract all medical info. Format as EXTRACTED_DATA:{json}. Explain what it is and what to do.' }];
+      } catch (e) {
+        messages = [{ role: 'user', content: 'A PDF was uploaded but could not be read. Please ask the user to describe the contents.' }];
+      }
+    } else {
+      let text;
+      try { text = fs.readFileSync(filePath, 'utf-8').substring(0, 5000); } catch (e) { text = '[Could not read file]'; }
+      messages = [{ role: 'user', content: text + '\n\nAnalyze this document. Extract medical info as EXTRACTED_DATA:{json}.' }];
+    }
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: buildSystemPrompt(patient),
+      messages
+    });
+
+    const text = response.content[0].text;
+    const match = text.match(/EXTRACTED_DATA:(\{[\s\S]*\})/);
+
+    if (match) {
+      try {
+        const extracted = JSON.parse(match[1]);
+        pendingUpdates = {
+          id: currentPatientId,
+          updates: extracted,
+          raw: text
+        };
+        try { fs.unlinkSync(filePath); } catch (e) {}
+        return res.json({
+          success: true,
+          extracted,
+          message: 'Review the extracted data. Type "confirm" to save or "deny" to cancel.',
+          pending: true
+        });
+      } catch (e) {
+        console.log('Extract parse error:', e.message);
+      }
+    }
+
+    try { fs.unlinkSync(filePath); } catch (e) {}
+    res.json({ success: true, message: text, pending: false });
+  } catch (e) {
+    try { fs.unlinkSync(req.file.path); } catch (_) {}
+    console.error('Upload error:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 
+// ─── Voice Calls ────────────────────────────────────────────
+app.post('/api/call', async (req, res) => {
+  try {
+    const { phone, phoneNumber, reason } = req.body;
+    const number = phone || phoneNumber;
+    if (!number) return res.status(400).json({ error: 'Phone number required' });
+    const result = await voice.startPhoneCall(number, reason);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/call/:id', async (req, res) => {
+  try {
+    const status = await voice.getCallStatus(req.params.id);
+    res.json(status);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Email ───────────────────────────────────────────────────
+app.post('/api/send-email', async (req, res) => {
+  try {
+    const { to, subject, body, htmlBody } = req.body;
+    const emailBody = htmlBody || body;
+    const result = await emailTools.sendRealEmail(to, subject, emailBody);
+    res.json({ success: true, message: 'Email sent successfully!' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+app.get('/api/drafts', (req, res) => {
+  try {
+    const drafts = emailTools.listDrafts();
+    res.json({ drafts });
+  } catch (e) {
+    res.json({ drafts: [] });
+  }
+});
+
+// ─── Google Calendar OAuth ───────────────────────────────────
+app.get('/auth/google', (req, res) => {
+  if (!oauth2Client) {
+    return res.send('<h2>Google Calendar not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env</h2>');
+  }
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/calendar.events'],
+    prompt: 'consent'
+  });
+  res.redirect(url);
+});
+
+app.get('/oauth2callback', async (req, res) => {
+  if (!oauth2Client) return res.status(500).send('Google Calendar not configured');
+  const { code } = req.query;
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    googleTokens = tokens;
+    oauth2Client.setCredentials(tokens);
+    fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));
+    res.send('<html><body style="font-family:sans-serif;padding:40px;text-align:center;"><h2>✅ Google Calendar Connected!</h2><p>You can now add events from the chat.</p><script>setTimeout(() => window.close(), 2000)</script></body></html>');
+  } catch (e) {
+    res.status(500).send('Error: ' + e.message);
+  }
+});
+
+app.get('/api/calendar/status', (req, res) => {
+  res.json({ connected: !!googleTokens });
+});
+
+app.post('/api/calendar/add-event', async (req, res) => {
+  if (!googleTokens || !oauth2Client) {
+    return res.status(401).json({ error: 'Google Calendar not connected. Visit /auth/google first.' });
+  }
+
+  try {
+    const { title, date, time, duration, description } = req.body;
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const startDateTime = new Date(date + 'T' + (time || '09:00') + ':00');
+    const endDateTime = new Date(startDateTime.getTime() + (duration || 60) * 60000);
+
+    const event = {
+      summary: title,
+      description: description || '',
+      start: { dateTime: startDateTime.toISOString(), timeZone: 'America/Chicago' },
+      end: { dateTime: endDateTime.toISOString(), timeZone: 'America/Chicago' },
+    };
+
+    const result = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: event
+    });
+
+    addNotification(
+      'appointment',
+      'Appointment Added: ' + title,
+      'Added to Google Calendar: ' + date + ' at ' + (time || '9:00 AM'),
+      getCurrentPatientId(),
+      date
+    );
+
+    res.json({ success: true, eventId: result.data.id, link: result.data.htmlLink });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/calendar/events', (req, res) => {
+  try {
+    const events = calendarTools.listEvents ? calendarTools.listEvents() : [];
+    res.json({ events });
+  } catch (e) {
+    res.json({ events: [] });
+  }
+});
+
+// ─── Dashboard ──────────────────────────────────────────────
+app.get('/api/dashboard', (req, res) => {
+  const patient = getAllPatients().find(p => p.id === getCurrentPatientId());
+  res.json({
+    patient,
+    appointments: appointmentsTools.listUpcoming ? appointmentsTools.listUpcoming() : [],
+    medications: medicationsTools.getMedications ? medicationsTools.getMedications() : [],
+    drafts: emailTools.listDrafts(),
+    notifications: loadNotifications()
+  });
+});
+
+app.get('/api/pending', (req, res) => res.json(pendingUpdates));
+
+// ─── Static pages ───────────────────────────────────────────
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/settings', (req, res) => {
+  const settingsPath = path.join(__dirname, 'public', 'settings.html');
+  if (fs.existsSync(settingsPath)) res.sendFile(settingsPath);
+  else res.redirect('/');
+});
+
+// ─── START ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Health Agent v9 running at http://localhost:" + PORT));
+app.listen(PORT, () => {
+  console.log('\n🏥 Health Agent running on http://localhost:' + PORT);
+  console.log('📅 Google Calendar: ' + (googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'));
+  console.log('🔔 Notifications: ' + NOTIFICATIONS_FILE);
+  console.log('💬 Chat history: ' + CHAT_HISTORY_FILE + '\n');
+});

@@ -1,0 +1,36 @@
+{
+  "sessions": [
+    {
+      "id": "1773165557512",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-10T17:59:17.512Z",
+      "preview": "What are her current medications?",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What are her current medications?"
+        },
+        {
+          "role": "assistant",
+          "content": "Based on Linda's patient profile, her current medications are:\n\n**CURRENT MEDICATIONS:**\n- **Lisinopril 10mg** - taken once daily (for hypertension)\n- **Metformin 500mg** - taken twice daily (for Type 2 diabetes)\n- **Vitamin D3 2000IU** - taken once daily (supplement)\n- **Lamotrigine 100mg** - taken twice daily (mood stabilizer/seizure medication)\n\n**PHARMACY INFORMATION:**\n- **Walgreens Stone Oak**: (210) 403-0002\n- Address: Stone Oak area, San Antonio TX\n\n**IMPORTANT NOTES:**\n- Linda has allergies to **Penicillin** and **Sulfa drugs** - always verify any new prescriptions don't contain these\n- All medications should be coordinated through Dr. Martinez at Alamo Heights Family Medicine\n\n**NEXT STEPS:**\nWould you like me to help with:\n- Setting up refill reminders?\n- Checking for any drug interactions?\n- Calling the pharmacy to check refill status?\n- Reviewing medication adherence or side effects?"
+        }
+      ]
+    },
+    {
+      "id": "1773165527516",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-10T17:58:47.516Z",
+      "preview": "What are her current medications?",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What are her current medications?"
+        },
+        {
+          "role": "assistant",
+          "content": "Based on Linda's patient profile, her current medications are:\n\n**CURRENT MEDICATIONS:**\n- **Lisinopril 10mg** - taken once daily (for hypertension)\n- **Metformin 500mg** - taken twice daily (for Type 2 diabetes)\n- **Vitamin D3 2000IU** - taken once daily (supplement)\n- **Lamotrigine 100mg** - taken twice daily (mood stabilizer/seizure medication)\n\n**PHARMACY INFORMATION:**\n- **Walgreens Stone Oak**: (210) 403-0002\n- Address: Stone Oak area, San Antonio TX\n\n**IMPORTANT NOTES:**\n- Linda has allergies to **Penicillin** and **Sulfa drugs** - always verify any new prescriptions don't contain these\n- All medications should be coordinated through Dr. Martinez at Alamo Heights Family Medicine\n\n**NEXT STEPS:**\nWould you like me to help with:\n- Setting up refill reminders?\n- Checking for any drug interactions?\n- Calling the pharmacy to check refill status?\n- Reviewing medication adherence or side effects?"
+        }
+      ]
+    }
+  ]
+}

@@ -1,113 +1,40 @@
-[
-  {
-    "id": "maria-fields",
-    "name": "LINDA FIELDS",
-    "relationship": "Mother",
-    "dob": "11/03/1949",
-    "age": 70,
-    "phone": "",
-    "address": "13203 SUNSET MDW, SAN ANTONIO TX 78258",
-    "emergencyContact": {
-      "name": "J Fields",
-      "phone": "",
-      "relationship": "Son"
-    },
-    "doctors": [
-      {
-        "name": "Dr. Martinez",
-        "specialty": "Primary Care",
-        "office": "Alamo Heights Family Medicine",
-        "phone": "",
-        "fax": "",
-        "portal": "",
-        "notes": "Routine visits every 3 months"
-      }
-    ],
-    "insurance": {
-      "provider": "Medicare",
-      "plan": "Medicare Supplement Plan G",
-      "memberId": "6VG3-TR1-TK42",
-      "groupNumber": "",
-      "phone": "1-800-444-9137",
-      "portalUrl": "https://www.uhc.com/member",
-      "copay": {
-        "office": "$30",
-        "specialist": "$50",
-        "imaging": "$75",
-        "er": "$250"
-      }
-    },
-    "pharmacy": {
-      "name": "H-E-B Pharmacy",
-      "location": "Huebner Rd",
-      "phone": "",
-      "transferRx": false
-    },
-    "medications": [
-      {
-        "name": "Lisinopril",
-        "dose": "10mg",
-        "frequency": "daily",
-        "prescriber": "Dr. Martinez",
-        "purpose": "Blood pressure",
-        "refillDate": "",
-        "pharmacy": "H-E-B"
+{
+  "patients": [
+    {
+      "id": "maria-fields",
+      "name": "Linda Fields",
+      "relationship": "Mother",
+      "dob": "11/03/1949",
+      "address": "13203 Sunset Meadow, San Antonio TX 78258",
+      "phone": null,
+      "insurance": {
+        "primary": "Medicare",
+        "secondary": "Aetna Medicare Supplement Plan G",
+        "memberId": "6VG3-TR1-TK42"
       },
-      {
-        "name": "Metformin",
-        "dose": "500mg",
-        "frequency": "twice daily",
-        "prescriber": "Dr. Martinez",
-        "purpose": "Type 2 Diabetes",
-        "refillDate": "",
-        "pharmacy": "H-E-B"
-      },
-      {
-        "name": "Vitamin D3",
-        "dose": "2000IU",
-        "frequency": "daily",
-        "prescriber": "Dr. Martinez",
-        "purpose": "Supplement",
-        "refillDate": "",
-        "pharmacy": "H-E-B"
-      },
-      {
-        "name": "LAMOTRIGINE",
-        "dose": "100MG",
-        "frequency": "TAKE 1 TABLET BY MOUTH TWICE DAILY",
-        "prescriber": "",
-        "pharmacy": "Walgreens",
-        "rxNumber": "3055844-04838"
+      "conditions": [
+        "Hypertension",
+        "Type 2 Diabetes",
+        "Pulmonary nodule (monitoring)"
+      ],
+      "allergies": [
+        "Penicillin",
+        "Sulfa drugs"
+      ],
+      "medications": [
+        { "name": "Lisinopril", "dose": "10mg", "frequency": "daily" },
+        { "name": "Metformin", "dose": "500mg", "frequency": "twice daily" },
+        { "name": "Vitamin D3", "dose": "2000IU", "frequency": "daily" },
+        { "name": "Lamotrigine", "dose": "100mg", "frequency": "twice daily" }
+      ],
+      "primaryDoctor": "Dr. Martinez",
+      "clinic": "Alamo Heights Family Medicine",
+      "preferredHospital": "Methodist Hospital",
+      "pharmacy": {
+        "name": "Walgreens Stone Oak",
+        "address": "Stone Oak Parkway",
+        "phone": "(210) 403-0002"
       }
-    ],
-    "conditions": [
-      "Hypertension",
-      "Type 2 Diabetes",
-      "Pulmonary nodule (monitoring)"
-    ],
-    "allergies": [
-      "Penicillin",
-      "Sulfa drugs"
-    ],
-    "surgeries": [],
-    "familyHistory": [],
-    "preferredHospital": "Methodist Hospital",
-    "preferredLanguage": "English",
-    "visits": [
-      {
-        "date": "2/1/26",
-        "doctor": "Dr. Martinez",
-        "type": "Routine follow-up",
-        "notes": ""
-      },
-      {
-        "date": "1/15/26",
-        "doctor": "Radiology",
-        "type": "Chest X-ray",
-        "notes": "Pulmonary nodule noted, CT follow-up recommended"
-      }
-    ],
-    "documents": [],
-    "portalAccess": []
-  }
-]
+    }
+  ]
+}
