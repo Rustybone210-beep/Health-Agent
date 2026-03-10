@@ -1,0 +1,39 @@
+TO: provider
+SUBJECT: CT Scan Order Request - Linda Fields (DOB: 11/03/1949) - Pulmonary Nodule Follow-up
+DATE: 3/9/2026, 10:26:48 PM
+
+Dear Imaging Center,
+
+I am writing to request a CT scan order for my mother, Linda Fields, following up on findings from her recent chest X-ray.
+
+**Patient Information:**
+- Name: Linda Fields
+- Date of Birth: November 3, 1949
+- Address: 13203 Sunset Mdw, San Antonio, TX 78258
+- Insurance: Medicare Supplement Plan G
+- Member ID: 6VG3-TR1-TK42
+
+**Medical History:**
+- Primary Care Physician: Dr. Martinez at Alamo Heights Family Medicine
+- Recent chest X-ray performed on January 15, 2026
+- Radiology findings: Pulmonary nodule noted with CT follow-up recommended
+
+**Request:**
+We need to schedule a chest CT scan as recommended by radiology to further evaluate the pulmonary nodule identified on the January 15th chest X-ray.
+
+Please let us know:
+1. What documentation you need from Dr. Martinez's office
+2. Available appointment times
+3. Any pre-authorization requirements through Medicare
+4. Preparation instructions for the patient
+
+You can reach me at this email or contact Dr. Martinez's office at Alamo Heights Family Medicine for the official order if needed.
+
+Thank you for your assistance in coordinating this important follow-up imaging.
+
+Best regards,
+J Fields
+(Son and Healthcare Advocate for Linda Fields)
+END_EMAIL_DRAFT
+
+Please review this draft. If it looks good, type **'send'** and I'll send it immediately to rustybone210@icloud.com.
