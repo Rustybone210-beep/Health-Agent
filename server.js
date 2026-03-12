@@ -549,8 +549,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           content: 'A PDF was uploaded but its text could not be extracted. Tell the user this is likely a scanned or image-only PDF. Ask them to either upload clear photos/screenshots of each page or describe the document contents. Then help them understand it and decide next steps.'
         }];
       }
-        messages = [{ role: 'user', content: 'A PDF was uploaded but could not be read. Please ask the user to describe the contents.' }];
-      }
+        
+      messages = [{ role: 'user', content: 'A PDF was uploaded but its text could not be extracted. Tell the user this is likely a scanned or image-only PDF. Ask them to either upload clear photos/screenshots of each page or describe the document contents. Then help them understand it and decide next steps.' }];
     } else {
      let rawText;
 
