@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Tracker</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{
+      font-family:Arial, sans-serif;
+      background:#0e1426;
+      color:white;
+      padding:30px;
+      margin:0;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:24px;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .back{
+      color:white;
+      text-decoration:none;
+      background:#182040;
+      padding:10px 14px;
+      border-radius:10px;
+    }
+    .task{
+      background:#182040;
+      margin-bottom:10px;
+      padding:12px;
+      border-radius:8px;
+    }
+    button{
+      margin-top:8px;
+      background:#2c4da7;
+      color:white;
+      border:none;
+      border-radius:8px;
+      padding:8px 12px;
+      cursor:pointer;
+    }
+    .meta{
+      font-size:12px;
+      opacity:.8;
+      margin-top:6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>Task Tracker</h1>
+    <a class="back" href="/">← Back to Dashboard</a>
+  </div>
+
+  <div id="tasks">Loading tasks...</div>
+
+  <script>
+    function escapeHtml(str){
+      if(!str) return '';
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    async function loadTasks(){
+      try{
+        const res = await fetch('/api/tasks');
+        const data = await res.json();
+
+        const el = document.getElementById("tasks");
+
+        if(!data.tasks || !data.tasks.length){
+          el.innerHTML = "No tasks";
+          return;
+        }
+
+        el.innerHTML = data.tasks.map(t => `
+          <div class="task">
+            <h3>${escapeHtml(t.title || 'Untitled Task')}</h3>
+            <p>${escapeHtml(t.description || "")}</p>
+            <div class="meta">
+              ${t.dueDate ? 'Due: ' + escapeHtml(t.dueDate) + ' • ' : ''}
+              ${escapeHtml(t.priority || 'medium')} •
+              ${escapeHtml(t.category || 'general')} •
+              ${escapeHtml(t.status || 'open')}
+            </div>
+            ${t.status === 'done'
+              ? ''
+              : `<button onclick="completeTask('${String(t.id).replace(/'/g, "\\'")}')">Complete</button>`
+            }
+          </div>
+        `).join("");
+      } catch (err) {
+        document.getElementById("tasks").innerHTML = "Error loading tasks";
+      }
+    }
+
+    async function completeTask(id){
+      try{
+        await fetch('/api/tasks/' + encodeURIComponent(id) + '/complete', { method: 'POST' });
+        loadTasks();
+      } catch (err) {
+        alert('Failed to complete task');
+      }
+    }
+
+    loadTasks();
+  </script>
+
+</body>
+</html>

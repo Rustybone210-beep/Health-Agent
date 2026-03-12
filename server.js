@@ -1,3 +1,4 @@
+
 // ============================================================
 // server.js — AI Health Agent (All Features — Corrected)
 // ============================================================
@@ -22,6 +23,7 @@ const calendarTools = require('./tools/calendar');
 const patientsTools = require('./tools/patients');
 const appointmentsTools = require('./tools/appointments');
 const medicationsTools = require('./tools/medications');
+const tasksTools = require('./tools/tasks');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -36,6 +38,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const CHAT_HISTORY_FILE = './data/chat_history.json';
 const NOTIFICATIONS_FILE = './data/notifications.json';
 const CURRENT_PATIENT_FILE = './data/current_patient.json';
+const TOKEN_FILE = './data/google_tokens.json';
+const TIMELINE_FILE = './data/timeline.json';
 
 // ─── Ensure data directories exist ────────────────────────
 ['./data', './drafts', './calendar', './uploads'].forEach(dir => {
@@ -93,6 +97,14 @@ function loadNotifications() {
 
 function saveNotifications(data) {
   fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify(data, null, 2));
+}
+function loadTimeline() {
+  try {
+    if (fs.existsSync(TIMELINE_FILE)) {
+      return JSON.parse(fs.readFileSync(TIMELINE_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return { events: [] };
 }
 
 function addNotification(type, title, message, patientId = null, dueDate = null) {
@@ -205,7 +217,6 @@ CRITICAL RULES:
 // ─── Google OAuth2 Setup ────────────────────────────────────
 let oauth2Client = null;
 let googleTokens = null;
-const TOKEN_FILE = './data/google_tokens.json';
 
 if (google && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   oauth2Client = new google.auth.OAuth2(
@@ -392,7 +403,7 @@ app.post('/api/chat', async (req, res) => {
   // Handle send for pending email
   if (lower === 'send' && pendingEmailDraft) {
     try {
-      const result = await emailTools.sendRealEmail(
+      await emailTools.sendRealEmail(
         pendingEmailDraft.to,
         pendingEmailDraft.subject,
         pendingEmailDraft.body
@@ -532,10 +543,19 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const pdfParse = require('pdf-parse');
         const pdf = await pdfParse(fs.readFileSync(filePath));
         messages = [{ role: 'user', content: 'PDF content:\n' + pdf.text + '\n\nExtract all medical info. Format as EXTRACTED_DATA:{json}. Explain what it is and what to do.' }];
-      } catch (e) {
+            } catch (e) {
+        messages = [{
+          role: 'user',
+          content: 'A PDF was uploaded but its text could not be extracted. Tell the user this is likely a scanned or image-only PDF. Ask them to either upload clear photos/screenshots of each page or describe the document contents. Then help them understand it and decide next steps.'
+        }];
+      }
         messages = [{ role: 'user', content: 'A PDF was uploaded but could not be read. Please ask the user to describe the contents.' }];
       }
     } else {
+     let rawText;
+
+  
+
       let text;
       try { text = fs.readFileSync(filePath, 'utf-8').substring(0, 5000); } catch (e) { text = '[Could not read file]'; }
       messages = [{ role: 'user', content: text + '\n\nAnalyze this document. Extract medical info as EXTRACTED_DATA:{json}.' }];
@@ -549,7 +569,49 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     });
 
     const text = response.content[0].text;
-    const match = text.match(/EXTRACTED_DATA:(\{[\s\S]*\})/);
+
+// Auto-create a simple timeline event from uploaded documents
+try {
+  const timelineData = loadTimeline();
+  const title = req.file.originalname || 'Uploaded Medical Document';
+  const exists = (timelineData.events || []).some(e =>
+    e.title === title &&
+    e.patientId === currentPatientId
+  );
+
+  if (!exists) {
+    timelineData.events = timelineData.events || [];
+    timelineData.events.unshift({
+      id: Date.now().toString(),
+      patientId: currentPatientId,
+      date: new Date().toISOString().slice(0, 10),
+      title,
+      summary: 'Medical document uploaded and analyzed',
+      type: 'document',
+      source: req.file.originalname || 'upload'
+    });
+    fs.writeFileSync(TIMELINE_FILE, JSON.stringify(timelineData, null, 2));
+  }
+} catch (e) {
+  console.log('Timeline save error:', e.message);
+}
+
+// Auto-create a basic follow-up task from uploaded documents
+try {
+  tasksTools.addTask({
+    patientId: currentPatientId,
+    title: 'Review uploaded document',
+    description: (req.file.originalname || 'Medical document') + ' was uploaded and may need follow-up.',
+    dueDate: null,
+    priority: 'medium',
+    category: 'records',
+    source: req.file.originalname || 'upload'
+  });
+} catch (e) {
+  console.log('Task auto-create error:', e.message);
+}
+
+        const match = text.match(/EXTRACTED_DATA:(\{[\s\S]*\})/);
 
     if (match) {
       try {
@@ -607,7 +669,7 @@ app.post('/api/send-email', async (req, res) => {
   try {
     const { to, subject, body, htmlBody } = req.body;
     const emailBody = htmlBody || body;
-    const result = await emailTools.sendRealEmail(to, subject, emailBody);
+    await emailTools.sendRealEmail(to, subject, emailBody);
     res.json({ success: true, message: 'Email sent successfully!' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
@@ -700,6 +762,76 @@ app.get('/api/calendar/events', (req, res) => {
     res.json({ events: [] });
   }
 });
+// ─── Tasks API ──────────────────────────────────────────────
+
+app.get('/api/tasks', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const tasks = tasksTools.listTasks(patientId);
+    res.json({ tasks });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/tasks', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const task = tasksTools.addTask({
+      ...req.body,
+      patientId
+    });
+    res.json({ success: true, task });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/tasks/:id/complete', (req, res) => {
+  try {
+    const task = tasksTools.updateTask(req.params.id, {
+      status: 'done',
+      completedAt: new Date().toISOString()
+    });
+    res.json({ success: true, task });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ─── Timeline API ───────────────────────────────────────────
+
+app.get('/api/timeline', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const data = loadTimeline();
+    const events = (data.events || []).filter(e => e.patientId === patientId || !e.patientId);
+    res.json({ events });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ─── Brief API ──────────────────────────────────────────────
+
+app.get('/api/brief', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === patientId) || getAllPatients()[0] || {};
+    const timeline = loadTimeline();
+    const recentTimeline = (timeline.events || [])
+      .filter(e => e.patientId === patientId || !e.patientId)
+      .slice(0, 10);
+
+    const openTasks = tasksTools.listTasks(patientId).filter(t => t.status !== 'done');
+
+    res.json({
+      patient,
+      recentTimeline,
+      openTasks
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ─── Dashboard ──────────────────────────────────────────────
 app.get('/api/dashboard', (req, res) => {
@@ -721,6 +853,21 @@ app.get('/settings', (req, res) => {
   const settingsPath = path.join(__dirname, 'public', 'settings.html');
   if (fs.existsSync(settingsPath)) res.sendFile(settingsPath);
   else res.redirect('/');
+});
+app.get('/timeline', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'timeline.html'));
+});
+
+app.get('/tasks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tasks.html'));
+});
+
+app.get('/brief', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'brief.html'));
+});
+
+app.get('/playbooks', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'playbooks.html'));
 });
 
 // ─── START ──────────────────────────────────────────────────
