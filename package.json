@@ -24,6 +24,8 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.1",
     "pdf-parse": "^2.4.5",
+    "pdf-poppler": "^0.2.3",
+    "pdfjs-dist": "^5.5.207",
     "resend": "^6.9.3",
     "sharp": "^0.34.5"
   }

@@ -40,7 +40,17 @@ function addTask(task) {
     createdAt: new Date().toISOString(),
     completedAt: null
   };
+  const duplicate = (db.tasks || []).find(existing =>
+    existing.patientId === t.patientId &&
+    existing.title === t.title &&
+    existing.description === t.description &&
+    existing.status !== 'done'
+  );
 
+  if (duplicate) {
+    return duplicate;
+  }
+  
   db.tasks.unshift(t);
   save(db);
   return t;

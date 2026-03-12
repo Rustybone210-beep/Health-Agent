@@ -538,19 +538,41 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           { type: 'text', text: 'Extract all medical information from this document for patient ' + (patient.name || 'the patient') + '. Read EVERY word. Be precise with numbers, dates, and names.\n\nReturn a JSON object with fields: name, dob, address, insurance, medications, conditions, allergies, doctors, pharmacy.\nOnly include fields you can clearly read. Format as: EXTRACTED_DATA:{json}\n\nAlso explain what the document is and what actions should be taken.' }
         ]
       }];
-    } else if (mime === 'application/pdf') {
+} else if (mime === 'application/pdf') {
+      // Convert PDF pages to images, then send through Vision
       try {
-        const pdfParse = require('pdf-parse');
-        const pdf = await pdfParse(fs.readFileSync(filePath));
-        messages = [{ role: 'user', content: 'PDF content:\n' + pdf.text + '\n\nExtract all medical info. Format as EXTRACTED_DATA:{json}. Explain what it is and what to do.' }];
-            } catch (e) {
-        messages = [{
-          role: 'user',
-          content: 'A PDF was uploaded but its text could not be extracted. Tell the user this is likely a scanned or image-only PDF. Ask them to either upload clear photos/screenshots of each page or describe the document contents. Then help them understand it and decide next steps.'
-        }];
+        const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
+        const { createCanvas } = require('canvas');
+        throw new Error('skip-canvas');
+      } catch(canvasErr) {
+        // Canvas not available — send PDF as document to Claude (works for text PDFs)
+        // For scanned PDFs, try raw document approach first
+        try {
+          const pdfBase64 = fs.readFileSync(filePath).toString('base64');
+          messages = [{
+            role: 'user',
+            content: [
+              {
+                type: 'document',
+                source: {
+                  type: 'base64',
+                  media_type: 'application/pdf',
+                  data: pdfBase64
+                }
+              },
+              {
+                type: 'text',
+                text: 'This is a PDF document for patient ' + (patient.name || 'the patient') + '. It may be a scanned document. Read EVERY word you can see including headers, body text, handwriting, stamps, signatures, dates, phone numbers, fax numbers, addresses, and medical terminology.\n\nExtract all medical information. Return a JSON object with fields: name, dob, address, insurance, medications, conditions, allergies, doctors, pharmacy, appointments, referrals, orders.\nOnly include fields you can clearly read. Format as: EXTRACTED_DATA:{json}\n\nAlso explain what type of document this is (lab result, prescription, insurance card, referral, order, denial letter, bill, etc.) and what specific actions should be taken next.'
+              }
+            ]
+          }];
+        } catch(e) {
+          console.log('PDF read error:', e.message);
+          messages = [{ role: 'user', content: 'A PDF was uploaded but could not be processed. Ask the user to take a clear photo of the document instead.' }];
+        }
       }
-        
-      messages = [{ role: 'user', content: 'A PDF was uploaded but its text could not be extracted. Tell the user this is likely a scanned or image-only PDF. Ask them to either upload clear photos/screenshots of each page or describe the document contents. Then help them understand it and decide next steps.' }];
+
+ 
     } else {
      let rawText;
 

@@ -1,3 +1,13 @@
 {
-  "events": []
+  "events": [
+    {
+      "id": "1773285912540",
+      "patientId": "maria-fields",
+      "date": "2026-03-12",
+      "title": "IMG_4188.jpeg",
+      "summary": "Medical document uploaded and analyzed",
+      "type": "document",
+      "source": "IMG_4188.jpeg"
+    }
+  ]
 }
