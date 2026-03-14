@@ -24,6 +24,7 @@ const patientsTools = require('./tools/patients');
 const appointmentsTools = require('./tools/appointments');
 const medicationsTools = require('./tools/medications');
 const tasksTools = require('./tools/tasks');
+const concernsTools = require('./tools/concerns');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -530,15 +531,30 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     let messages = [];
 
     if (mime.startsWith('image/')) {
-      const base64 = fs.readFileSync(filePath).toString('base64');
-      messages = [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mime === 'image/jpg' ? 'image/jpeg' : mime, data: base64 } },
-          { type: 'text', text: 'Extract all medical information from this document for patient ' + (patient.name || 'the patient') + '. Read EVERY word. Be precise with numbers, dates, and names.\n\nReturn a JSON object with fields: name, dob, address, insurance, medications, conditions, allergies, doctors, pharmacy.\nOnly include fields you can clearly read. Format as: EXTRACTED_DATA:{json}\n\nAlso explain what the document is and what actions should be taken.' }
-        ]
-      }];
+  const base64 = fs.readFileSync(filePath).toString('base64');
+
+  messages = [{
+    role: 'user',
+    content: [
+      {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mime === 'image/jpg' ? 'image/jpeg' : mime,
+          data: base64
+        }
+      },
+      {
+        type: 'text',
+        text: 'Analyze this medical document for patient ' +
+              (patient?.name || 'the patient') +
+              '. Identify the document_type (insurance_card, insurance_denial, lab_result, prescription, medical_bill, imaging_order, doctor_note, referral, unknown). Extract all medical information and return EXTRACTED_DATA:{json} including document_type, name, dob, insurance, medications, conditions, doctors, and key medical details. Then explain what the document means and what actions should be taken.'
+      }
+    ]
+  }];
+
 } else if (mime === 'application/pdf') {
+    } else if (mime === 'application/pdf') {
       // Convert PDF pages to images, then send through Vision
       try {
         const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
@@ -631,6 +647,51 @@ try {
   });
 } catch (e) {
   console.log('Task auto-create error:', e.message);
+}
+// Auto-create an active concern from uploaded documents
+try {
+  let concernTitle = 'Document review pending';
+  let concernDescription = (req.file.originalname || 'Medical document') + ' was uploaded and may need follow-up.';
+
+  if (match) {
+    try {
+      const extracted = JSON.parse(match[1]);
+      const docType = String(extracted.document_type || '').toLowerCase();
+
+      if (docType === 'insurance_denial') {
+        concernTitle = 'Insurance appeal required';
+        concernDescription = 'A denial document was uploaded and may need an appeal or provider follow-up.';
+      } else if (docType === 'imaging_order') {
+        concernTitle = 'Schedule imaging';
+        concernDescription = 'An imaging order was uploaded and may need scheduling.';
+      } else if (docType === 'prescription') {
+        concernTitle = 'Prescription follow-up';
+        concernDescription = 'A prescription document was uploaded and may need refill or medication review.';
+      } else if (docType === 'lab_result') {
+        concernTitle = 'Review lab results';
+        concernDescription = 'A lab result was uploaded and may need provider review.';
+      } else if (docType === 'medical_bill') {
+        concernTitle = 'Review medical bill';
+        concernDescription = 'A medical bill was uploaded and may need billing review.';
+      } else if (docType === 'doctor_note') {
+        concernTitle = 'Review doctor note';
+        concernDescription = 'A doctor note was uploaded and may need follow-up.';
+      } else if (docType === 'insurance_card') {
+        concernTitle = 'Verify insurance details';
+        concernDescription = 'An insurance card was uploaded and coverage details may need verification.';
+      }
+    } catch (e) {}
+  }
+
+  concernsTools.addConcern({
+    patientId: currentPatientId,
+    title: concernTitle,
+    description: concernDescription,
+    priority: 'medium',
+    source: req.file.originalname || 'upload'
+  });
+} catch (e) {
+  console.log('Concern auto-create error:', e.message);
 }
 
         const match = text.match(/EXTRACTED_DATA:(\{[\s\S]*\})/);
@@ -784,6 +845,45 @@ app.get('/api/calendar/events', (req, res) => {
     res.json({ events: [] });
   }
 });
+// ─── ICS Calendar Fallback (Universal Calendar Support) ───────
+app.get('/api/calendar/ics', (req, res) => {
+  try {
+    const { title, date, time, duration, description } = req.query;
+
+    if (!title || !date) {
+      return res.status(400).send('Missing title or date');
+    }
+
+    const start = new Date(date + 'T' + (time || '09:00') + ':00');
+    const end = new Date(start.getTime() + (Number(duration || 60) * 60000));
+
+    function formatICSDate(d) {
+      return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    }
+
+    const safeTitle = String(title).replace(/\n/g, ' ').trim();
+    const safeDescription = String(description || '').replace(/\n/g, ' ').trim();
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Health Agent//EN',
+      'BEGIN:VEVENT',
+      'SUMMARY:' + safeTitle,
+      'DESCRIPTION:' + safeDescription,
+      'DTSTART:' + formatICSDate(start),
+      'DTEND:' + formatICSDate(end),
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=event.ics');
+    res.send(ics);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
 // ─── Tasks API ──────────────────────────────────────────────
 
 app.get('/api/tasks', (req, res) => {
@@ -865,6 +965,38 @@ app.get('/api/dashboard', (req, res) => {
     drafts: emailTools.listDrafts(),
     notifications: loadNotifications()
   });
+});
+// ─── Active Concerns ─────────────────────────────────────────
+app.get('/api/concerns', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const concerns = concernsTools.listConcerns(patientId);
+    res.json({ concerns });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/concerns/add', (req, res) => {
+  try {
+    const patientId = getCurrentPatientId();
+    const concern = concernsTools.addConcern({
+      ...req.body,
+      patientId
+    });
+    res.json({ success: true, concern });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/concerns/resolve/:id', (req, res) => {
+  try {
+    const updated = concernsTools.resolveConcern(req.params.id);
+    res.json({ success: true, concern: updated });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/pending', (req, res) => res.json(pendingUpdates));

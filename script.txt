@@ -1,0 +1,742 @@
+<script>
+// ─── State ──────────────────────────────────────────────────
+let currentMessages = []; // active chat messages
+let currentSessionId = null;
+let currentPatientId = null;
+let allPatients = [];
+let notifications = [];
+let calendarConnected = false;
+let pendingCalendarEvent = null;
+
+// ─── Init ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadPatients();
+  await loadChatHistory();
+  await loadNotifications();
+    await loadConcerns();
+  await checkCalendarStatus();
+});
+
+// ─── Patients ────────────────────────────────────────────────
+async function loadPatients() {
+  try {
+    const [patientsRes, currentRes] = await Promise.all([
+      fetch('/api/patients').then(r => r.json()),
+      fetch('/api/patients/current').then(r => r.json())
+    ]);
+    allPatients = patientsRes.patients || [];
+    currentPatientId = currentRes.currentId || allPatients[0]?.id;
+    renderPatientDropdown();
+    renderPatientCard(currentRes.patient);
+    renderHeroPatient(currentRes.patient);
+    updateTopbarTitle(currentRes.patient);
+  } catch (e) {
+    console.error('loadPatients error', e);
+  }
+}
+
+function renderPatientDropdown() {
+  const dd = document.getElementById('patientDropdown');
+  const current = allPatients.find(p => p.id === currentPatientId);
+
+  document.getElementById('selectorName').textContent = current?.name || 'No Patient';
+  document.getElementById('selectorRel').textContent = current?.relationship || current?.relation || 'Family Member';
+
+  dd.innerHTML = allPatients.map(p => `
+    <div class="patient-option ${p.id === currentPatientId ? 'active' : ''}" onclick="switchPatient('${p.id}')">
+      <div class="opt-name">${p.name}</div>
+      <div class="opt-rel">${p.relationship || p.relation || 'Family Member'} · DOB ${p.dob || '—'}</div>
+    </div>
+  `).join('') + `
+    <div class="add-patient-btn" onclick="openAddPatient()">＋ Add family member</div>
+  `;
+}
+
+async function switchPatient(id) {
+  await fetch('/api/patients/switch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patientId: id })
+  });
+  currentPatientId = id;
+  closePatientDropdown();
+  await loadPatients();
+  await loadChatHistory();
+  clearChat();
+  const patient = allPatients.find(p => p.id === id);
+  if (patient) {
+    addMsg('ai', `Switched to <strong>${patient.name}</strong>'s profile. How can I help?`);
+  }
+}
+
+function renderPatientCard(patient) {
+  if (!patient) return;
+
+  const meds = (patient.medications || []).map(m =>
+    `<span class="med-pill">${m.name} ${m.dose || ''}</span>`
+  ).join('');
+
+  const allergies = (patient.allergies || []).map(a =>
+    `<span class="allergy-pill">⚠️ ${a}</span>`
+  ).join('');
+
+  document.getElementById('cardContent').innerHTML = `
+    <div class="card-row"><span class="label">Name</span><span class="val">${patient.name}</span></div>
+    <div class="card-row"><span class="label">DOB</span><span class="val">${patient.dob || '—'}</span></div>
+    <div class="card-row"><span class="label">Doctor</span><span class="val">${patient.primaryDoctor || '—'}</span></div>
+    <div class="card-row"><span class="label">Insurance</span><span class="val">${patient.insurance?.primary || '—'}</span></div>
+    ${meds ? `<div style="margin-top:8px"><div class="card-section-label">Medications</div>${meds}</div>` : ''}
+    ${allergies ? `<div style="margin-top:8px"><div class="card-section-label">Allergies</div>${allergies}</div>` : ''}
+  `;
+
+  renderHeroPatient(patient);
+}
+
+function renderHeroPatient(patient) {
+  if (!patient) return;
+
+  const heroName = document.getElementById('heroPatientName');
+  const heroSub = document.getElementById('heroPatientSub');
+  const heroMed = document.getElementById('heroMedCount');
+  const heroAllergy = document.getElementById('heroAllergyCount');
+  const heroDoctor = document.getElementById('heroDoctorName');
+  const renderDob = document.getElementById('renderDob');
+
+  if (heroName) heroName.textContent = patient.name || 'Patient';
+  if (heroSub) heroSub.textContent = `${patient.relationship || patient.relation || 'Family Member'} care dashboard`;
+  if (heroMed) heroMed.textContent = `${(patient.medications || []).length} meds`;
+  if (heroAllergy) heroAllergy.textContent = `${(patient.allergies || []).length} allergies`;
+  if (heroDoctor) heroDoctor.textContent = patient.primaryDoctor || 'No doctor';
+  if (renderDob) renderDob.textContent = patient.dob || '—';
+}
+  if (!patient) return;
+
+  const heroName = document.getElementById('heroPatientName');
+  const heroSub = document.getElementById('heroPatientSub');
+  const heroMed = document.getElementById('heroMedCount');
+  const heroAllergy = document.getElementById('heroAllergyCount');
+  const heroDoctor = document.getElementById('heroDoctorName');
+
+  if (heroName) heroName.textContent = patient.name || 'Patient';
+  if (heroSub) heroSub.textContent = `${patient.relationship || patient.relation || 'Family Member'} care dashboard`;
+  if (heroMed) heroMed.textContent = `💊 ${(patient.medications || []).length} meds`;
+  if (heroAllergy) heroAllergy.textContent = `⚠️ ${(patient.allergies || []).length} allergies`;
+  if (heroDoctor) heroDoctor.textContent = `🩺 ${patient.primaryDoctor || 'No doctor'}`;
+
+ function updateTopbarTitle(patient) {
+  const name = patient?.name || 'Health Dashboard';
+  const el = document.querySelector('.desktop-topbar .page-title');
+  if (el) el.textContent = `${name} — Health Dashboard`;
+}
+
+function togglePatientDropdown() {
+  document.getElementById('patientDropdown').classList.toggle('open');
+}
+
+function closePatientDropdown() {
+  document.getElementById('patientDropdown').classList.remove('open');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#patientSelector')) closePatientDropdown();
+});
+
+// ─── Add Patient Modal ───────────────────────────────────────
+function openAddPatient() {
+  closePatientDropdown();
+  document.getElementById('addPatientModal').classList.add('open');
+}
+
+function closeAddPatient() {
+  document.getElementById('addPatientModal').classList.remove('open');
+}
+
+async function saveNewPatient() {
+  const name = document.getElementById('newName').value.trim();
+  if (!name) { alert('Name is required'); return; }
+
+  const patient = {
+    name,
+    relationship: document.getElementById('newRelation').value.trim() || 'Family Member',
+    dob: document.getElementById('newDob').value.trim(),
+    primaryDoctor: document.getElementById('newDoctor').value.trim(),
+    address: document.getElementById('newAddress').value.trim(),
+    insurance: { primary: document.getElementById('newInsurance').value.trim() },
+    pharmacy: { name: document.getElementById('newPharmacy').value.trim() },
+    conditions: document.getElementById('newConditions').value.split(',').map(s => s.trim()).filter(Boolean),
+    allergies: document.getElementById('newAllergies').value.split(',').map(s => s.trim()).filter(Boolean),
+    medications: []
+  };
+
+  try {
+    const res = await fetch('/api/patients/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patient)
+    });
+    const data = await res.json();
+    closeAddPatient();
+    allPatients.push(data.patient);
+    await switchPatient(data.patient.id);
+  } catch (e) {
+    alert('Error adding patient: ' + e.message);
+  }
+}
+
+// ─── Chat History ────────────────────────────────────────────
+async function loadChatHistory() {
+  try {
+    const data = await fetch('/api/chat-history').then(r => r.json());
+    renderChatHistory(data.sessions || []);
+  } catch (e) {}
+}
+
+function renderChatHistory(sessions) {
+  const list = document.getElementById('chatHistoryList');
+  // Filter to current patient
+  const filtered = sessions.filter(s => !s.patientId || s.patientId === currentPatientId);
+  if (!filtered.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0;">No history yet</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice(0, 20).map(s => `
+    <div class="history-item ${s.id === currentSessionId ? 'active' : ''}" onclick="loadSession('${s.id}')">
+      <span class="hist-icon">💬</span>
+      <div class="hist-content">
+        <div class="hist-preview">${escapeHtml(s.preview || 'Chat session')}</div>
+        <div class="hist-time">${formatRelTime(s.timestamp)}</div>
+      </div>
+      <button class="hist-delete" onclick="deleteSession(event, '${s.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function loadSession(id) {
+  try {
+    const session = await fetch(`/api/chat-history/${id}`).then(r => r.json());
+    currentSessionId = id;
+    currentMessages = session.messages || [];
+    clearChat(false);
+
+    // Replay messages
+    for (const m of currentMessages) {
+      addMsg(m.role === 'user' ? 'user' : 'ai', m.content, false);
+    }
+
+    closeSidebar();
+    await loadChatHistory(); // Refresh to show active
+  } catch (e) {
+    console.error('loadSession error', e);
+  }
+}
+
+async function deleteSession(e, id) {
+  e.stopPropagation();
+  await fetch(`/api/chat-history/${id}`, { method: 'DELETE' });
+  await loadChatHistory();
+}
+
+function newChat() {
+  // Save current chat first
+  if (currentMessages.length > 0) {
+    saveChatSession();
+  }
+  clearChat();
+  currentSessionId = null;
+  currentMessages = [];
+  loadChatHistory();
+}
+
+async function saveChatSession() {
+  if (!currentMessages.length) return;
+  await fetch('/api/save-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: currentMessages, patientId: currentPatientId })
+  });
+}
+
+// Auto-save every 30 seconds
+setInterval(() => {
+  if (currentMessages.length > 0) saveChatSession();
+}, 30000);
+
+// Save on page unload
+window.addEventListener('beforeunload', () => {
+  if (currentMessages.length > 0) {
+    navigator.sendBeacon('/api/save-chat', JSON.stringify({
+      messages: currentMessages,
+      patientId: currentPatientId
+    }));
+  }
+});
+
+// ─── Active Concerns ──────────────────────────────────────────
+async function loadConcerns() {
+  try {
+    const data = await fetch('/api/concerns').then(r => r.json());
+    renderConcerns(data.concerns || []);
+  } catch (e) {
+    const el = document.getElementById('activeConcernsList');
+    if (el) el.innerHTML = '<div style="color:var(--text3);font-size:12px;">No active concerns</div>';
+  }
+}
+
+function renderConcerns(concerns) {
+  const el = document.getElementById('activeConcernsList');
+  if (!el) return;
+
+  if (!concerns.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;">No active concerns</div>';
+    return;
+  }
+
+  el.innerHTML = concerns.slice(0, 5).map(c => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;color:var(--text);font-weight:500;">${escapeHtml(c.title || 'Concern')}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;">
+        ${(c.priority || 'medium')} priority
+      </div>
+    </div>
+  `).join('');
+}
+// ─── Notifications ────────────────────────────────────────────
+async function loadNotifications() {
+  try {
+    const data = await fetch('/api/notifications').then(r => r.json());
+    notifications = data.notifications || [];
+    renderNotifications();
+    updateNotifBadge();
+  } catch (e) {}
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">✅ All clear — no notifications</div>';
+    return;
+  }
+
+  const typeIcons = {
+    medication: '💊',
+    appointment: '📅',
+    insurance: '🛡️',
+    general: '💡'
+  };
+
+  list.innerHTML = notifications.slice(0, 20).map(n => `
+    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="readNotif('${n.id}')">
+      <div class="notif-item-header">
+        <span class="notif-dot"></span>
+        <span class="notif-icon">${typeIcons[n.type] || '🔔'}</span>
+        <span class="notif-item-title">${escapeHtml(n.title)}</span>
+      </div>
+      <div class="notif-item-msg">${escapeHtml(n.message)}</div>
+      <div class="notif-item-time">${formatRelTime(n.createdAt)}</div>
+    </div>
+  `).join('');
+}
+
+function updateNotifBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  ['notifBadgeDesktop', 'notifBadgeMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = unread > 9 ? '9+' : unread;
+      el.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+async function readNotif(id) {
+  await fetch(`/api/notifications/read/${id}`, { method: 'POST' });
+  const n = notifications.find(n => n.id === id);
+  if (n) n.read = true;
+  renderNotifications();
+  updateNotifBadge();
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/read-all', { method: 'POST' });
+  notifications.forEach(n => n.read = true);
+  renderNotifications();
+  updateNotifBadge();
+}
+
+function toggleNotifications() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+
+// Close notif panel on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifPanel') && !e.target.closest('.notif-btn')) {
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+});
+
+// ─── Calendar ────────────────────────────────────────────────
+async function checkCalendarStatus() {
+  try {
+    const data = await fetch('/api/calendar/status').then(r => r.json());
+    calendarConnected = data.connected;
+    const el = document.getElementById('gcalStatus');
+    if (calendarConnected) {
+      el.textContent = '✅ Calendar Connected';
+      el.className = 'gcal-status';
+      el.removeAttribute('href');
+    }
+  } catch (e) {}
+}
+
+async function addToCalendar(event) {
+  if (!calendarConnected) {
+    window.open('/auth/google', '_blank');
+    addMsg('ai', '⚠️ Please connect Google Calendar first. A window opened for authorization — refresh the page and try again after connecting.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/calendar/add-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    });
+    const data = await res.json();
+    if (data.success) {
+      addMsg('ai', `✅ Added to Google Calendar: <strong>${event.title}</strong> on ${event.date}. <a href="${data.link}" target="_blank" style="color:var(--accent)">View event →</a>`);
+      await loadNotifications();
+    } else {
+      addMsg('ai', `❌ Couldn't add event: ${data.error}`);
+    }
+  } catch (e) {
+    addMsg('ai', `❌ Calendar error: ${e.message}`);
+  }
+}
+
+// ─── Chat ────────────────────────────────────────────────────
+function clearChat(addWelcome = true) {
+  const area = document.getElementById('chatArea');
+  if (!area) return;
+  area.innerHTML = '';
+  area.style.display = 'none';
+}
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+
+  if (addWelcome) {
+    area.innerHTML = `
+      <div class="assistant-home-card" id="assistantHomeCard">
+        <div class="assistant-home-head">
+          <div>
+            <div class="assistant-home-title">Health Agent</div>
+            <div class="assistant-home-copy">
+              I’m here for Linda. I can help with appointments, provider calls, refill requests,
+              insurance questions, and doctor communication. What do we need to handle today?
+            </div>
+          </div>
+          <button class="assistant-home-close" onclick="document.getElementById('assistantHomeCard')?.remove()">×</button>
+        </div>
+
+        <div class="assistant-home-actions">
+          <button class="assistant-primary-btn" onclick="startVoiceCall()">→ Call Provider Now</button>
+          <button class="assistant-secondary-btn" onclick="startEmailSend()">→ Send Email Now</button>
+        </div>
+
+        <div class="assistant-bottom-nav">
+          <span>💚</span>
+          <span>🧴</span>
+          <span>📅</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  if (addWelcome) {
+    const patient = allPatients.find(p => p.id === currentPatientId);
+    addMsg('ai', `Hello! I'm your Health Agent${patient ? ` for <strong>${patient.name}</strong>` : ''}. How can I help you today?`, false);
+  }
+
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  addMsg('user', text);
+  currentMessages.push({ role: 'user', content: text });
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="msg ai" id="${typingId}">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">
+        <div class="typing-indicator"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, patientId: currentPatientId })
+    });
+    const data = await res.json();
+
+    document.getElementById(typingId)?.remove();
+
+    const reply = data.reply || data.error || 'Something went wrong';
+    addMsg('ai', reply);
+    currentMessages.push({ role: 'assistant', content: reply });
+
+    // Handle calendar event suggestion
+    if (data.calendarEvent) {
+      pendingCalendarEvent = data.calendarEvent;
+      addCalendarCard(data.calendarEvent);
+    }
+
+    // Handle call request
+    if (data.callRequest) {
+      addCallCard(data.callRequest);
+    }
+
+    // Handle email pending
+    if (data.hasPendingEmail) {
+      addEmailActionCard();
+    }
+
+    // Refresh notifications after each message
+    await loadNotifications();
+
+  } catch (e) {
+    document.getElementById(typingId)?.remove();
+    addMsg('ai', `❌ Error: ${e.message}`);
+  }
+}
+
+function addMsg(role, html, scroll = true) {
+  const area = document.getElementById('chatArea');
+  if (!area) return;
+
+  area.style.display = 'block';
+
+  const isUser = role === 'user';
+  area.insertAdjacentHTML('beforeend', `
+    <div class="msg ${isUser ? 'user' : 'ai'}">
+      <div class="msg-avatar">${isUser ? '👤' : '🤖'}</div>
+      <div class="msg-bubble">${html}</div>
+    </div>
+  `);
+  if (scroll) area.scrollTop = area.scrollHeight;
+}
+  const area = document.getElementById('chatArea');
+  const isUser = role === 'user';
+  area.insertAdjacentHTML('beforeend', `
+    <div class="msg ${isUser ? 'user' : 'ai'}">
+      <div class="msg-avatar">${isUser ? '👤' : '🤖'}</div>
+      <div class="msg-bubble">${html}</div>
+    </div>
+  `);
+  if (scroll) area.scrollTop = area.scrollHeight;
+
+
+function addCalendarCard(event) {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card calendar">
+      <div class="action-card-title">📅 Add to Google Calendar?</div>
+      <div class="action-card-body">
+        <strong>${escapeHtml(event.title)}</strong><br/>
+        ${event.date} at ${event.time || '9:00 AM'} · ${event.duration || 60} minutes
+        ${event.description ? '<br/>' + escapeHtml(event.description) : ''}
+      </div>
+      <div class="action-btns">
+        <button class="action-btn success" onclick="addToCalendar(${JSON.stringify(event).replace(/"/g, '&quot;')})">✅ Add to Calendar</button>
+        <button class="action-btn secondary" onclick="this.closest('.action-card').remove()">Dismiss</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addCallCard(callReq) {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card call">
+      <div class="action-card-title">📞 Confirm Phone Call</div>
+      <div class="action-card-body">
+        Call <strong>${escapeHtml(callReq.name)}</strong> at ${escapeHtml(callReq.phone || 'unknown number')}<br/>
+        Reason: ${escapeHtml(callReq.reason || 'Medical inquiry')}
+      </div>
+      <div class="action-btns">
+        <button class="action-btn warn" onclick="confirmCall(this)">📞 Confirm Call</button>
+        <button class="action-btn secondary" onclick="cancelCall(this)">Cancel</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function confirmCall(btn) {
+  btn.closest('.action-card').remove();
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'confirm call', patientId: currentPatientId })
+  });
+  const data = await res.json();
+  addMsg('ai', data.reply);
+}
+
+async function cancelCall(btn) {
+  btn.closest('.action-card').remove();
+  await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'cancel call', patientId: currentPatientId })
+  });
+  addMsg('ai', 'Call cancelled.');
+}
+
+function addEmailActionCard() {
+  const area = document.getElementById('chatArea');
+  area.insertAdjacentHTML('beforeend', `
+    <div class="action-card email">
+      <div class="action-card-title">✉️ Email Draft Ready</div>
+      <div class="action-card-body">Your email has been drafted and saved. Ready to send?</div>
+      <div class="action-btns">
+        <button class="action-btn primary" onclick="sendDraftEmail(this)">📤 Send Email</button>
+        <button class="action-btn secondary" onclick="this.closest('.action-card').remove()">Save Draft</button>
+      </div>
+    </div>
+  `);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function sendDraftEmail(btn) {
+  btn.closest('.action-card').remove();
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'send', patientId: currentPatientId })
+  });
+  const data = await res.json();
+  addMsg('ai', data.reply);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function qa(text) {
+  document.getElementById('chatInput').value = text;
+  closeSidebar();
+  sendMessage();
+}
+
+// ─── File Upload ─────────────────────────────────────────────
+function triggerUpload() {
+  document.getElementById('fileInput').click();
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const pending = document.getElementById('uploadPending');
+  const fileName = document.getElementById('uploadFileName');
+  fileName.textContent = `Processing: ${file.name}`;
+  pending.classList.add('show');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    pending.classList.remove('show');
+
+    if (data.pending) {
+      addMsg('ai', `📄 Document scanned: <strong>${file.name}</strong><br/><br/>I extracted the following information. Type <strong>"confirm"</strong> to save or <strong>"deny"</strong> to cancel:<br/><br/><pre style="font-size:11px;background:var(--bg);padding:8px;border-radius:6px;overflow:auto">${JSON.stringify(data.extracted, null, 2)}</pre>`);
+    } else {
+      addMsg('ai', `📄 ${data.message}`);
+    }
+  } catch (e) {
+    pending.classList.remove('show');
+    addMsg('ai', `❌ Upload error: ${e.message}`);
+  }
+
+  input.value = '';
+}
+
+// ─── Voice & Email ───────────────────────────────────────────
+async function startVoiceCall() {
+  const patient = allPatients.find(p => p.id === currentPatientId);
+  const phone = patient?.phone || prompt('Enter phone number to call:');
+  if (!phone) return;
+
+  try {
+    const res = await fetch('/api/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, reason: 'Health check call' })
+    });
+    const data = await res.json();
+    addMsg('ai', `📞 Call initiated! Call ID: ${data.id || 'started'}. Status: ${data.status || 'connecting...'}`);
+  } catch (e) {
+    addMsg('ai', `❌ Call failed: ${e.message}`);
+  }
+}
+
+function startEmailSend() {
+  qa('Draft an email to Dr. Martinez about Linda\'s recent lab results');
+}
+
+// ─── Mobile Sidebar ──────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatRelTime(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+</script>
