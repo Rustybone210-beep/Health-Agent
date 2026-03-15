@@ -223,7 +223,7 @@ if (google && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) 
   oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'http://localhost:3000/oauth2callback'
+    process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/oauth2callback` : 'http://localhost:3000/oauth2callback'
   );
   if (fs.existsSync(TOKEN_FILE)) {
     try {
@@ -260,11 +260,17 @@ app.delete('/api/chat-history/:id', (req, res) => {
   }
 });
 
-app.post('/api/save-chat', (req, res) => {
-  const { messages, patientId } = req.body;
-  if (!messages?.length) return res.json({ success: false });
-  const id = saveChatSession(patientId || getCurrentPatientId(), messages);
-  res.json({ success: true, id });
+app.post(`/api/save-chat`, (req, res) => {
+  try {
+    const body = req.body || {};
+    const messages = body.messages;
+    const patientId = body.patientId;
+    if (!messages?.length) return res.json({ success: false });
+    const id = saveChatSession(patientId || getCurrentPatientId(), messages);
+    res.json({ success: true, id });
+  } catch (e) {
+    res.json({ success: false });
+  }
 });
 
 // ─── Notifications ──────────────────────────────────────────

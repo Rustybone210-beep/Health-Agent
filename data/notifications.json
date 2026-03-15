@@ -1,6 +1,16 @@
 {
   "notifications": [
     {
+      "id": "1773607207132",
+      "type": "medication",
+      "title": "Medication Refill Reminder",
+      "message": "Chat mention: can you send an email",
+      "patientId": "maria-fields",
+      "dueDate": null,
+      "read": false,
+      "createdAt": "2026-03-15T20:40:07.132Z"
+    },
+    {
       "id": "1773532975561",
       "type": "medication",
       "title": "Medication Refill Reminder",
