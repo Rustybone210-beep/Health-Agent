@@ -12,30 +12,36 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
 
 <style>
-/* ── RESET ─────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#08090f;
-  --surface:#111420;
-  --surface2:#181d2e;
-  --surface3:#20263b;
-  --glass:rgba(18,22,38,0.88);
-  --glass2:rgba(26,31,50,0.82);
-  --glass3:rgba(38,45,70,0.9);
+  --surface:rgba(18,22,38,0.88);
+  --surface-2:rgba(24,29,46,0.9);
+  --surface-3:rgba(31,37,58,0.96);
   --border:rgba(255,255,255,0.07);
-  --border2:rgba(255,255,255,0.12);
-  --teal:#2dd4bf; --teal2:#0d9488; --teal-glow:rgba(45,212,191,0.3);
-  --gold:#d4a843; --gold2:#b8860b;
-  --purple:#8b5cf6; --purple2:#7c3aed;
-  --danger:#f87171; --warn:#fb923c; --info:#60a5fa;
-  --text:#f0f2f8; --text2:#8892aa; --text3:#404860; --text4:#a8b2c7;
-  --text-inv:#06080e;
+  --border-2:rgba(255,255,255,0.12);
+  --teal:#2dd4bf;
+  --teal2:#0d9488;
+  --gold:#d4a843;
+  --gold2:#b8860b;
+  --danger:#f87171;
+  --warn:#fb923c;
+  --info:#60a5fa;
+  --text:#f0f2f8;
+  --text2:#8892aa;
+  --text3:#404860;
+  --textInv:#06080e;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,20px);
-  --topbar:56px; --botnav:60px;
-  --r:16px; --rs:10px; --rx:22px;
-  --sans:'DM Sans',sans-serif; --serif:'DM Serif Display',serif;
-  --shadow:0 10px 30px rgba(0,0,0,0.28);
+  --topbar-h:56px;
+  --botnav-h:62px;
+  --radius-card:22px;
+  --radius-bubble:16px;
+  --radius-btn:10px;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.22);
+  --shadow-card:0 6px 20px rgba(0,0,0,0.18);
+  --sans:'DM Sans',sans-serif;
+  --serif:'DM Serif Display',serif;
 }
 html,body{
   height:100%;
@@ -48,83 +54,198 @@ html,body{
 }
 body.modal-open{overflow:hidden}
 button,input,textarea,select{font:inherit}
-a{color:inherit}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.app{display:flex;height:100dvh;overflow:hidden;position:relative}
-
-/* ── GENERIC ───────────────────────────────────────── */
+a{color:inherit;text-decoration:none}
 .hidden{display:none!important}
 .muted{color:var(--text2)}
-.small{font-size:12px}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+small{font-size:12px}
+pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 
-/* ── SIDEBAR ───────────────────────────────────────── */
-.sidebar{
-  width:280px;flex-shrink:0;
-  background:rgba(8,9,15,0.97);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden;
-  z-index:50;transition:transform 0.3s ease;
+.app{
+  display:flex;
+  height:100dvh;
+  overflow:hidden;
+  position:relative;
+  background:radial-gradient(circle at top center, rgba(45,212,191,0.035), transparent 28%), var(--bg);
 }
-.sb-head{padding:20px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-brand{display:flex;align-items:center;gap:9px;margin-bottom:14px}
-.sb-logo{
-  width:34px;height:34px;border-radius:9px;
-  background:linear-gradient(135deg,var(--teal),var(--teal2));
+
+/* MOBILE TOP BAR */
+.topbar{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:120;
+  height:calc(var(--topbar-h) + var(--safe-top));
+  padding:var(--safe-top) 16px 0;
+  background:rgba(8,9,15,0.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  align-items:center;
+  justify-content:space-between;
+}
+.tb-title{
+  font-family:var(--serif);
+  font-size:18px;
+  color:var(--text);
+}
+.tb-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.tb-bell{
+  position:relative;
+  background:none;
+  border:none;
+  color:var(--text2);
+  font-size:20px;
+  cursor:pointer;
+  width:32px;height:32px;
   display:flex;align-items:center;justify-content:center;
-  font-size:16px;box-shadow:0 3px 10px var(--teal-glow)
 }
-.sb-name{font-family:var(--serif);font-size:17px}
+.tb-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  border:2px solid rgba(212,168,67,0.38);
+  color:#101114;
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(212,168,67,0.22);
+  cursor:pointer;
+}
+.notif-badge{
+  position:absolute;
+  top:0;right:0;
+  min-width:16px;height:16px;
+  padding:0 4px;
+  border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--danger);
+  color:#fff;
+  font-size:9px;
+  font-weight:700;
+  border:1.5px solid var(--bg);
+}
+
+/* DESKTOP SIDEBAR */
+.sidebar{
+  width:288px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  background:rgba(8,9,15,0.97);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  overflow:hidden;
+  z-index:40;
+}
+.sb-head{
+  padding:20px 16px 14px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sb-brand{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;
+}
+.sb-logo{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  box-shadow:0 3px 10px rgba(45,212,191,0.24);
+  font-size:16px;
+}
+.sb-name{
+  font-family:var(--serif);
+  font-size:17px;
+}
 .pat-btn{
-  width:100%;background:var(--glass2);border:1px solid var(--border2);
-  border-radius:var(--rs);padding:8px 11px;color:var(--text);
-  font-size:13px;cursor:pointer;display:flex;align-items:center;
-  justify-content:space-between;gap:8px;text-align:left
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  border-radius:12px;
+  padding:9px 11px;
+  color:var(--text);
+  font-size:13px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;
+  text-align:left;
 }
-.pat-btn:hover{border-color:rgba(45,212,191,0.3)}
-.pat-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pat-rel{font-size:11px;color:var(--text2);margin-top:1px}
+.pat-btn:hover{border-color:rgba(45,212,191,0.25)}
+.pat-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pat-rel{font-size:11px;color:var(--text2);margin-top:2px}
 .pat-dd{
-  display:none;position:absolute;top:calc(100% + 5px);left:0;right:0;
-  background:rgba(10,12,22,0.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--border2);border-radius:var(--rs);overflow:hidden;
-  z-index:300;box-shadow:0 8px 32px rgba(0,0,0,0.5)
+  display:none;
+  position:absolute;
+  left:0;right:0;top:calc(100% + 6px);
+  background:rgba(10,12,22,0.98);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border-2);
+  border-radius:12px;
+  overflow:hidden;
+  z-index:300;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
 }
 .pat-dd.open{display:block}
 .pat-opt{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px}
 .pat-opt:hover{background:rgba(45,212,191,0.06)}
 .pat-opt.active{background:rgba(45,212,191,0.1)}
-.opt-n{font-weight:600;color:var(--text)}
-.opt-r{font-size:11px;color:var(--text2);margin-top:1px}
+.opt-n{font-weight:600}
+.opt-r{font-size:11px;color:var(--text2);margin-top:2px}
 .add-pat{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--teal)}
 .add-pat:hover{background:rgba(45,212,191,0.06)}
-.sb-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:none}
+
+.sb-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:12px;
+  scrollbar-width:none;
+}
 .sb-scroll::-webkit-scrollbar{display:none}
-.s-lbl{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.s-lbl{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:7px;
+}
 .sb-card{
-  background:linear-gradient(135deg,rgba(212,168,67,0.14),rgba(184,134,11,0.06));
-  border:1px solid rgba(212,168,67,0.18);border-radius:var(--r);padding:13px;margin-bottom:12px
+  background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.04));
+  border:1px solid rgba(212,168,67,0.14);
+  border-radius:var(--radius-card);
+  padding:14px;
+  margin-bottom:12px;
 }
-.pc-row{display:flex;gap:5px;margin-bottom:5px;font-size:12px}
-.pc-l{color:var(--text3);width:62px;flex-shrink:0;font-size:11px}
-.pc-v{color:var(--text);font-size:12px;line-height:1.4}
-.pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.pc-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px}
+.pc-l{width:62px;flex-shrink:0;color:var(--text3);font-size:11px}
+.pc-v{color:var(--text);line-height:1.4}
+.pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .pill{
-  display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
-  font-size:10px;font-weight:500
+  display:inline-flex;align-items:center;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:500;
 }
-.p-teal{background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.2);color:var(--teal)}
-.p-red{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:var(--danger)}
-.p-gold{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);color:var(--gold)}
+.p-teal{background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.18);color:var(--teal)}
+.p-red{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.18);color:var(--danger)}
+.p-gold{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.18);color:var(--gold)}
+
 .hist-item{
-  padding:8px 9px;border-radius:8px;cursor:pointer;margin-bottom:2px;font-size:12px;
-  color:var(--text2);display:flex;align-items:flex-start;gap:6px;border:1px solid transparent;transition:all 0.15s
+  padding:8px 9px;border-radius:10px;cursor:pointer;margin-bottom:2px;
+  font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px;
+  border:1px solid transparent;transition:all 0.15s
 }
-.hist-item:hover{background:var(--glass2);color:var(--text);border-color:var(--border)}
-.hist-item.active{background:rgba(45,212,191,0.08);color:var(--text);border-color:rgba(45,212,191,0.2)}
+.hist-item:hover{background:var(--surface-2);color:var(--text);border-color:var(--border)}
+.hist-item.active{background:rgba(45,212,191,0.08);color:var(--text);border-color:rgba(45,212,191,0.18)}
 .hist-content{flex:1;overflow:hidden}
-.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hist-time{font-size:10px;color:var(--text3);margin-top:2px}
 .hist-del{
   opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;
@@ -132,429 +253,827 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 }
 .hist-item:hover .hist-del{opacity:1}
 .new-chat-btn{
-  background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.2);
-  color:var(--teal);font-size:11px;padding:3px 8px;border-radius:20px;cursor:pointer
+  background:rgba(45,212,191,0.08);
+  border:1px solid rgba(45,212,191,0.18);
+  color:var(--teal);
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:999px;
+  cursor:pointer;
 }
-.sb-nav{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+.sb-nav{display:flex;flex-direction:column;gap:3px}
 .sb-link{
-  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12px;
-  color:var(--text2);text-decoration:none;background:none;border:none;cursor:pointer;width:100%;text-align:left;transition:all 0.15s
+  display:flex;align-items:center;gap:8px;
+  padding:9px 10px;border-radius:10px;
+  font-size:12px;color:var(--text2);
+  background:none;border:none;cursor:pointer;text-align:left;width:100%;
+  transition:all 0.15s
 }
-.sb-link:hover{background:var(--glass2);color:var(--text)}
-.sb-link.em{color:#fca5a5}
-.sb-link.em:hover{background:rgba(248,113,113,0.08)}
-.gcal-s{
-  display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;
-  background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.2);color:var(--teal);text-decoration:none
-}
-.gcal-s.nc{background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.2);color:var(--warn);cursor:pointer}
-.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px}
+.sb-link:hover{background:var(--surface-2);color:var(--text)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .qa-btn{
-  background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:9px 7px;
-  color:var(--text2);font-size:11px;cursor:pointer;text-align:center;transition:all 0.2s
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 8px;
+  color:var(--text2);
+  font-size:11px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s
 }
-.qa-btn:hover{background:var(--glass);color:var(--text);border-color:rgba(45,212,191,0.3)}
+.qa-btn:hover{background:var(--surface-3);color:var(--text)}
 .qa-icon{display:block;font-size:14px;margin-bottom:3px}
-
-/* ── TOPBAR ────────────────────────────────────────── */
-.topbar{
-  display:none;position:fixed;top:0;left:0;right:0;
-  height:calc(var(--topbar) + var(--safe-top));padding-top:var(--safe-top);
-  background:rgba(8,9,15,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;
-  padding-left:16px;padding-right:16px;z-index:100
+.gcal-s{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;padding:5px 10px;border-radius:999px;
+  background:rgba(45,212,191,0.08);
+  border:1px solid rgba(45,212,191,0.18);
+  color:var(--teal)
 }
-.tb-title{font-family:var(--serif);font-size:18px;color:var(--text)}
-.tb-right{display:flex;align-items:center;gap:10px}
-.tb-avatar{
-  width:34px;height:34px;border-radius:50%;
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--serif);font-size:13px;font-weight:700;color:rgba(8,9,15,0.9);
-  cursor:pointer;border:2px solid rgba(212,168,67,0.4);box-shadow:0 2px 8px rgba(212,168,67,0.3)
-}
-.tb-bell{position:relative;background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;padding:4px}
-.notif-badge{
-  position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;
-  font-size:8px;font-weight:700;min-width:15px;height:15px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid var(--bg)
+.gcal-s.nc{
+  background:rgba(251,146,60,0.08);
+  border-color:rgba(251,146,60,0.18);
+  color:var(--warn)
 }
 
-/* ── MAIN ──────────────────────────────────────────── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;position:relative}
+/* DESKTOP TOP BAR */
 .desk-topbar{
-  height:56px;background:rgba(8,9,15,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0
+  height:56px;
+  background:rgba(8,9,15,0.9);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 20px;
+  gap:12px;
+  flex-shrink:0;
 }
-.desk-title{flex:1;font-family:var(--serif);font-size:18px;color:var(--text)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pdot 2.5s ease infinite}
+.desk-title{
+  flex:1;
+  font-family:var(--serif);
+  font-size:18px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 8px var(--teal);
+  animation:pdot 2.5s ease infinite
+}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
 .notif-btn{
-  position:relative;background:var(--glass2);border:1px solid var(--border);border-radius:50%;
-  width:34px;height:34px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.2s
+  position:relative;
+  width:34px;height:34px;border-radius:50%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+  font-size:15px;
+  cursor:pointer;
 }
-.notif-btn:hover{background:var(--glass);color:var(--text)}
+.notif-btn:hover{background:var(--surface-3);color:var(--text)}
 
-/* ── NOTIFICATIONS ─────────────────────────────────── */
-.notif-panel{
-  display:none;flex-direction:column;position:absolute;top:62px;right:14px;width:320px;max-height:420px;
-  background:rgba(10,12,22,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid var(--border2);border-radius:var(--rx);overflow:hidden;z-index:300;
-  box-shadow:0 16px 48px rgba(0,0,0,0.6);animation:dropIn 0.2s ease
+/* MAIN */
+.main{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
 }
-.notif-panel.open{display:flex}
-@keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.np-head{
-  padding:14px 16px 12px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0
-}
-.np-title{font-size:14px;font-weight:600;color:var(--text)}
-.np-mark{background:none;border:none;color:var(--teal);font-size:12px;cursor:pointer}
-.notif-list{overflow-y:auto;flex:1;padding:6px}
-.ni{padding:10px 12px;border-radius:8px;margin-bottom:3px;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
-.ni:hover{background:var(--glass2)}
-.ni.unread{background:rgba(45,212,191,0.04);border-color:rgba(45,212,191,0.12)}
-.ni-head{display:flex;align-items:center;gap:5px;margin-bottom:3px}
-.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
-.ni.read .ni-dot{opacity:0}
-.ni-title{font-size:13px;font-weight:600;color:var(--text);flex:1}
-.ni-msg{font-size:12px;color:var(--text2);margin-bottom:2px;line-height:1.4}
-.ni-time{font-size:10px;color:var(--text3)}
-.ni-empty{text-align:center;padding:28px;color:var(--text3);font-size:13px}
 
-/* ── DASHBOARD ─────────────────────────────────────── */
-.home-dashboard{
-  padding:14px 14px 8px;border-bottom:1px solid rgba(255,255,255,0.04);
-  background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0));
-  flex-shrink:0
+/* MOBILE STATES */
+.mobile-state{
+  display:none;
+  flex:1;
+  min-height:0;
 }
-.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mobile-state.active{
+  display:flex;
+  flex-direction:column;
+  animation:fadeState 0.18s ease;
+}
+@keyframes fadeState{from{opacity:0}to{opacity:1}}
+
+/* DASHBOARD */
+.dashboard-wrap{
+  flex:1;
+  overflow-y:auto;
+  padding:14px 14px 12px;
+}
+.dash-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
 .dash-card{
-  background:var(--glass2);border:1px solid var(--border);border-radius:16px;padding:14px;min-height:96px;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 6px 20px rgba(0,0,0,0.18)
+  background:var(--surface);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-card);
+  padding:16px;
+  min-height:118px;
+  box-shadow:var(--shadow-card);
+  cursor:pointer;
+  transition:transform 0.15s ease, border-color 0.15s ease;
 }
+.dash-card:active{transform:scale(0.98)}
+.dash-card:hover{border-color:rgba(45,212,191,0.14)}
 .dash-label{
-  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:10px;
 }
-.dash-value{font-family:var(--serif);font-size:22px;line-height:1.1;color:var(--text);margin-bottom:6px}
-.dash-sub{font-size:12px;line-height:1.45;color:var(--text2)}
-.dash-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.dash-mini{
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
-  border-radius:10px;padding:9px 10px
+.dash-value{
+  font-family:var(--serif);
+  font-size:30px;
+  line-height:1;
+  margin-bottom:8px;
 }
-.dash-mini-title{font-size:11px;font-weight:600;color:var(--text)}
-.dash-mini-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.dash-sub{
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.45;
+}
+.activity-list{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.activity-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 14px;
+}
+.activity-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+}
+.activity-sub{
+  font-size:11px;
+  color:var(--text3);
+  margin-top:3px;
+}
 
-/* ── SUGGESTIONS ───────────────────────────────────── */
-.suggest-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
-.suggest-chip{
-  padding:8px 12px;border-radius:999px;background:rgba(45,212,191,0.06);border:1px solid rgba(45,212,191,0.14);
-  color:var(--text2);font-size:12px;cursor:pointer;transition:all 0.15s
+/* CHAT */
+.chat-wrap{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
 }
-.suggest-chip:hover{color:var(--text);background:rgba(45,212,191,0.1)}
-
-/* ── CHAT ──────────────────────────────────────────── */
 .chat-area{
-  flex:1;overflow-y:auto;padding:12px 14px 8px;display:flex;flex-direction:column;gap:6px;
-  scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:14px 14px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
 .chat-area::-webkit-scrollbar{display:none}
-.msg{display:flex;gap:8px;max-width:85%;animation:msgIn 0.2s ease}
-@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.welcome-inline{
+  padding:8px 2px 10px;
+  animation:msgIn 0.2s ease;
+}
+.welcome-inline-title{
+  font-size:18px;
+  line-height:1.5;
+  color:var(--text);
+  margin-bottom:10px;
+}
+.chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chip{
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(45,212,191,0.06);
+  border:1px solid rgba(45,212,191,0.14);
+  color:var(--text2);
+  font-size:13px;
+  cursor:pointer;
+  transition:all 0.15s
+}
+.chip:hover{background:rgba(45,212,191,0.1);color:var(--text)}
+.chip:active{transform:scale(0.96)}
+
+.msg{
+  display:flex;
+  gap:8px;
+  max-width:88%;
+  animation:msgIn 0.2s ease;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .msg.user{margin-left:auto;flex-direction:row-reverse}
 .msg-avatar{
-  width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-size:12px;margin-top:1px;border:1px solid var(--border)
+  width:28px;height:28px;border-radius:50%;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+  margin-top:2px;
+  border:1px solid var(--border);
 }
-.msg.ai .msg-avatar{background:var(--glass2)}
-.msg.user .msg-avatar{background:linear-gradient(135deg,var(--teal),var(--teal2));border-color:rgba(45,212,191,0.3)}
-.msg-bubble{padding:10px 14px;font-size:16px;line-height:1.55;color:var(--text);max-width:100%;word-wrap:break-word}
-.msg-bubble pre{
-  white-space:pre-wrap;word-break:break-word;overflow:auto;background:rgba(0,0,0,0.28);
-  padding:10px;border-radius:10px;margin-top:8px;font-size:12px;line-height:1.45
+.msg.ai .msg-avatar{background:var(--surface-2)}
+.msg.user .msg-avatar{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border-color:rgba(45,212,191,0.24)
 }
-.msg-bubble a{color:var(--teal)}
+.msg-bubble{
+  max-width:100%;
+  word-wrap:break-word;
+  padding:13px 15px;
+  font-size:16px;
+  line-height:1.6;
+  color:var(--text);
+  border-radius:18px;
+}
 .msg.ai .msg-bubble{
-  background:var(--glass2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:4px
+  background:var(--surface);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-bottom-left-radius:6px;
 }
 .msg.user .msg-bubble{
-  background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--text-inv);
-  font-weight:500;border-radius:18px;border-bottom-right-radius:4px;box-shadow:0 3px 12px rgba(45,212,191,0.3)
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+  border-bottom-right-radius:6px;
+  box-shadow:0 4px 16px rgba(45,212,191,0.24);
 }
-.typing-indicator{display:flex;gap:4px;padding:2px 0;align-items:center}
+.msg-bubble strong{font-weight:700}
+.msg-bubble em{font-style:italic}
+.msg-bubble code{
+  background:rgba(255,255,255,0.08);
+  padding:2px 6px;
+  border-radius:6px;
+  font-size:13px;
+}
+.msg-bubble pre{
+  margin-top:10px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:rgba(0,0,0,0.26);
+  padding:10px;
+  border-radius:10px;
+  font-size:12px;
+  line-height:1.45;
+}
+.msg-bubble a{color:inherit;text-decoration:underline}
+
+.typing-indicator{display:flex;gap:4px;align-items:center}
 .typing-indicator span{
-  width:6px;height:6px;background:var(--text3);border-radius:50%;animation:tb 1.3s ease infinite
+  width:6px;height:6px;border-radius:50%;
+  background:var(--text3);
+  animation:tb 1.3s ease infinite
 }
 .typing-indicator span:nth-child(2){animation-delay:0.18s}
 .typing-indicator span:nth-child(3){animation-delay:0.36s}
-@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:0.45}30%{transform:translateY(-5px);opacity:1}}
 
+/* ACTION CARDS */
 .action-card{
-  background:var(--glass2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid var(--border);border-radius:var(--r);padding:13px;margin:2px 0;font-size:13px;
-  animation:msgIn 0.2s ease;max-width:85%
+  background:var(--surface);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-card);
+  padding:14px;
+  margin:2px 0;
+  font-size:13px;
+  animation:msgIn 0.2s ease;
+  max-width:88%;
+  box-shadow:var(--shadow-card);
 }
-.action-card.calendar{border-color:rgba(45,212,191,0.25)}
-.action-card.call{border-color:rgba(251,146,60,0.3)}
-.action-card.email{border-color:rgba(139,92,246,0.3)}
-.ac-title{font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
-.ac-body{color:var(--text2);margin-bottom:10px;line-height:1.5;font-size:13px}
+.action-card.calendar{border-color:rgba(45,212,191,0.18)}
+.action-card.call{border-color:rgba(251,146,60,0.24)}
+.action-card.email{border-color:rgba(139,92,246,0.22)}
+.ac-title{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.07em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:7px;
+}
+.ac-body{
+  color:var(--text2);
+  margin-bottom:10px;
+  line-height:1.55;
+  font-size:13px;
+}
 .ac-btns{display:flex;gap:7px;flex-wrap:wrap}
 .ac-btn{
-  padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;
-  border:none;transition:all 0.2s;-webkit-user-select:none;user-select:none;touch-action:manipulation
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  transition:all 0.15s;
 }
 .ac-btn:active{transform:scale(0.95)}
 .ac-btn.primary,.ac-btn.success{
-  background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--text-inv);box-shadow:0 3px 10px rgba(45,212,191,0.35)
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
 }
-.ac-btn.secondary{background:var(--glass);border:1px solid var(--border);color:var(--text2)}
-.ac-btn.warn{background:linear-gradient(135deg,var(--warn),#ea580c);color:#fff;box-shadow:0 3px 10px rgba(251,146,60,0.35)}
+.ac-btn.secondary{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text2);
+}
+.ac-btn.warn{
+  background:linear-gradient(135deg,var(--warn),#ea580c);
+  color:#fff;
+}
 
-.welcome-card{
-  background:var(--glass2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--border);border-radius:var(--rx);padding:20px 18px;margin-bottom:4px;animation:msgIn 0.3s ease;position:relative
-}
-.wc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.wc-icon{
-  width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal2));
-  display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 10px rgba(45,212,191,0.3)
-}
-.wc-x{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px;line-height:1}
-.wc-title{font-family:var(--serif);font-size:19px;color:var(--text);margin-bottom:7px}
-.wc-body{font-size:14px;color:var(--text2);line-height:1.65}
-
-/* ── SCAN CARD ─────────────────────────────────────── */
+/* SCAN */
 .scan-card{
-  background:var(--glass3);border:1px solid var(--border2);border-radius:18px;padding:16px;margin-top:4px;
-  box-shadow:0 8px 26px rgba(0,0,0,0.25)
+  background:var(--surface-3);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-card);
+  padding:16px;
+  box-shadow:var(--shadow-soft);
 }
 .scan-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .scan-icon{font-size:22px}
 .scan-title{font-family:var(--serif);font-size:18px}
 .scan-badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .scan-badge{
-  font-size:10px;padding:4px 8px;border-radius:999px;border:1px solid var(--border2);letter-spacing:0.04em;text-transform:uppercase
+  font-size:10px;padding:4px 8px;border-radius:999px;border:1px solid var(--border-2);
+  letter-spacing:0.04em;text-transform:uppercase
 }
 .scan-badge.safe{color:var(--teal);background:rgba(45,212,191,0.08);border-color:rgba(45,212,191,0.18)}
 .scan-badge.warn{color:var(--warn);background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.18)}
 .scan-badge.info{color:var(--info);background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.18)}
-.scan-card p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.scan-card p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px}
 .scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .scan-field{
-  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:10px 11px
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:14px;
+  padding:10px 11px;
 }
 .scan-field.full{grid-column:1 / -1}
-.scan-label{display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
-.scan-value{font-size:13px;color:var(--text);line-height:1.45}
+.scan-label{
+  display:block;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:4px;
+}
+.scan-value{
+  font-size:13px;
+  color:var(--text);
+  line-height:1.45;
+}
 .scan-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
 .scan-btn{
-  padding:8px 12px;border-radius:10px;border:1px solid var(--border2);
-  background:var(--glass);font-size:13px;cursor:pointer;color:var(--text)
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--border-2);
+  background:var(--surface-2);
+  font-size:13px;
+  color:var(--text);
+  cursor:pointer;
 }
-.scan-btn.primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--text-inv);border:none}
-.scan-foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+.scan-btn.primary{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+  border:none;
+}
+.scan-foot{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+  font-size:12px;
+  color:var(--text3);
+}
 
-/* ── INPUT ─────────────────────────────────────────── */
+/* INPUT */
 .input-bar{
-  flex-shrink:0;background:rgba(8,9,15,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--border);padding:10px 14px;padding-bottom:calc(10px + var(--safe-bot))
+  flex-shrink:0;
+  background:rgba(8,9,15,0.96);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:10px 14px calc(10px + var(--safe-bot));
 }
-.input-row{display:flex;gap:9px;align-items:flex-end;margin-bottom:9px}
+.input-row{
+  display:flex;
+  gap:10px;
+  align-items:flex-end;
+}
 .chat-input{
-  flex:1;background:var(--glass2);border:1px solid var(--border2);border-radius:22px;
-  padding:10px 16px;color:var(--text);font-size:16px;resize:none;outline:none;
-  max-height:120px;min-height:44px;line-height:1.45;appearance:none;-webkit-appearance:none;transition:border-color 0.2s
+  flex:1;
+  background:var(--surface);
+  border:1px solid var(--border-2);
+  border-radius:999px;
+  padding:12px 16px;
+  color:var(--text);
+  font-size:16px;
+  resize:none;
+  outline:none;
+  max-height:120px;
+  min-height:46px;
+  line-height:1.45;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:border-color 0.2s ease;
 }
-.chat-input:focus{border-color:rgba(45,212,191,0.4);box-shadow:0 0 0 3px rgba(45,212,191,0.06)}
+.chat-input:focus{
+  border-color:rgba(45,212,191,0.32);
+  box-shadow:0 0 0 3px rgba(45,212,191,0.06);
+}
 .chat-input::placeholder{color:var(--text3)}
 .send-btn{
-  width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--teal),var(--teal2));
-  border:none;color:var(--text-inv);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 12px rgba(45,212,191,0.35);transition:all 0.2s;touch-action:manipulation
+  width:46px;height:46px;border-radius:50%;
+  flex-shrink:0;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border:none;
+  color:var(--textInv);
+  font-size:18px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(45,212,191,0.24);
+  transition:transform 0.15s ease;
 }
-.send-btn:active{transform:scale(0.92)}
-.quick-bar{display:flex;gap:6px;align-items:center}
-.qb-btn{
-  display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;background:var(--glass2);
-  border:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;flex-shrink:0
+.send-btn:active{transform:scale(0.95)}
+.tool-row{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:10px;
 }
-.qb-btn:active{transform:scale(0.95);background:var(--glass)}
-.qb-icon{font-size:16px}
+.tool-btn{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:17px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
+.tool-btn:hover{background:var(--surface-2);color:var(--text)}
+.tool-btn:active{transform:scale(0.95)}
 .upload-pending{
-  display:none;padding:5px 12px;background:rgba(45,212,191,0.06);border:1px solid rgba(45,212,191,0.15);
-  border-radius:8px;font-size:12px;color:var(--teal);margin-top:6px;align-items:center;gap:6px
+  display:none;
+  margin-top:10px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:rgba(45,212,191,0.06);
+  border:1px solid rgba(45,212,191,0.14);
+  color:var(--teal);
+  font-size:12px;
+  align-items:center;
+  gap:6px;
 }
 .upload-pending.show{display:flex}
 
-/* ── BOTTOM NAV ────────────────────────────────────── */
+/* BOTTOM NAV */
 .bot-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,15,0.97);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);
-  z-index:90;align-items:stretch;height:calc(var(--botnav) + var(--safe-bot));padding-bottom:var(--safe-bot)
+  display:none;
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:90;
+  height:calc(var(--botnav-h) + var(--safe-bot));
+  padding-bottom:var(--safe-bot);
+  background:rgba(8,9,15,0.97);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  align-items:stretch;
 }
 .bn-tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;
-  color:var(--text3);font-size:9px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;text-decoration:none;transition:color 0.2s
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  border:none;
+  background:none;
+  color:var(--text3);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  cursor:pointer;
 }
-.bn-tab:active{opacity:0.7}
-.bn-icon{font-size:22px;line-height:1}
+.bn-tab:active{opacity:0.75}
+.bn-icon{font-size:21px;line-height:1}
 .bn-tab.active{color:var(--teal)}
-.bn-tab.active .bn-icon{filter:drop-shadow(0 0 5px var(--teal))}
+.bn-tab.active .bn-icon{filter:drop-shadow(0 0 6px rgba(45,212,191,0.35))}
 
-/* ── PROFILE SHEET ─────────────────────────────────── */
-.profile-sheet{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:400}
+/* PROFILE SHEET */
+.profile-sheet{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:400;
+}
 .profile-sheet.open{display:block}
-.ps-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ps-backdrop{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.58);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
 .ps-card{
-  position:absolute;top:0;left:0;right:0;background:var(--surface);
-  border-bottom-left-radius:24px;border-bottom-right-radius:24px;padding:calc(var(--safe-top) + 16px) 20px 24px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:slideDown 0.3s cubic-bezier(0.4,0,0.2,1);max-height:88dvh;overflow-y:auto
+  position:absolute;
+  top:0;left:0;right:0;
+  background:rgba(12,14,24,0.98);
+  border-bottom-left-radius:28px;
+  border-bottom-right-radius:28px;
+  padding:calc(var(--safe-top) + 16px) 20px 24px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.56);
+  animation:slideDown 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height:88dvh;
+  overflow-y:auto;
 }
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .ps-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .ps-pat-info{display:flex;align-items:center;gap:12px}
 .ps-avatar{
-  width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
-  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-weight:700;color:rgba(8,9,15,0.9);
-  border:2px solid rgba(212,168,67,0.4);box-shadow:0 4px 16px rgba(212,168,67,0.35)
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:700;
+  color:#101114;
+  border:2px solid rgba(212,168,67,0.36);
+  box-shadow:0 4px 14px rgba(212,168,67,0.22);
 }
-.ps-name{font-family:var(--serif);font-size:22px;color:var(--text);line-height:1.15}
-.ps-sub{font-size:13px;color:var(--gold);margin-top:2px;font-weight:500}
+.ps-name{font-family:var(--serif);font-size:24px;line-height:1.1}
+.ps-sub{font-size:13px;color:var(--gold);margin-top:3px;font-weight:500}
 .ps-close{
-  width:34px;height:34px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);color:var(--text2);font-size:18px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center
+  width:34px;height:34px;border-radius:50%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
 }
-.ps-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
-.ps-stat{background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.15);border-radius:12px;padding:10px;text-align:center}
-.ps-stat-n{font-family:var(--serif);font-size:22px;color:var(--text);font-weight:700}
+.ps-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:18px;
+}
+.ps-stat{
+  background:rgba(212,168,67,0.08);
+  border:1px solid rgba(212,168,67,0.15);
+  border-radius:14px;
+  padding:12px 10px;
+  text-align:center;
+}
+.ps-stat-n{font-family:var(--serif);font-size:24px;font-weight:700}
 .ps-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
-.ps-section{margin-bottom:14px}
-.ps-section-title{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.ps-section{margin-bottom:12px}
+.ps-section-title{
+  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px
+}
 .ps-row{display:flex;gap:6px;margin-bottom:6px;font-size:13px}
-.ps-rl{color:var(--text3);width:68px;flex-shrink:0;font-size:12px;padding-top:1px}
-.ps-rv{color:var(--text2);flex:1;line-height:1.4}
+.ps-rl{width:72px;flex-shrink:0;color:var(--text3);font-size:12px;padding-top:1px}
+.ps-rv{flex:1;color:var(--text2);line-height:1.4}
+.ps-expand{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+.ps-expand-btn{
+  width:100%;
+  background:none;
+  border:none;
+  color:var(--text);
+  padding:13px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;
+  text-align:left;
+}
+.ps-expand-body{
+  display:none;
+  padding:0 14px 14px;
+}
+.ps-expand.open .ps-expand-body{display:block}
 
-/* ── MENU SHEET ────────────────────────────────────── */
-.menu-sheet{display:none;position:fixed;inset:0;z-index:400}
+/* MENU SHEET */
+.menu-sheet{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:400;
+}
 .menu-sheet.open{display:block}
-.ms-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ms-backdrop{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.64);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
 .ms-panel{
-  position:absolute;bottom:0;left:0;right:0;background:var(--surface);
-  border-top-left-radius:24px;border-top-right-radius:24px;padding:8px 20px calc(20px + var(--safe-bot));
-  box-shadow:0 -20px 60px rgba(0,0,0,0.5);animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1)
+  position:absolute;
+  left:0;right:0;bottom:0;
+  background:rgba(12,14,24,0.98);
+  border-top-left-radius:28px;
+  border-top-right-radius:28px;
+  padding:10px 20px calc(20px + var(--safe-bot));
+  box-shadow:0 -16px 50px rgba(0,0,0,0.5);
+  animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.ms-handle{width:36px;height:4px;background:var(--text3);border-radius:2px;margin:8px auto 18px}
-.ms-title{font-family:var(--serif);font-size:18px;margin-bottom:16px}
+.ms-handle{width:38px;height:4px;background:var(--text3);border-radius:999px;margin:8px auto 16px}
+.ms-title{font-family:var(--serif);font-size:18px;margin-bottom:14px}
 .ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .ms-item{
-  background:var(--glass2);border:1px solid var(--border);border-radius:var(--r);padding:16px 10px;text-align:center;
-  cursor:pointer;transition:all 0.2s;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:6px
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 10px;
+  text-align:center;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
 }
-.ms-item:active{transform:scale(0.95);background:var(--glass)}
+.ms-item:active{transform:scale(0.96)}
 .ms-icon{font-size:24px}
-.ms-label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.02em}
+.ms-label{font-size:11px;font-weight:600;color:var(--text2)}
 
-/* ── TASK PANEL ────────────────────────────────────── */
+/* TASK PANEL */
 #taskPanel{
-  display:none;position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:rgba(8,9,15,0.98);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-left:1px solid var(--border);
-  z-index:500;flex-direction:column;overflow:hidden;box-shadow:-16px 0 48px rgba(0,0,0,0.5)
+  display:none;
+  position:fixed;
+  top:0;right:0;bottom:0;
+  width:min(420px,100vw);
+  background:rgba(8,9,15,0.98);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-left:1px solid var(--border);
+  z-index:500;
+  flex-direction:column;
+  overflow:hidden;
+  box-shadow:-16px 0 48px rgba(0,0,0,0.45);
 }
 #taskPanel.open{display:flex;animation:slideR 0.3s ease}
 @keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
 .task-tab{
-  padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);
-  background:transparent;color:var(--text2);transition:all 0.15s
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:12px;
+  cursor:pointer;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text2);
 }
-.task-tab.active{background:rgba(45,212,191,0.08);border-color:rgba(45,212,191,0.25);color:var(--teal)}
-.task-item{background:var(--glass2);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;margin-bottom:6px;animation:msgIn 0.2s ease}
+.task-tab.active{
+  background:rgba(45,212,191,0.08);
+  border-color:rgba(45,212,191,0.18);
+  color:var(--teal);
+}
+.task-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 13px;
+  margin-bottom:6px;
+  animation:msgIn 0.2s ease
+}
 .task-item.done{opacity:0.55}
-.ti-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:3px}
+.ti-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
 .task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--teal);cursor:pointer}
-.t-title{font-size:13px;font-weight:600;color:var(--text);flex:1;line-height:1.3}
+.t-title{font-size:13px;font-weight:600;flex:1;line-height:1.3}
 .t-title.done{text-decoration:line-through;color:var(--text3)}
 .t-desc{font-size:12px;color:var(--text2);margin:3px 0 7px 24px;line-height:1.5}
 .t-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:24px}
 .t-due{font-size:11px;color:var(--text3)}
 .t-due.ov{color:var(--danger);font-weight:600}
-.t-pri{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.t-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
 .pri-high{background:rgba(248,113,113,0.1);color:var(--danger)}
 .pri-medium{background:rgba(251,146,60,0.08);color:var(--warn)}
 .pri-low{background:rgba(45,212,191,0.08);color:var(--teal)}
 .t-acts{display:flex;gap:5px;margin-top:7px;margin-left:24px}
-.t-act{padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--glass2);color:var(--text2)}
-.t-act:active{background:var(--glass)}
+.t-act{
+  padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text2)
+}
 .t-act.del{color:var(--danger)}
 
-/* ── MODALS ────────────────────────────────────────── */
+/* MODALS */
 .modal{
-  display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;
-  padding:20px;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:600;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
 }
 .modal.open{display:flex}
 .modal-box{
-  position:relative;background:rgba(10,12,22,0.99);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid var(--border2);border-radius:var(--rx);padding:24px;width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,0.7);animation:dropIn 0.25s ease
+  position:relative;
+  width:100%;
+  max-width:520px;
+  max-height:90dvh;
+  overflow-y:auto;
+  background:rgba(10,12,22,0.99);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-card);
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  animation:modalIn 0.22s ease;
 }
-.m-title{font-family:var(--serif);font-size:20px;color:var(--text);margin-bottom:20px}
+@keyframes modalIn{from{opacity:0;transform:scale(0.98) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-title{
+  font-family:var(--serif);
+  font-size:20px;
+  margin-bottom:20px;
+}
 .f-field{margin-bottom:13px}
-.f-lbl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:5px}
-.f-inp{
-  width:100%;background:var(--glass2);border:1px solid var(--border);border-radius:8px;
-  padding:9px 12px;color:var(--text);font-size:14px;outline:none
+.f-lbl{
+  display:block;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.07em;
+  color:var(--text3);
+  margin-bottom:5px;
 }
-.f-inp:focus{border-color:rgba(45,212,191,0.4)}
+.f-inp{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text);
+  font-size:14px;
+  outline:none
+}
+.f-inp:focus{border-color:rgba(45,212,191,0.32)}
 .f-row{display:flex;gap:10px}
 .f-row .f-field{flex:1}
 .m-acts{display:flex;gap:9px;margin-top:20px}
 .m-btn{
-  flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent
+  flex:1;
+  padding:11px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  border:1px solid transparent;
 }
-.m-btn.cancel{background:var(--glass2);border-color:var(--border);color:var(--text2)}
-.m-btn.save{background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--text-inv);box-shadow:0 3px 12px rgba(45,212,191,0.3)}
-.cal-grid{display:grid;grid-template-columns:1fr;gap:10px}
-.cal-opt{
-  background:var(--glass2);border:1px solid var(--border);border-radius:14px;padding:14px 14px;cursor:pointer;transition:all 0.15s
+.m-btn.cancel{
+  background:var(--surface-2);
+  border-color:var(--border);
+  color:var(--text2);
 }
-.cal-opt:hover{border-color:rgba(45,212,191,0.22);background:var(--glass3)}
-.cal-opt-title{font-weight:700;color:var(--text)}
-.cal-opt-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.m-btn.save{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+}
 
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:40;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.overlay.show{display:block}
-#fileInput{display:none}
-::-webkit-scrollbar{width:0;height:0}
-
-/* ── RESPONSIVE ────────────────────────────────────── */
-@media(min-width:900px){
-  .topbar{display:none}
-  .bot-nav{display:none}
-  .desk-topbar{display:flex}
+/* RESPONSIVE */
+@media(min-width:901px){
+  .topbar,.bot-nav,.mobile-state{display:none!important}
   .sidebar{display:flex}
-  .main{padding-bottom:0}
-  .input-bar{padding-bottom:12px}
+  .desk-topbar{display:flex}
+  .desktop-chat{display:flex;flex-direction:column;flex:1;min-height:0}
 }
-@media(max-width:899px){
+@media(max-width:900px){
+  .sidebar,.desk-topbar{display:none!important}
   .topbar{display:flex}
   .bot-nav{display:flex}
-  .desk-topbar{display:none}
-  .sidebar{display:none}
-  .app{padding-top:calc(var(--topbar) + var(--safe-top));padding-bottom:calc(var(--botnav) + var(--safe-bot))}
+  .main{
+    padding-top:calc(var(--topbar-h) + var(--safe-top));
+    padding-bottom:calc(var(--botnav-h) + var(--safe-bot));
+  }
+  .desktop-chat{display:none!important}
   .msg{max-width:92%}
   .action-card{max-width:100%}
-  .notif-panel{right:8px;left:8px;width:auto;top:calc(var(--topbar) + var(--safe-top) + 6px)}
-  .chat-area{padding:10px 12px 6px}
-  .input-bar{padding:8px 12px;padding-bottom:calc(8px + var(--safe-bot))}
-  .home-dashboard{padding:10px 12px 4px}
-  .dash-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .dash-card{min-height:88px;padding:12px}
-  .dash-value{font-size:18px}
-  .dash-sub{font-size:11px}
   .scan-grid{grid-template-columns:1fr}
 }
 </style>
@@ -574,7 +1093,6 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 <div class="overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div class="app">
-
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
       <div class="sb-brand">
@@ -623,14 +1141,14 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
         <div class="s-lbl" style="margin-bottom:7px">Pages</div>
         <div class="sb-nav">
           <a href="/timeline" class="sb-link">🕐 Medical Timeline</a>
-          <a href="/playbooks" class="sb-link em">🆘 Emergency Playbooks</a>
+          <a href="/playbooks" class="sb-link">🆘 Emergency Playbooks</a>
           <a href="/brief" class="sb-link">📋 Doctor Brief PDF</a>
           <button class="sb-link" onclick="openTaskPanel()">✅ Task Tracker <span id="taskBadge" style="margin-left:auto;background:var(--warn);color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;display:none"></span></button>
           <button class="sb-link" onclick="openCalendarModal()">📅 Add Calendar Event</button>
         </div>
       </div>
 
-      <div style="margin-bottom:12px">
+      <div>
         <div class="s-lbl" style="margin-bottom:6px">Google Calendar</div>
         <a id="gcalStatus" href="/auth/google" target="_blank" class="gcal-s nc">⚠️ Connect Calendar</a>
       </div>
@@ -643,7 +1161,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:calc(16px + var(--safe-top))">
       <span style="font-family:var(--serif);font-size:18px">✅ Tasks</span>
       <span style="flex:1"></span>
-      <button onclick="openAddTask()" style="background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;color:var(--text-inv);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button>
+      <button onclick="openAddTask()" style="background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;color:var(--textInv);padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button>
       <button onclick="closeTaskPanel()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px;line-height:1">×</button>
     </div>
 
@@ -658,12 +1176,93 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   </div>
 
   <main class="main">
-    <div class="desk-topbar">
-      <div class="status-dot"></div>
-      <span class="desk-title" id="desktopTitle">Health Dashboard</span>
-      <span style="flex:1"></span>
-      <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button>
-    </div>
+
+    <!-- MOBILE: CHAT -->
+    <section class="mobile-state active" id="mobileChatState">
+      <div class="chat-wrap">
+        <div class="chat-area" id="chatArea"></div>
+
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Message Health Agent..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendMessage()" aria-label="Send">➤</button>
+          </div>
+
+          <div class="tool-row">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">📧</button>
+            <button class="tool-btn" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
+          </div>
+
+          <div class="upload-pending" id="uploadPending">
+            <span>📎</span><span id="uploadFileName">Uploading...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOBILE: DASHBOARD -->
+    <section class="mobile-state" id="mobileHomeState">
+      <div class="dashboard-wrap">
+        <div class="dash-grid">
+          <button class="dash-card" onclick="goToDashboardCard('today')">
+            <div class="dash-label">Today</div>
+            <div class="dash-value" id="todayPrimary">All clear</div>
+            <div class="dash-sub" id="todaySecondary">No urgent items right now</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('upcoming')">
+            <div class="dash-label">Upcoming</div>
+            <div class="dash-value" id="upcomingPrimary">0</div>
+            <div class="dash-sub" id="upcomingSecondary">No appointments loaded</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('tasks')">
+            <div class="dash-label">Tasks</div>
+            <div class="dash-value" id="tasksPrimary">0</div>
+            <div class="dash-sub" id="tasksSecondary">Nothing pending</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('records')">
+            <div class="dash-label">Records</div>
+            <div class="dash-value" id="recordsPrimary">0</div>
+            <div class="dash-sub" id="recordsSecondary">No recent uploads</div>
+          </button>
+        </div>
+
+        <div class="activity-list" id="recentActivityList"></div>
+      </div>
+    </section>
+
+    <!-- DESKTOP -->
+    <section class="desktop-chat">
+      <div class="desk-topbar">
+        <div class="status-dot"></div>
+        <span class="desk-title" id="desktopTitle">Health Dashboard</span>
+        <span style="flex:1"></span>
+        <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button>
+      </div>
+
+      <div class="chat-wrap">
+        <div class="chat-area" id="desktopChatMirror" style="display:none"></div>
+        <div class="chat-area" id="chatAreaDesktop"></div>
+
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInputDesktop" placeholder="Message Health Agent..." rows="1"></textarea>
+            <button class="send-btn" onclick="sendMessageFromDesktop()" aria-label="Send">➤</button>
+          </div>
+
+          <div class="tool-row" style="justify-content:flex-start">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">📧</button>
+            <button class="tool-btn" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="notif-panel" id="notifPanel">
       <div class="np-head">
@@ -673,61 +1272,14 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
       <div class="notif-list" id="notifList"><div class="ni-empty">No notifications</div></div>
     </div>
 
-    <section class="home-dashboard" id="homeDashboard">
-      <div class="dash-grid">
-        <div class="dash-card">
-          <div class="dash-label">Today</div>
-          <div class="dash-value" id="todayPrimary">All clear</div>
-          <div class="dash-sub" id="todaySecondary">No urgent items right now</div>
-        </div>
-
-        <div class="dash-card">
-          <div class="dash-label">Upcoming</div>
-          <div class="dash-value" id="upcomingPrimary">0</div>
-          <div class="dash-sub" id="upcomingSecondary">No appointments loaded</div>
-        </div>
-
-        <div class="dash-card">
-          <div class="dash-label">Tasks</div>
-          <div class="dash-value" id="tasksPrimary">0</div>
-          <div class="dash-sub" id="tasksSecondary">Nothing pending</div>
-        </div>
-
-        <div class="dash-card">
-          <div class="dash-label">Records</div>
-          <div class="dash-value" id="recordsPrimary">0</div>
-          <div class="dash-sub" id="recordsSecondary">No recent uploads</div>
-        </div>
-      </div>
-
-      <div class="dash-list hidden" id="recentRecordsList"></div>
-    </section>
-
-    <div class="chat-area" id="chatArea"></div>
-
-    <div class="input-bar">
-      <div class="input-row">
-        <textarea class="chat-input" id="chatInput" placeholder="Message Health Agent..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button class="send-btn" onclick="sendMessage()" aria-label="Send">➤</button>
-      </div>
-      <div class="quick-bar">
-        <button class="qb-btn" onclick="startVoiceCall()"><span class="qb-icon">📞</span>Call</button>
-        <button class="qb-btn" onclick="startEmailSend()"><span class="qb-icon">✉️</span>Email</button>
-        <button class="qb-btn" onclick="triggerUpload()"><span class="qb-icon">📷</span>Scan</button>
-        <button class="qb-btn" onclick="openCalendarModal()"><span class="qb-icon">📅</span>Calendar</button>
-      </div>
-      <div class="upload-pending" id="uploadPending">
-        <span>📎</span><span id="uploadFileName">Uploading...</span>
-      </div>
-    </div>
   </main>
 </div>
 
 <nav class="bot-nav" id="botNav">
-  <a href="/" class="bn-tab active" id="navDash"><span class="bn-icon">🏠</span>Home</a>
-  <button class="bn-tab" onclick="newChat()"><span class="bn-icon">💬</span>New Chat</button>
-  <button class="bn-tab" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
-  <button class="bn-tab" onclick="openMenuSheet()"><span class="bn-icon">☰</span>Menu</button>
+  <button class="bn-tab" id="navHome" onclick="setMobileState('home')"><span class="bn-icon">🏠</span>Home</button>
+  <button class="bn-tab active" id="navChat" onclick="setMobileState('chat')"><span class="bn-icon">💬</span>Chat</button>
+  <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
+  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">☰</span>More</button>
 </nav>
 
 <div class="profile-sheet" id="profileSheet">
@@ -736,7 +1288,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     <div class="ps-top">
       <div class="ps-pat-info">
         <div class="ps-avatar" id="psAvatar">LF</div>
-        <div class="ps-name-wrap">
+        <div>
           <div class="ps-name" id="psName">Patient</div>
           <div class="ps-sub" id="psSub">Family Member</div>
         </div>
@@ -750,33 +1302,49 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
       <div class="ps-stat"><div class="ps-stat-n" id="psAlgN">0</div><div class="ps-stat-l">Allergies</div></div>
     </div>
 
-    <div class="ps-section">
-      <div class="ps-section-title">Details</div>
-      <div class="ps-row"><span class="ps-rl">DOB</span><span class="ps-rv" id="psDob">—</span></div>
-      <div class="ps-row"><span class="ps-rl">Doctor</span><span class="ps-rv" id="psDoctor">—</span></div>
-      <div class="ps-row"><span class="ps-rl">Insurance</span><span class="ps-rv" id="psInsurance">—</span></div>
-      <div class="ps-row"><span class="ps-rl">Pharmacy</span><span class="ps-rv" id="psPharmacy">—</span></div>
+    <div class="ps-expand open" id="expDetails">
+      <button class="ps-expand-btn" onclick="toggleExpand('expDetails')">
+        <span>Details</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="ps-row"><span class="ps-rl">DOB</span><span class="ps-rv" id="psDob">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Doctor</span><span class="ps-rv" id="psDoctor">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Insurance</span><span class="ps-rv" id="psInsurance">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Pharmacy</span><span class="ps-rv" id="psPharmacy">—</span></div>
+      </div>
     </div>
 
-    <div class="ps-section">
-      <div class="ps-section-title">Conditions</div>
-      <div class="pill-row" id="psCondPills"></div>
+    <div class="ps-expand" id="expConditions">
+      <button class="ps-expand-btn" onclick="toggleExpand('expConditions')">
+        <span>Conditions</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psCondPills"></div>
+      </div>
     </div>
 
-    <div class="ps-section">
-      <div class="ps-section-title">Medications</div>
-      <div class="pill-row" id="psMedPills"></div>
+    <div class="ps-expand" id="expMeds">
+      <button class="ps-expand-btn" onclick="toggleExpand('expMeds')">
+        <span>Medications</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psMedPills"></div>
+      </div>
     </div>
 
-    <div class="ps-section">
-      <div class="ps-section-title">Allergies</div>
-      <div class="pill-row" id="psAlgPills"></div>
+    <div class="ps-expand" id="expAllergies">
+      <button class="ps-expand-btn" onclick="toggleExpand('expAllergies')">
+        <span>Allergies</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psAlgPills"></div>
+      </div>
     </div>
 
-    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
       <div class="ps-section-title">Switch Patient</div>
-      <div id="psPatientList" style="display:flex;flex-direction:column;gap:5px;margin-top:6px"></div>
-      <button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--glass2);border:1px solid var(--border);border-radius:10px;color:var(--teal);font-size:13px;cursor:pointer">＋ Add Family Member</button>
+      <div id="psPatientList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      <button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--teal);font-size:13px;cursor:pointer">＋ Add Family Member</button>
     </div>
   </div>
 </div>
@@ -785,14 +1353,14 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   <div class="ms-backdrop" onclick="closeMenuSheet()"></div>
   <div class="ms-panel">
     <div class="ms-handle"></div>
-    <div class="ms-title">Tools</div>
+    <div class="ms-title">More</div>
     <div class="ms-grid">
       <a href="/timeline" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🕐</span><span class="ms-label">Timeline</span></a>
       <a href="/playbooks" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🆘</span><span class="ms-label">Playbooks</span></a>
-      <a href="/brief" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">📋</span><span class="ms-label">Dr. Brief</span></a>
+      <a href="/brief" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">📋</span><span class="ms-label">Dr Brief</span></a>
       <button class="ms-item" onclick="closeMenuSheet();openTaskPanel()"><span class="ms-icon">✅</span><span class="ms-label">Tasks</span></button>
       <button class="ms-item" onclick="closeMenuSheet();openCalendarModal()"><span class="ms-icon">📅</span><span class="ms-label">Calendar</span></button>
-      <button class="ms-item" onclick="closeMenuSheet();newChat()"><span class="ms-icon">💬</span><span class="ms-label">New Chat</span></button>
+      <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">⚙️</span><span class="ms-label">Settings</span></button>
     </div>
   </div>
 </div>
@@ -892,20 +1460,16 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     </div>
 
     <div class="s-lbl" style="margin-bottom:10px">Choose Calendar</div>
-    <div class="cal-grid">
-      <button class="cal-opt" onclick="addEventToAppleCalendar()">
-        <div class="cal-opt-title"> iPhone / Apple Calendar</div>
-        <div class="cal-opt-sub">Downloads an .ics file that opens in Calendar on iPhone and Mac.</div>
-      </button>
 
-      <button class="cal-opt" onclick="addEventToGoogleCalendar()">
-        <div class="cal-opt-title">Google Calendar</div>
-        <div class="cal-opt-sub">Uses your connected Google flow when available, otherwise opens Google’s event page.</div>
+    <div style="display:grid;gap:10px">
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToAppleCalendar()">
+        <span> iPhone / Apple Calendar</span>
       </button>
-
-      <button class="cal-opt" onclick="addEventToOutlookCalendar()">
-        <div class="cal-opt-title">Outlook Calendar</div>
-        <div class="cal-opt-sub">Opens Outlook’s web calendar compose flow.</div>
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToGoogleCalendar()">
+        <span>Google Calendar</span>
+      </button>
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToOutlookCalendar()">
+        <span>Outlook Calendar</span>
       </button>
     </div>
 
@@ -920,7 +1484,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 <script>
 'use strict';
 
-/* ── STATE ─────────────────────────────────────────── */
+const MODEL_NAME = 'claude-sonnet-4-20250514';
+
 let currentMessages = [];
 let currentSessionId = null;
 let currentPatientId = null;
@@ -931,10 +1496,14 @@ let pendingCalendarEvent = null;
 let allTasks = [];
 let taskFilter = 'all';
 let latestScanData = null;
+let mobileState = 'chat';
 
-/* ── INIT ──────────────────────────────────────────── */
+/* INIT */
 window.addEventListener('DOMContentLoaded', async () => {
   try {
+    bindDesktopInput();
+    setMobileState('chat', false);
+    seedCalendarDefaults();
     await loadPatients();
     clearChat();
     await Promise.all([
@@ -943,7 +1512,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       checkCalendarStatus()
     ]);
     updateDashboard();
-    seedCalendarDefaults();
     setTimeout(() => { loadTasks().catch(() => {}); }, 800);
   } catch (err) {
     console.error('init error', err);
@@ -952,7 +1520,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-/* ── API ───────────────────────────────────────────── */
+/* API */
 async function api(url, options = {}) {
   const res = await fetch(url, options);
   const contentType = res.headers.get('content-type') || '';
@@ -976,7 +1544,7 @@ async function api(url, options = {}) {
   return data || {};
 }
 
-/* ── HELPERS ───────────────────────────────────────── */
+/* HELPERS */
 function lockBody(){ document.body.classList.add('modal-open'); }
 function unlockBody(){ document.body.classList.remove('modal-open'); }
 
@@ -991,12 +1559,17 @@ function esc(str){
 }
 
 function formatAssistantText(text) {
-  const safe = esc(text).replace(/\n/g, '<br>');
-  return safe
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/__(.+?)__/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
+  if (!text) return '';
+  let safe = esc(text);
+
+  safe = safe.replace(/```([\s\S]*?)```/g, (_m, code) => `<pre><code>${code.trim()}</code></pre>`);
+  safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  safe = safe.replace(/\n/g, '<br>');
+
+  return safe;
 }
 
 function setText(id, val) {
@@ -1086,6 +1659,16 @@ function inferConfidence(data){
   return {label:'low confidence', className:'info'};
 }
 
+function normalizeUSPhone(phone){
+  if(!phone) return '';
+  const cleaned = String(phone).replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+')) return cleaned;
+  const digits = cleaned.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  return cleaned;
+}
+
 function toISODateTimeLocal(dateStr, timeStr){
   if(!dateStr) throw new Error('Date is required.');
   const time = timeStr || '09:00';
@@ -1144,29 +1727,78 @@ function seedCalendarDefaults(){
   if (!titleEl.value) titleEl.value = 'Medical appointment';
 }
 
-/* ── DASHBOARD ─────────────────────────────────────── */
+function isMobileView(){
+  return window.innerWidth <= 900;
+}
+
+function setMobileState(state, animate = true){
+  mobileState = state;
+  document.querySelectorAll('.mobile-state').forEach(el => el.classList.remove('active'));
+
+  if (state === 'chat') document.getElementById('mobileChatState').classList.add('active');
+  if (state === 'home') document.getElementById('mobileHomeState').classList.add('active');
+
+  document.getElementById('navHome')?.classList.toggle('active', state === 'home');
+  document.getElementById('navChat')?.classList.toggle('active', state === 'chat');
+}
+
+function goToDashboardCard(type){
+  if (type === 'tasks') {
+    openTaskPanel();
+    return;
+  }
+  if (type === 'records') {
+    setMobileState('chat');
+    addMsg('ai', 'Recent records are visible after scans are saved. Scan a document or bottle to start building the record list.', true, false);
+    return;
+  }
+  if (type === 'upcoming') {
+    setMobileState('chat');
+    qa('What are her upcoming appointments?');
+    return;
+  }
+  if (type === 'today') {
+    setMobileState('chat');
+    qa('What needs attention today?');
+  }
+}
+
+function toggleExpand(id){
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+function openSettingsPlaceholder(){
+  closeMenuSheet();
+  addMsg('ai', '⚙️ Settings screen coming next. Right now, the core care tools are chat, tasks, scans, calendar, and patient switching.', true, false);
+  setMobileState('chat');
+}
+
+/* DASHBOARD */
 function updateTopbarTitle(patient){
   const n = patient?.name || 'Health Dashboard';
   setText('desktopTitle', `${n} — Health Dashboard`);
 }
 
 function renderRecentRecords(){
-  const list = document.getElementById('recentRecordsList');
+  const list = document.getElementById('recentActivityList');
   if(!list) return;
 
   const uploads = getRecentUploads().filter(x => !currentPatientId || x.patientId === currentPatientId).slice(0, 3);
 
   if (!uploads.length) {
-    list.classList.add('hidden');
-    list.innerHTML = '';
+    list.innerHTML = `
+      <div class="activity-item">
+        <div class="activity-title">No recent activity yet</div>
+        <div class="activity-sub">Scans, saved records, and care actions will appear here.</div>
+      </div>
+    `;
     return;
   }
 
-  list.classList.remove('hidden');
   list.innerHTML = uploads.map(item => `
-    <div class="dash-mini">
-      <div class="dash-mini-title">${esc(item.title || item.name || 'Recent record')}</div>
-      <div class="dash-mini-sub">${esc(item.type || 'Record')} · ${formatRelTime(item.at)}</div>
+    <div class="activity-item">
+      <div class="activity-title">${esc(item.title || item.name || 'Recent record')}</div>
+      <div class="activity-sub">${esc(item.type || 'Record')} · ${formatRelTime(item.at)}</div>
     </div>
   `).join('');
 }
@@ -1207,7 +1839,7 @@ function updateDashboard(){
   renderRecentRecords();
 }
 
-/* ── PATIENTS ──────────────────────────────────────── */
+/* PATIENTS */
 async function loadPatients(){
   const [patientsData, currentData] = await Promise.all([
     api('/api/patients'),
@@ -1250,7 +1882,7 @@ async function switchPatient(id){
     await api('/api/patients/switch', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ patientId:id })
+      body:JSON.stringify({ patientId:id, model:MODEL_NAME })
     });
 
     currentPatientId = id;
@@ -1327,7 +1959,7 @@ function renderProfileSheet(patient){
 
   const pl = document.getElementById('psPatientList');
   pl.innerHTML = allPatients.map(p => `
-    <button onclick="switchPatient('${esc(p.id)}')" style="width:100%;padding:9px 12px;background:${p.id===currentPatientId?'rgba(45,212,191,0.1)':'var(--glass2)'};border:1px solid ${p.id===currentPatientId?'rgba(45,212,191,0.25)':'var(--border)'};border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;text-align:left">
+    <button onclick="switchPatient('${esc(p.id)}')" style="width:100%;padding:10px 12px;background:${p.id===currentPatientId?'rgba(45,212,191,0.1)':'var(--surface)'};border:1px solid ${p.id===currentPatientId?'rgba(45,212,191,0.2)':'var(--border)'};border-radius:12px;color:var(--text);font-size:13px;cursor:pointer;text-align:left">
       <strong>${esc(p.name)}</strong> <span style="color:var(--text2);font-size:11px">· ${esc(p.relationship || p.relation || 'Family Member')}</span>
     </button>
   `).join('');
@@ -1348,7 +1980,7 @@ document.addEventListener('click', e => {
   if (!notifOpen) document.getElementById('notifPanel')?.classList.remove('open');
 });
 
-/* ── SHEETS / MODALS ───────────────────────────────── */
+/* SHEETS / MODALS */
 function openProfileSheet(){ document.getElementById('profileSheet')?.classList.add('open'); lockBody(); }
 function closeProfileSheet(){ document.getElementById('profileSheet')?.classList.remove('open'); unlockBody(); }
 function openMenuSheet(){ document.getElementById('menuSheet')?.classList.add('open'); lockBody(); }
@@ -1360,7 +1992,7 @@ function closeAddTask(){ document.getElementById('addTaskModal').classList.remov
 function openCalendarModal(){ document.getElementById('calendarModal').classList.add('open'); seedCalendarDefaults(); lockBody(); }
 function closeCalendarModal(){ document.getElementById('calendarModal').classList.remove('open'); unlockBody(); }
 
-/* ── ADD PATIENT ───────────────────────────────────── */
+/* ADD PATIENT */
 async function saveNewPatient(){
   const name = document.getElementById('newName').value.trim();
   if(!name){ alert('Name is required'); return; }
@@ -1382,7 +2014,7 @@ async function saveNewPatient(){
     const data = await api('/api/patients/add', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(patient)
+      body:JSON.stringify({ ...patient, model:MODEL_NAME })
     });
 
     closeAddPatient();
@@ -1396,7 +2028,7 @@ async function saveNewPatient(){
   }
 }
 
-/* ── CHAT HISTORY ──────────────────────────────────── */
+/* CHAT HISTORY */
 async function loadChatHistory(){
   try{
     const data = await api('/api/chat-history');
@@ -1470,6 +2102,7 @@ function newChat(){
   currentMessages = [];
   clearChat();
   loadChatHistory().catch(() => {});
+  if (isMobileView()) setMobileState('chat');
 }
 
 async function saveChatSession(){
@@ -1478,7 +2111,7 @@ async function saveChatSession(){
     await api('/api/save-chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ messages: currentMessages, patientId: currentPatientId })
+      body:JSON.stringify({ messages: currentMessages, patientId: currentPatientId, model:MODEL_NAME })
     });
   }catch(e){
     console.error('saveChatSession', e);
@@ -1491,11 +2124,11 @@ setInterval(() => {
 
 window.addEventListener('beforeunload', () => {
   if(!currentMessages.length) return;
-  const blob = new Blob([JSON.stringify({ messages: currentMessages, patientId: currentPatientId })], { type:'application/json' });
+  const blob = new Blob([JSON.stringify({ messages: currentMessages, patientId: currentPatientId, model:MODEL_NAME })], { type:'application/json' });
   navigator.sendBeacon('/api/save-chat', blob);
 });
 
-/* ── NOTIFICATIONS ─────────────────────────────────── */
+/* NOTIFICATIONS */
 async function loadNotifications(){
   try{
     const data = await api('/api/notifications');
@@ -1565,7 +2198,7 @@ function toggleNotifications(){
   document.getElementById('notifPanel')?.classList.toggle('open');
 }
 
-/* ── CALENDAR ──────────────────────────────────────── */
+/* CALENDAR */
 async function checkCalendarStatus(){
   try{
     const data = await api('/api/calendar/status');
@@ -1645,6 +2278,7 @@ function addEventToAppleCalendar(){
     downloadICSFile(event);
     closeCalendarModal();
     addMsg('ai', `📅 Apple Calendar file created for <strong>${esc(event.title)}</strong>. On iPhone, open the downloaded file to add it to Calendar.`, true, true);
+    if (isMobileView()) setMobileState('chat');
   }catch(e){
     addMsg('ai', `❌ ${esc(e.message)}`, true, false);
   }
@@ -1664,7 +2298,8 @@ async function addEventToGoogleCalendar(){
           time: event.time,
           duration: event.duration,
           location: event.location,
-          description: event.description
+          description: event.description,
+          model:MODEL_NAME
         })
       });
 
@@ -1673,6 +2308,7 @@ async function addEventToGoogleCalendar(){
       if (data.success) {
         const linkHtml = data.link ? ` <a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer">View →</a>` : '';
         addMsg('ai', `✅ Added <strong>${esc(event.title)}</strong> to Google Calendar.${linkHtml}`, true, true);
+        if (isMobileView()) setMobileState('chat');
         return;
       }
     }
@@ -1690,6 +2326,7 @@ async function addEventToGoogleCalendar(){
     window.open(url.toString(), '_blank', 'noopener,noreferrer');
     closeCalendarModal();
     addMsg('ai', `📅 Opened Google Calendar for <strong>${esc(event.title)}</strong>.`, true, true);
+    if (isMobileView()) setMobileState('chat');
   }catch(e){
     addMsg('ai', `❌ ${esc(e.message)}`, true, false);
   }
@@ -1708,82 +2345,117 @@ function addEventToOutlookCalendar(){
     window.open(url.toString(), '_blank', 'noopener,noreferrer');
     closeCalendarModal();
     addMsg('ai', `📅 Opened Outlook Calendar for <strong>${esc(event.title)}</strong>.`, true, true);
+    if (isMobileView()) setMobileState('chat');
   }catch(e){
     addMsg('ai', `❌ ${esc(e.message)}`, true, false);
   }
 }
 
-/* ── CHAT ──────────────────────────────────────────── */
+/* CHAT */
+function getPrimaryChatArea(){
+  return isMobileView() ? document.getElementById('chatArea') : document.getElementById('chatAreaDesktop');
+}
+
+function getPrimaryChatInput(){
+  return isMobileView() ? document.getElementById('chatInput') : document.getElementById('chatInputDesktop');
+}
+
 function clearChat(addWelcome = true){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-  area.innerHTML = '';
+  const mobileArea = document.getElementById('chatArea');
+  const desktopArea = document.getElementById('chatAreaDesktop');
+
+  if (mobileArea) mobileArea.innerHTML = '';
+  if (desktopArea) desktopArea.innerHTML = '';
 
   if(addWelcome){
     const p = getPatientById(currentPatientId);
     const fn = esc((p?.name || 'Linda').split(' ')[0]);
-    area.innerHTML = `
-      <div class="welcome-card" id="welcomeCard">
-        <div class="wc-head">
-          <div class="wc-icon">🤖</div>
-          <button class="wc-x" onclick="document.getElementById('welcomeCard')?.remove()">×</button>
-        </div>
-        <div class="wc-title">Health Agent</div>
-        <div class="wc-body">I'm here for <strong>${fn}</strong>. I can help with appointments, provider calls, refill requests, insurance questions, doctor communication, and scanned document intake.</div>
-        <div class="suggest-wrap">
-          <button class="suggest-chip" onclick="qa('What are her current medications?')">What meds is she taking?</button>
-          <button class="suggest-chip" onclick="qa('What are her upcoming appointments?')">What appointments are coming up?</button>
-          <button class="suggest-chip" onclick="qa('Draft a prior authorization appeal letter for Medicare')">Draft an appeal letter</button>
-          <button class="suggest-chip" onclick="qa('Check whether a supplement is safe with current meds')">Check supplement safety</button>
+    const html = `
+      <div class="welcome-inline" id="welcomeInline">
+        <div class="welcome-inline-title">Hi, I’m here for <strong>${fn}</strong>. What do you need?</div>
+        <div class="chip-row">
+          <button class="chip" onclick="qa('What are her current medications?')">What meds is she taking?</button>
+          <button class="chip" onclick="qa('What appointments are coming up?')">What appointments are coming up?</button>
+          <button class="chip" onclick="qa('Draft a prior authorization appeal letter for Medicare')">Draft an appeal letter</button>
+          <button class="chip" onclick="qa('Check supplement safety')">Check supplement safety</button>
         </div>
       </div>
     `;
+    if (mobileArea) mobileArea.innerHTML = html;
+    if (desktopArea) desktopArea.innerHTML = html;
+  }
+}
+
+function syncChatAreas(){
+  const mobileArea = document.getElementById('chatArea');
+  const desktopArea = document.getElementById('chatAreaDesktop');
+  if (!mobileArea || !desktopArea) return;
+  if (isMobileView()) {
+    desktopArea.innerHTML = mobileArea.innerHTML;
+  } else {
+    mobileArea.innerHTML = desktopArea.innerHTML;
   }
 }
 
 function addMsg(role, content, scroll = true, allowHtml = false){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-
-  const isUser = role === 'user';
-  const safeContent = allowHtml ? content : esc(String(content || ''));
-
-  area.insertAdjacentHTML('beforeend', `
-    <div class="msg ${isUser ? 'user' : 'ai'}">
-      <div class="msg-avatar">${isUser ? '👤' : '🤖'}</div>
-      <div class="msg-bubble">${safeContent}</div>
+  const html = `
+    <div class="msg ${role === 'user' ? 'user' : 'ai'}">
+      <div class="msg-avatar">${role === 'user' ? '👤' : '🤖'}</div>
+      <div class="msg-bubble">${allowHtml ? content : esc(String(content || ''))}</div>
     </div>
-  `);
+  `;
+
+  ['chatArea','chatAreaDesktop'].forEach(id => {
+    const area = document.getElementById(id);
+    if (area) area.insertAdjacentHTML('beforeend', html);
+  });
 
   if(scroll){
-    requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+    requestAnimationFrame(() => {
+      ['chatArea','chatAreaDesktop'].forEach(id => {
+        const area = document.getElementById(id);
+        if (area) area.scrollTop = area.scrollHeight;
+      });
+    });
   }
 }
 
 function addTypingBubble(id){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-
-  area.insertAdjacentHTML('beforeend', `
+  const html = `
     <div class="msg ai" id="${id}">
       <div class="msg-avatar">🤖</div>
       <div class="msg-bubble">
         <div class="typing-indicator"><span></span><span></span><span></span></div>
       </div>
     </div>
-  `);
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+}
 
-  area.scrollTop = area.scrollHeight;
+function removeTypingBubble(id){
+  document.querySelectorAll(`#${CSS.escape(id)}`).forEach(el => el.remove());
 }
 
 async function sendMessage(prefilledText = null){
+  if (isMobileView()) setMobileState('chat');
+
   const input = document.getElementById('chatInput');
-  const raw = prefilledText ?? input.value;
+  const desktopInput = document.getElementById('chatInputDesktop');
+  const sourceInput = isMobileView() ? input : desktopInput;
+  const raw = prefilledText ?? sourceInput.value;
   const text = String(raw || '').trim();
   if(!text) return;
 
   input.value = '';
+  desktopInput.value = '';
   input.style.height = 'auto';
+  desktopInput.style.height = 'auto';
 
   addMsg('user', text, true, false);
   currentMessages.push({ role:'user', content:text });
@@ -1795,10 +2467,14 @@ async function sendMessage(prefilledText = null){
     const data = await api('/api/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ message:text, patientId:currentPatientId })
+      body: JSON.stringify({
+        message:text,
+        patientId:currentPatientId,
+        model:MODEL_NAME
+      })
     });
 
-    document.getElementById(typingId)?.remove();
+    removeTypingBubble(typingId);
 
     const replyText = data.reply || data.error || 'Something went wrong';
     addMsg('ai', formatAssistantText(replyText), true, true);
@@ -1813,34 +2489,56 @@ async function sendMessage(prefilledText = null){
 
     await loadNotifications();
   }catch(e){
-    document.getElementById(typingId)?.remove();
+    removeTypingBubble(typingId);
     addMsg('ai', `❌ ${esc(e.message)}`, true, false);
   }
 }
 
+function sendMessageFromDesktop(){
+  if (!isMobileView()) sendMessage();
+}
+
 function qa(text){
   closeSidebar();
+  setMobileState('chat');
   sendMessage(text);
 }
 
 function handleKey(e){
+  if (isMobileView() && mobileState !== 'chat') setMobileState('chat');
   if(e.key === 'Enter' && !e.shiftKey){
     e.preventDefault();
     sendMessage();
   }
 }
 
-function autoResize(el){
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+function bindDesktopInput(){
+  const input = document.getElementById('chatInputDesktop');
+  if (!input) return;
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessageFromDesktop();
+    }
+  });
+  input.addEventListener('input', () => autoResize(input));
 }
 
-/* ── SCAN EXPERIENCE ───────────────────────────────── */
+function autoResize(el){
+  if (isMobileView() && mobileState !== 'chat') setMobileState('chat');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  const mirror = el.id === 'chatInput' ? document.getElementById('chatInputDesktop') : document.getElementById('chatInput');
+  if (mirror) {
+    mirror.value = el.value;
+    mirror.style.height = 'auto';
+    mirror.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+}
+
+/* SCAN */
 function renderScanCard(data, fileName = 'Scanned item'){
   latestScanData = { ...data, fileName, patientId: currentPatientId };
-
-  const area = document.getElementById('chatArea');
-  if(!area) return;
 
   const confidence = inferConfidence(data);
 
@@ -1909,8 +2607,15 @@ function renderScanCard(data, fileName = 'Scanned item'){
     </div>
   `;
 
-  area.insertAdjacentHTML('beforeend', html);
-  area.scrollTop = area.scrollHeight;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+
+  setMobileState('chat');
 }
 
 function confirmScan(){
@@ -1954,69 +2659,120 @@ function askDoctor(){
   addMsg('ai', `✉️ Drafting a question for <strong>${esc(doctor)}</strong> about <strong>${esc(product)}</strong> and whether it is appropriate for this patient.`, true, true);
 }
 
-/* ── ACTION CARDS ──────────────────────────────────── */
+/* ACTION CARDS */
 function addCalendarCard(event){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-
   const payload = encodeURIComponent(JSON.stringify(event));
-  area.insertAdjacentHTML('beforeend', `
+  const html = `
     <div class="action-card calendar">
       <div class="ac-title">📅 Add to Calendar?</div>
       <div class="ac-body"><strong>${esc(event.title)}</strong><br/>${esc(event.date)} at ${esc(event.time || '09:00')} · ${esc(String(event.duration || 60))} min</div>
       <div class="ac-btns">
         <button class="ac-btn success" onclick="addToCalendar(JSON.parse(decodeURIComponent('${payload}')))">Add</button>
-        <button class="ac-btn secondary" onclick="this.closest('.action-card').remove()">Dismiss</button>
+        <button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button>
       </div>
     </div>
-  `);
-  area.scrollTop = area.scrollHeight;
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
 }
 
 function addCallCard(callReq){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-
-  area.insertAdjacentHTML('beforeend', `
-    <div class="action-card call">
+  const callId = `call-card-${Date.now()}`;
+  const html = `
+    <div class="action-card call" data-call-card="${callId}">
       <div class="ac-title">📞 Confirm Phone Call</div>
       <div class="ac-body">Call <strong>${esc(callReq.name)}</strong> at ${esc(callReq.phone || 'unknown')}<br/>Reason: ${esc(callReq.reason || 'Medical inquiry')}</div>
       <div class="ac-btns">
-        <button class="ac-btn warn">📞 Confirm Call</button>
-        <button class="ac-btn secondary">Cancel</button>
+        <button class="ac-btn warn" data-dyn-action="confirm-call" data-card="${callId}">📞 Confirm Call</button>
+        <button class="ac-btn secondary" data-dyn-action="cancel-call" data-card="${callId}">Cancel</button>
       </div>
     </div>
-  `);
-
-  area.scrollTop = area.scrollHeight;
-
-  const card = area.querySelector('.action-card.call:last-of-type');
-  if(card){
-    const confirmBtn = card.querySelector('.ac-btn.warn');
-    const cancelBtn = card.querySelector('.ac-btn.secondary');
-
-    if(confirmBtn){
-      const doConfirm = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        card.remove();
-        await confirmCall();
-      };
-      confirmBtn.addEventListener('click', doConfirm, { once:true });
-      confirmBtn.addEventListener('touchend', doConfirm, { once:true, passive:false });
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
     }
+  });
 
-    if(cancelBtn){
-      const doCancel = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        card.remove();
-        cancelCall();
-      };
-      cancelBtn.addEventListener('click', doCancel, { once:true });
-      cancelBtn.addEventListener('touchend', doCancel, { once:true, passive:false });
+  bindDynamicButton(`[data-dyn-action="confirm-call"][data-card="${callId}"]`, async (_e, btn) => {
+    removeCardsByData('call-card', callId);
+    await confirmCall();
+  });
+
+  bindDynamicButton(`[data-dyn-action="cancel-call"][data-card="${callId}"]`, async (_e, btn) => {
+    removeCardsByData('call-card', callId);
+    await cancelCall();
+  });
+}
+
+function addEmailActionCard(){
+  const emailId = `email-card-${Date.now()}`;
+  const html = `
+    <div class="action-card email" data-email-card="${emailId}">
+      <div class="ac-title">✉️ Email Draft Ready</div>
+      <div class="ac-body">Your email draft is ready. Send it now?</div>
+      <div class="ac-btns">
+        <button class="ac-btn primary" data-dyn-action="send-email" data-card="${emailId}">📤 Send</button>
+        <button class="ac-btn secondary" data-dyn-action="save-email" data-card="${emailId}">Save Draft</button>
+      </div>
+    </div>
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
     }
+  });
+
+  bindDynamicButton(`[data-dyn-action="send-email"][data-card="${emailId}"]`, async (_e, btn) => {
+    removeCardsByData('email-card', emailId);
+    await sendDraftEmail(btn);
+  });
+
+  bindDynamicButton(`[data-dyn-action="save-email"][data-card="${emailId}"]`, async () => {
+    removeCardsByData('email-card', emailId);
+    addMsg('ai', 'Email draft saved.', true, false);
+  });
+}
+
+function removeClosestCard(btn){
+  const card = btn.closest('.action-card');
+  if (!card) return;
+  const attr = [...card.attributes].find(a => a.name.startsWith('data-'));
+  if (attr) {
+    const dataName = attr.name.replace('data-','');
+    removeCardsByData(dataName, attr.value);
+  } else {
+    card.remove();
   }
+}
+
+function removeCardsByData(attrName, value){
+  document.querySelectorAll(`[data-${attrName}="${value}"]`).forEach(el => el.remove());
+}
+
+function bindDynamicButton(selector, handler){
+  document.querySelectorAll(selector).forEach(el => {
+    let fired = false;
+    const wrapped = async (e) => {
+      if (fired) return;
+      fired = true;
+      e.preventDefault();
+      e.stopPropagation();
+      try { await handler(e, el); }
+      finally { setTimeout(() => { fired = false; }, 200); }
+    };
+    el.addEventListener('click', wrapped);
+    el.addEventListener('touchend', wrapped, { passive:false });
+  });
 }
 
 async function confirmCall(){
@@ -2024,7 +2780,7 @@ async function confirmCall(){
     const data = await api('/api/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ message:'confirm call', patientId:currentPatientId })
+      body:JSON.stringify({ message:'confirm call', patientId:currentPatientId, model:MODEL_NAME })
     });
     addMsg('ai', formatAssistantText(data.reply || 'Call confirmed.'), true, true);
   }catch(e){
@@ -2037,7 +2793,7 @@ async function cancelCall(){
     await api('/api/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ message:'cancel call', patientId:currentPatientId })
+      body:JSON.stringify({ message:'cancel call', patientId:currentPatientId, model:MODEL_NAME })
     });
     addMsg('ai', 'Call cancelled.', true, false);
   }catch(e){
@@ -2045,39 +2801,29 @@ async function cancelCall(){
   }
 }
 
-function addEmailActionCard(){
-  const area = document.getElementById('chatArea');
-  if(!area) return;
-
-  area.insertAdjacentHTML('beforeend', `
-    <div class="action-card email">
-      <div class="ac-title">✉️ Email Draft Ready</div>
-      <div class="ac-body">Your email has been drafted. Ready to send?</div>
-      <div class="ac-btns">
-        <button class="ac-btn primary" onclick="sendDraftEmail(this)">📤 Send</button>
-        <button class="ac-btn secondary" onclick="this.closest('.action-card').remove()">Save Draft</button>
-      </div>
-    </div>
-  `);
-
-  area.scrollTop = area.scrollHeight;
-}
-
-async function sendDraftEmail(btn){
-  btn.closest('.action-card')?.remove();
+async function sendDraftEmail(){
   try{
-    const data = await api('/api/chat', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ message:'send', patientId:currentPatientId })
-    });
-    addMsg('ai', formatAssistantText(data.reply || 'Email sent.'), true, true);
+    let data;
+    try{
+      data = await api('/api/send-email', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ patientId:currentPatientId, model:MODEL_NAME })
+      });
+    }catch(_err){
+      data = await api('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ message:'send', patientId:currentPatientId, model:MODEL_NAME })
+      });
+    }
+    addMsg('ai', formatAssistantText(data.reply || data.message || 'Email sent.'), true, true);
   }catch(e){
     addMsg('ai', `❌ ${esc(e.message)}`, true, false);
   }
 }
 
-/* ── FILE UPLOAD ───────────────────────────────────── */
+/* FILE UPLOAD */
 function triggerUpload(){
   document.getElementById('fileInput')?.click();
 }
@@ -2092,6 +2838,7 @@ async function handleFileUpload(input){
 
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('model', MODEL_NAME);
 
   try{
     const res = await fetch('/api/upload', { method:'POST', body:formData });
@@ -2105,6 +2852,7 @@ async function handleFileUpload(input){
 
     if(data.pending){
       renderScanCard(data.extracted || {}, file.name);
+      setMobileState('chat');
     } else {
       saveRecentUpload({
         name: file.name,
@@ -2124,17 +2872,19 @@ async function handleFileUpload(input){
   }
 }
 
-/* ── VOICE / EMAIL ─────────────────────────────────── */
+/* VOICE / EMAIL */
 async function startVoiceCall(){
   const patient = getPatientById(currentPatientId);
-  const phone = patient?.phone || prompt('Enter phone number to call:');
+  let phone = patient?.phone || prompt('Enter phone number to call:');
   if(!phone) return;
+
+  phone = normalizeUSPhone(phone);
 
   try{
     const data = await api('/api/call', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ phone, reason:'Health check call' })
+      body:JSON.stringify({ phone, reason:'Health check call', patientId:currentPatientId, model:MODEL_NAME })
     });
 
     addMsg('ai', `📞 Call initiated! ID: ${esc(data.id || 'started')}. Status: ${esc(data.status || 'connecting...')}`, true, false);
@@ -2145,10 +2895,11 @@ async function startVoiceCall(){
 
 function startEmailSend(){
   const patientName = getPatientById(currentPatientId)?.name || 'the patient';
+  setMobileState('chat');
   qa(`Draft an email to Dr. Martinez about ${patientName}'s recent lab results`);
 }
 
-/* ── SIDEBAR ───────────────────────────────────────── */
+/* SIDEBAR */
 function toggleSidebar(){
   document.getElementById('sidebar')?.classList.toggle('open');
   document.getElementById('sidebarOverlay')?.classList.toggle('show');
@@ -2158,7 +2909,7 @@ function closeSidebar(){
   document.getElementById('sidebarOverlay')?.classList.remove('show');
 }
 
-/* ── TASKS ─────────────────────────────────────────── */
+/* TASKS */
 async function openTaskPanel(){
   document.getElementById('taskPanel')?.classList.add('open');
   document.getElementById('taskPanelOverlay').style.display = 'block';
@@ -2255,7 +3006,7 @@ async function toggleTaskDone(id, checked){
     await api(`/api/tasks/${encodeURIComponent(id)}`, {
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ status: checked ? 'done' : 'pending' })
+      body:JSON.stringify({ status: checked ? 'done' : 'pending', model:MODEL_NAME })
     });
     await loadTasks();
   }catch(e){
@@ -2268,7 +3019,7 @@ async function setTaskStatus(id, status){
     await api(`/api/tasks/${encodeURIComponent(id)}`, {
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ status })
+      body:JSON.stringify({ status, model:MODEL_NAME })
     });
     await loadTasks();
   }catch(e){
@@ -2303,7 +3054,8 @@ async function saveTask(){
         dueDate: document.getElementById('taskDue').value,
         priority: document.getElementById('taskPriority').value,
         category: document.getElementById('taskCategory').value,
-        patientId: currentPatientId
+        patientId: currentPatientId,
+        model:MODEL_NAME
       })
     });
 

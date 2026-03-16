@@ -1,6 +1,38 @@
 {
   "sessions": [
     {
+      "id": "1773632139420",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-16T03:35:39.420Z",
+      "preview": "can you send an email",
+      "messages": [
+        {
+          "role": "user",
+          "content": "can you send an email"
+        },
+        {
+          "role": "assistant",
+          "content": "I can help you draft and send emails related to Linda's healthcare needs! To create the right email for you, I need a few details:\n\n**What type of email would you like me to send?**\n- Contact a doctor's office about an appointment or medical concern\n- Reach out to insurance about a claim or coverage question  \n- Communicate with a pharmacy about prescriptions\n- Send medical records or documents to a provider\n- Something else healthcare-related\n\n**Please tell me:**\n1. Who should receive the email?\n2. What's the main purpose/request?\n3. Any specific details I should include?\n\nOnce you provide these details, I'll draft the email using Linda's information and ask for your confirmation before sending it out.\n\n**Example scenarios I can help with:**\n- Requesting appointment availability\n- Following up on test results\n- Appealing insurance denials\n- Coordinating care between providers\n- Medication refill requests\n\nWhat would you like the email to accomplish?"
+        }
+      ]
+    },
+    {
+      "id": "1773632137015",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-16T03:35:37.015Z",
+      "preview": "can you send an email",
+      "messages": [
+        {
+          "role": "user",
+          "content": "can you send an email"
+        },
+        {
+          "role": "assistant",
+          "content": "I can help you draft and send emails related to Linda's healthcare needs! To create the right email for you, I need a few details:\n\n**What type of email would you like me to send?**\n- Contact a doctor's office about an appointment or medical concern\n- Reach out to insurance about a claim or coverage question  \n- Communicate with a pharmacy about prescriptions\n- Send medical records or documents to a provider\n- Something else healthcare-related\n\n**Please tell me:**\n1. Who should receive the email?\n2. What's the main purpose/request?\n3. Any specific details I should include?\n\nOnce you provide these details, I'll draft the email using Linda's information and ask for your confirmation before sending it out.\n\n**Example scenarios I can help with:**\n- Requesting appointment availability\n- Following up on test results\n- Appealing insurance denials\n- Coordinating care between providers\n- Medication refill requests\n\nWhat would you like the email to accomplish?"
+        }
+      ]
+    },
+    {
       "id": "1773607628386",
       "patientId": "maria-fields",
       "timestamp": "2026-03-15T20:47:08.386Z",
@@ -756,38 +788,6 @@
       "id": "1773534486591",
       "patientId": "maria-fields",
       "timestamp": "2026-03-15T00:28:06.591Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534456589",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:27:36.589Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534426591",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:27:06.591Z",
       "preview": "call and make an appointment on march 23 for 3:30pm at touch",
       "messages": [
         {
