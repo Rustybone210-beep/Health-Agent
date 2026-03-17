@@ -1,1016 +1,1036 @@
-// ============================================================
-// server.js — AI Health Agent (Stabilized Upload + Calendar + Tasks)
-// ============================================================
-require('dotenv').config();
-const express = require('express');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const Anthropic = require('@anthropic-ai/sdk').default;
-// Conditionally load googleapis (only if installed)
-let google = null;
-try {
-  google = require('googleapis').google;
-} catch (e) {
-  console.log('⚠️  googleapis not installed — Google Calendar disabled. Run: npm install googleapis');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="color-scheme" content="light dark" />
+<title>Health Agent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+/* ═══════════════════════════════════════════
+   AUTO LIGHT / DARK THEME
+   ═══════════════════════════════════════════ */
+:root{
+  /* Light mode defaults */
+  --bg:#ffffff;
+  --bg2:#f2f2f7;
+  --surface:#ffffff;
+  --surface-2:#f2f2f7;
+  --surface-3:#e5e5ea;
+  --border:rgba(0,0,0,0.08);
+  --border-2:rgba(0,0,0,0.12);
+  --bubble-ai:#e9e9eb;
+  --bubble-user:#0b93f6;
+  --bubble-ai-text:#1c1c1e;
+  --bubble-user-text:#ffffff;
+  --text:#1c1c1e;
+  --text2:#6e6e73;
+  --text3:#aeaeb2;
+  --teal:#34c759;
+  --teal2:#248a3d;
+  --accent:#0b93f6;
+  --accent2:#0a84e8;
+  --gold:#ff9500;
+  --danger:#ff3b30;
+  --warn:#ff9500;
+  --info:#5ac8fa;
+  --textInv:#ffffff;
+  --bar-bg:rgba(255,255,255,0.88);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+  --topbar-h:52px;
+  --botnav-h:50px;
+  --radius:20px;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
 }
-const voice = require('./tools/voice');
-const emailTools = require('./tools/email');
-const calendarTools = require('./tools/calendar');
-const patientsTools = require('./tools/patients');
-const appointmentsTools = require('./tools/appointments');
-const medicationsTools = require('./tools/medications');
-const tasksTools = require('./tools/tasks');
-const concernsTools = require('./tools/concerns');
-const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
-app.use('/drafts', express.static('drafts'));
-app.use('/calendar', express.static('calendar'));
-const upload = multer({
-  dest: 'uploads/',
-  limits: { fileSize: 10 * 1024 * 1024 }
-});
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
-// ─── Data File Paths ───────────────────────────────────────
-const CHAT_HISTORY_FILE = './data/chat_history.json';
-const NOTIFICATIONS_FILE = './data/notifications.json';
-const CURRENT_PATIENT_FILE = './data/current_patient.json';
-const TOKEN_FILE = './data/google_tokens.json';
-const TIMELINE_FILE = './data/timeline.json';
-const PATIENTS_FILE = './data/patients.json';
-// ─── Ensure directories exist ──────────────────────────────
-['./data', './drafts', './calendar', './uploads'].forEach((dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
-// ─── Session State ─────────────────────────────────────────
-let pendingUpdates = null;
-let pendingEmailDraft = null;
-let pendingCallRequest = null;
-let conversationHistory = [];
-// ─── Generic Helpers ───────────────────────────────────────
-function safeReadJson(filePath, fallback) {
-  try {
-    if (!fs.existsSync(filePath)) return fallback;
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (e) {
-    return fallback;
-  }
-}
-function safeWriteJson(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-function cleanupFile(filePath) {
-  try {
-    if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  } catch (e) {}
-}
-function normalizeUSPhone(phone) {
-  if (!phone) return '';
-  const digits = String(phone).replace(/\D/g, '');
-  if (digits.length === 10) return `+1${digits}`;
-  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-  if (String(phone).startsWith('+')) return String(phone);
-  return phone;
-}
-function extractJsonAfterMarker(text, marker = 'EXTRACTED_DATA:') {
-  if (!text || !text.includes(marker)) return null;
-  const startIndex = text.indexOf(marker) + marker.length;
-  let raw = text.slice(startIndex).trim();
-  raw = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-  const firstBrace = raw.indexOf('{');
-  const lastBrace = raw.lastIndexOf('}');
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null;
-  const jsonText = raw.slice(firstBrace, lastBrace + 1);
-  try {
-    return JSON.parse(jsonText);
-  } catch (e) {
-    console.log('JSON parse error:', e.message);
-    return null;
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#000000;
+    --bg2:#1c1c1e;
+    --surface:#1c1c1e;
+    --surface-2:#2c2c2e;
+    --surface-3:#3a3a3c;
+    --border:rgba(255,255,255,0.08);
+    --border-2:rgba(255,255,255,0.14);
+    --bubble-ai:#26262a;
+    --bubble-ai-text:#f2f2f7;
+    --bubble-user:#0b93f6;
+    --bubble-user-text:#ffffff;
+    --text:#f2f2f7;
+    --text2:#8e8e93;
+    --text3:#48484a;
+    --teal:#30d158;
+    --teal2:#248a3d;
+    --accent:#0a84ff;
+    --accent2:#0b93f6;
+    --textInv:#ffffff;
+    --bar-bg:rgba(0,0,0,0.88);
   }
 }
-// ─── Chat history helpers ──────────────────────────────────
-function loadChatHistory() {
-  const data = safeReadJson(CHAT_HISTORY_FILE, { sessions: [] });
-  return data.sessions || [];
+
+html,body{
+  height:100%;height:100dvh;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
 }
-function saveChatSession(patientId, messages) {
-  try {
-    const data = safeReadJson(CHAT_HISTORY_FILE, { sessions: [] });
-    const session = {
-      id: Date.now().toString(),
-      patientId,
-      timestamp: new Date().toISOString(),
-      preview: messages.find((m) => m.role === 'user')?.content?.substring(0, 60) || 'Chat session',
-      messages
-    };
-    data.sessions.unshift(session);
-    data.sessions = data.sessions.slice(0, 50);
-    safeWriteJson(CHAT_HISTORY_FILE, data);
-    return session.id;
-  } catch (e) {
-    console.error('Error saving chat history:', e);
-    return null;
-  }
+body.modal-open{overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+.hidden{display:none!important}
+
+/* ═══════════════════════════════════════════
+   APP SHELL — iMessage layout
+   ═══════════════════════════════════════════ */
+.app{
+  display:flex;
+  height:100dvh;
+  overflow:hidden;
+  background:var(--bg);
 }
-// ─── Notifications ─────────────────────────────────────────
-function loadNotifications() {
-  return safeReadJson(NOTIFICATIONS_FILE, { notifications: [] });
+
+/* MOBILE TOP BAR — thin, like iMessage */
+.topbar{
+  display:none;
+  position:fixed;top:0;left:0;right:0;z-index:120;
+  height:calc(var(--topbar-h) + var(--safe-top));
+  padding:var(--safe-top) 16px 0;
+  background:var(--bar-bg);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:0.5px solid var(--border);
+  align-items:center;justify-content:space-between;
 }
-function saveNotifications(data) {
-  safeWriteJson(NOTIFICATIONS_FILE, data);
+.tb-title{font-weight:600;font-size:17px;letter-spacing:-0.02em}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-bell{
+  position:relative;background:none;border:none;
+  color:var(--text2);font-size:18px;cursor:pointer;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
 }
-function loadTimeline() {
-  return safeReadJson(TIMELINE_FILE, { events: [] });
+.tb-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
-function addNotification(type, title, message, patientId = null, dueDate = null) {
-  const data = loadNotifications();
-  const notif = {
-    id: Date.now().toString(),
-    type,
-    title,
-    message,
-    patientId,
-    dueDate,
-    read: false,
-    createdAt: new Date().toISOString()
-  };
-  data.notifications.unshift(notif);
-  saveNotifications(data);
-  return notif;
+.notif-badge{
+  position:absolute;top:-2px;right:-2px;
+  min-width:16px;height:16px;padding:0 4px;
+  border-radius:999px;display:flex;align-items:center;justify-content:center;
+  background:var(--danger);color:#fff;font-size:9px;font-weight:700;
+  border:2px solid var(--bg);
 }
-// ─── Patient helpers ───────────────────────────────────────
-function getCurrentPatientId() {
-  const data = safeReadJson(CURRENT_PATIENT_FILE, { patientId: 'maria-fields' });
-  return data.patientId || 'maria-fields';
+
+/* ═══════════════════════════════════════════
+   DESKTOP SIDEBAR (unchanged structure, new theme)
+   ═══════════════════════════════════════════ */
+.sidebar{
+  width:320px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg2);border-right:0.5px solid var(--border);
+  overflow:hidden;z-index:40;
 }
-function setCurrentPatientId(id) {
-  safeWriteJson(CURRENT_PATIENT_FILE, { patientId: id });
+.sb-head{padding:20px 16px 14px;border-bottom:0.5px solid var(--border);flex-shrink:0}
+.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sb-logo{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  font-size:16px;color:#fff;
 }
-function getAllPatients() {
-  try {
-    const data = safeReadJson(PATIENTS_FILE, []);
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data.patients)) return data.patients;
-    if (data && typeof data === 'object') return [data];
-    return [];
-  } catch (e) {
-    return [];
-  }
+.sb-name{font-family:var(--serif);font-size:17px;font-weight:600}
+.pat-btn{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:9px 11px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;
 }
-function saveAllPatients(patients) {
-  try {
-    const existing = safeReadJson(PATIENTS_FILE, null);
-    if (existing && existing.patients) {
-      safeWriteJson(PATIENTS_FILE, { ...existing, patients });
-    } else {
-      safeWriteJson(PATIENTS_FILE, { patients });
-    }
-  } catch (e) {
-    safeWriteJson(PATIENTS_FILE, { patients });
-  }
+.pat-btn:hover{border-color:var(--accent)}
+.pat-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pat-rel{font-size:11px;color:var(--text2);margin-top:2px}
+.pat-dd{
+  display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);
+  background:var(--surface);border:1px solid var(--border-2);border-radius:12px;
+  overflow:hidden;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,0.15);
 }
-// ─── System Prompt ─────────────────────────────────────────
-function buildSystemPrompt(patient) {
-  const p = patient || {};
-  return `You are Health Agent — an AI healthcare navigator and caregiver command center. You help manage healthcare for patients and their families.
-PATIENT PROFILE:
-- Name: ${p.name || 'Unknown'}
-- DOB: ${p.dob || 'Unknown'}
-- Address: ${p.address || 'Unknown'}
-- Insurance: ${p.insurance?.primary || ''} ${p.insurance?.secondary ? '+ ' + p.insurance.secondary : ''}
-- Member ID: ${p.insurance?.memberId || ''}
-- Conditions: ${(p.conditions || []).join(', ')}
-- Allergies: ${(p.allergies || []).join(', ')}
-- Doctor: ${p.primaryDoctor || 'Unknown'} at ${p.clinic || 'Unknown'}
-- Preferred Hospital: ${p.preferredHospital || 'Unknown'}
-- Pharmacy: ${p.pharmacy?.name || 'Unknown'} ${p.pharmacy?.phone || ''}
-- Medications: ${(p.medications || []).map((m) => m.name + ' ' + (m.dose || '') + ' ' + (m.frequency || '')).join(', ')}
-YOUR CAPABILITIES:
-1. DOCUMENT ANALYSIS - Read uploaded medical documents, prescriptions, insurance cards, lab results
-2. ACTION PLANS - Step-by-step plans with exact phone scripts
-3. APPEAL LETTERS - Draft formal insurance appeals with medical necessity arguments
-4. EMAIL SENDING - Draft and send real emails (use EMAIL_DRAFT format below)
-5. PHONE CALLS - Trigger real phone calls to providers (use CALL_REQUEST format below)
-6. CALENDAR - Detect appointment dates and suggest adding to Google Calendar (use CALENDAR_EVENT format)
-7. MEDICATION MANAGEMENT - Track meds, check interactions, refill reminders
-8. INSURANCE TRACKING - Track claims, denials, appeals
-9. MEDICAL TRANSLATION - Explain medical jargon in plain English
-10. APPOINTMENT PREP - Checklists and questions to ask
-CALL_REQUEST FORMAT: When user asks to call someone, respond with:
-CALL_REQUEST:{"name":"Provider Name","phone":"+12105551234","reason":"Reason for calling"}
-Then explain what the AI agent will say on the call. User will confirm before the call is made.
-EMAIL_DRAFT FORMAT: When drafting an email, include:
-EMAIL_DRAFT:{"to":"email@example.com","subject":"Subject Line","body":"Full email body text here"}
-Then ask user to type 'send' to confirm, or suggest changes.
-CALENDAR_EVENT FORMAT: When an appointment date is mentioned, include:
-CALENDAR_EVENT:{"title":"Appointment Title","date":"YYYY-MM-DD","time":"HH:MM","duration":60,"description":"Details"}
-CRITICAL RULES:
-- NEVER fabricate phone numbers or confirmation numbers
-- NEVER pretend to make phone calls — use CALL_REQUEST format and let the system handle it
-- Be honest about what you can and cannot do
-- Always ask for confirmation before sending emails or making calls
-- Use **bold** for important information
-- Always end with clear next steps
-- You are an advocate for the patient — fight hard for their care`;
+.pat-dd.open{display:block}
+.pat-opt{padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);font-size:13px}
+.pat-opt:hover{background:var(--surface-2)}
+.pat-opt.active{background:rgba(11,147,246,0.08)}
+.opt-n{font-weight:600}
+.opt-r{font-size:11px;color:var(--text2);margin-top:2px}
+.add-pat{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--accent)}
+
+.sb-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:none}
+.sb-scroll::-webkit-scrollbar{display:none}
+.s-lbl{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.sb-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:14px;margin-bottom:12px;
 }
-// ─── Google OAuth2 Setup ───────────────────────────────────
-let oauth2Client = null;
-let googleTokens = null;
-if (google && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.RAILWAY_PUBLIC_DOMAIN
-      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/oauth2callback`
-      : 'http://localhost:3000/oauth2callback'
-  );
-  if (fs.existsSync(TOKEN_FILE)) {
-    try {
-      googleTokens = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
-      oauth2Client.setCredentials(googleTokens);
-    } catch (e) {}
-  }
-} else {
-  console.log('⚠️  Google Calendar not configured — add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env');
+.pc-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px}
+.pc-l{width:62px;flex-shrink:0;color:var(--text3);font-size:11px}
+.pc-v{color:var(--text);line-height:1.4}
+.pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:500}
+.p-teal{background:rgba(52,199,89,0.12);border:1px solid rgba(52,199,89,0.2);color:var(--teal)}
+.p-red{background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.18);color:var(--danger)}
+.p-gold{background:rgba(255,149,0,0.1);border:1px solid rgba(255,149,0,0.18);color:var(--gold)}
+
+.hist-item{
+  padding:8px 9px;border-radius:10px;cursor:pointer;margin-bottom:2px;
+  font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px;
+  border:1px solid transparent;transition:all 0.15s
 }
-// ─── ROUTES ────────────────────────────────────────────────
-// Chat history
-app.get('/api/chat-history', (_req, res) => {
-  res.json({ sessions: loadChatHistory() });
-});
-app.get('/api/chat-history/:id', (req, res) => {
-  const data = loadChatHistory();
-  const session = data.find((s) => s.id === req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-  res.json(session);
-});
-app.delete('/api/chat-history/:id', (req, res) => {
-  try {
-    const data = { sessions: loadChatHistory() };
-    data.sessions = data.sessions.filter((s) => s.id !== req.params.id);
-    safeWriteJson(CHAT_HISTORY_FILE, data);
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+.hist-item:hover{background:var(--surface);color:var(--text);border-color:var(--border)}
+.hist-item.active{background:rgba(11,147,246,0.08);color:var(--text);border-color:rgba(11,147,246,0.2)}
+.hist-content{flex:1;overflow:hidden}
+.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-time{font-size:10px;color:var(--text3);margin-top:2px}
+.hist-del{opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;padding:2px;font-size:11px;transition:opacity 0.15s;flex-shrink:0}
+.hist-item:hover .hist-del{opacity:1}
+.new-chat-btn{
+  background:rgba(11,147,246,0.08);border:1px solid rgba(11,147,246,0.18);
+  color:var(--accent);font-size:11px;padding:3px 8px;border-radius:999px;cursor:pointer;
+}
+.sb-nav{display:flex;flex-direction:column;gap:3px}
+.sb-link{
+  display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;
+  font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-align:left;width:100%;
+}
+.sb-link:hover{background:var(--surface);color:var(--text)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qa-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:10px 8px;color:var(--text2);font-size:11px;cursor:pointer;text-align:center;
+}
+.qa-btn:hover{background:var(--surface-2);color:var(--text)}
+.qa-icon{display:block;font-size:14px;margin-bottom:3px}
+.gcal-s{
+  display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:999px;
+  background:rgba(52,199,89,0.08);border:1px solid rgba(52,199,89,0.18);color:var(--teal)
+}
+.gcal-s.nc{background:rgba(255,149,0,0.08);border-color:rgba(255,149,0,0.18);color:var(--warn)}
+
+/* DESKTOP TOP BAR */
+.desk-topbar{
+  height:52px;background:var(--bar-bg);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;
+}
+.desk-title{flex:1;font-weight:600;font-size:17px;letter-spacing:-0.02em}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pdot 2.5s ease infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
+.notif-btn{
+  position:relative;width:34px;height:34px;border-radius:50%;
+  background:var(--surface-2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;cursor:pointer;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+   ═══════════════════════════════════════════ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* ═══════════════════════════════════════════
+   PULL-DOWN DASHBOARD (mobile only)
+   ═══════════════════════════════════════════ */
+.pull-dashboard{
+  display:none;
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  transform:translateY(-100%);
+  transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+}
+.pull-dashboard.open{transform:translateY(0)}
+.pull-dashboard-backdrop{
+  position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,0.4);opacity:0;
+  transition:opacity 0.3s ease;pointer-events:none;
+}
+.pull-dashboard-backdrop.open{opacity:1;pointer-events:auto}
+.pd-card{
+  background:var(--surface);
+  border-bottom-left-radius:24px;border-bottom-right-radius:24px;
+  padding:calc(var(--safe-top) + 12px) 16px 20px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.2);
+}
+.pd-handle{width:36px;height:4px;background:var(--text3);border-radius:99px;margin:0 auto 16px;opacity:0.4}
+.pd-title{font-weight:700;font-size:15px;margin-bottom:14px;letter-spacing:-0.01em}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dash-card{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:16px;padding:14px;cursor:pointer;transition:transform 0.12s;
+}
+.dash-card:active{transform:scale(0.97)}
+.dash-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:6px}
+.dash-value{font-family:var(--serif);font-size:26px;line-height:1;margin-bottom:4px;font-weight:700}
+.dash-sub{font-size:12px;color:var(--text2);line-height:1.35}
+.activity-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.activity-item{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.activity-title{font-size:13px;font-weight:600}
+.activity-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pd-close{
+  display:block;width:100%;margin-top:14px;padding:10px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+  font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;text-align:center;
+}
+.pd-close:active{opacity:0.7}
+
+/* ═══════════════════════════════════════════
+   CHAT — iMessage style
+   ═══════════════════════════════════════════ */
+.chat-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+.chat-area{
+  flex:1;min-height:0;overflow-y:auto;
+  padding:10px 12px 10px;display:flex;flex-direction:column;gap:3px;
+  scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.chat-area::-webkit-scrollbar{display:none}
+
+/* Welcome */
+.welcome-inline{padding:20px 4px 10px;animation:msgIn 0.3s ease}
+.welcome-inline-title{font-size:16px;line-height:1.5;color:var(--text);font-weight:400}
+.welcome-inline-title strong{font-weight:700}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{
+  padding:8px 14px;border-radius:18px;
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text2);font-size:14px;cursor:pointer;transition:all 0.12s;
+}
+.chip:hover{background:var(--surface-3);color:var(--text)}
+.chip:active{transform:scale(0.96)}
+
+/* Messages — iMessage bubbles */
+.msg{display:flex;gap:0;max-width:78%;animation:msgIn 0.25s ease;margin-bottom:1px}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{margin-left:auto;justify-content:flex-end}
+.msg-avatar{display:none}
+.msg-bubble{
+  max-width:100%;word-wrap:break-word;
+  padding:10px 14px;font-size:16px;line-height:1.4;
+  letter-spacing:-0.01em;
+}
+.msg.ai .msg-bubble{
+  background:var(--bubble-ai);color:var(--bubble-ai-text);
+  border-radius:18px 18px 18px 6px;
+}
+.msg.user .msg-bubble{
+  background:var(--bubble-user);color:var(--bubble-user-text);
+  border-radius:18px 18px 6px 18px;
+}
+.msg-bubble strong{font-weight:600}
+.msg-bubble em{font-style:italic}
+.msg-bubble code{background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:14px}
+@media(prefers-color-scheme:dark){.msg-bubble code{background:rgba(255,255,255,0.08)}}
+.msg-bubble pre{margin-top:8px;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.06);padding:10px;border-radius:10px;font-size:13px;line-height:1.4}
+@media(prefers-color-scheme:dark){.msg-bubble pre{background:rgba(255,255,255,0.06)}}
+.msg-bubble a{color:inherit;text-decoration:underline}
+
+/* Typing */
+.typing-indicator{display:flex;gap:4px;align-items:center}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:tb 1.3s ease infinite}
+.typing-indicator span:nth-child(2){animation-delay:0.18s}
+.typing-indicator span:nth-child(3){animation-delay:0.36s}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:0.45}30%{transform:translateY(-5px);opacity:1}}
+
+/* ═══════════════════════════════════════════
+   ACTION CARDS (in-chat)
+   ═══════════════════════════════════════════ */
+.action-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:14px;margin:4px 0;font-size:13px;
+  animation:msgIn 0.25s ease;max-width:85%;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+.ac-title{font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.ac-body{color:var(--text2);margin-bottom:10px;line-height:1.5;font-size:13px}
+.ac-btns{display:flex;gap:7px;flex-wrap:wrap}
+.ac-btn{padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.12s}
+.ac-btn:active{transform:scale(0.95)}
+.ac-btn.primary,.ac-btn.success{background:var(--accent);color:#fff}
+.ac-btn.secondary{background:var(--surface-2);border:1px solid var(--border);color:var(--text2)}
+.ac-btn.warn{background:var(--warn);color:#fff}
+
+/* ═══════════════════════════════════════════
+   SCAN CARD
+   ═══════════════════════════════════════════ */
+.scan-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.scan-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.scan-icon{font-size:20px}
+.scan-title{font-weight:700;font-size:16px;letter-spacing:-0.01em}
+.scan-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.scan-badge{font-size:9px;padding:3px 7px;border-radius:999px;border:1px solid var(--border);letter-spacing:0.04em;text-transform:uppercase;font-weight:600}
+.scan-badge.safe{color:var(--teal);background:rgba(52,199,89,0.08);border-color:rgba(52,199,89,0.2)}
+.scan-badge.warn{color:var(--warn);background:rgba(255,149,0,0.08);border-color:rgba(255,149,0,0.2)}
+.scan-badge.info{color:var(--info);background:rgba(90,200,250,0.08);border-color:rgba(90,200,250,0.2)}
+.scan-card>p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.scan-field{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:9px 10px}
+.scan-field.full{grid-column:1/-1}
+.scan-label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:3px}
+.scan-value{font-size:13px;color:var(--text);line-height:1.4}
+.scan-actions{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.scan-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);font-size:13px;color:var(--text);cursor:pointer;font-weight:500}
+.scan-btn.primary{background:var(--accent);color:#fff;border:none;font-weight:600}
+.scan-btn:active{transform:scale(0.96)}
+.scan-foot{margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3)}
+
+/* ═══════════════════════════════════════════
+   INPUT BAR — iMessage style
+   ═══════════════════════════════════════════ */
+.input-bar{
+  flex-shrink:0;background:var(--bar-bg);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:0.5px solid var(--border);
+  padding:8px 10px calc(6px + var(--safe-bot));
+}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input{
+  flex:1;background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:22px;padding:10px 16px;color:var(--text);font-size:16px;
+  resize:none;outline:none;max-height:120px;min-height:40px;line-height:1.4;
+  appearance:none;-webkit-appearance:none;transition:border-color 0.15s;
+}
+.chat-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,147,246,0.1)}
+.chat-input::placeholder{color:var(--text3)}
+.send-btn{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:var(--accent);border:none;color:#fff;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform 0.12s;
+}
+.send-btn:active{transform:scale(0.9)}
+.tool-row{display:flex;justify-content:center;gap:16px;margin-top:6px}
+.tool-btn{
+  background:none;border:none;color:var(--text3);font-size:20px;
+  cursor:pointer;padding:4px;transition:color 0.12s;
+}
+.tool-btn:hover{color:var(--text)}
+.tool-btn:active{transform:scale(0.9)}
+.upload-pending{
+  display:none;margin-top:8px;padding:5px 12px;border-radius:999px;
+  background:rgba(11,147,246,0.08);border:1px solid rgba(11,147,246,0.15);
+  color:var(--accent);font-size:12px;align-items:center;gap:6px;
+}
+.upload-pending.show{display:flex}
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAV — minimal, iMessage-like
+   ═══════════════════════════════════════════ */
+.bot-nav{
+  display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;
+  height:calc(var(--botnav-h) + var(--safe-bot));padding-bottom:var(--safe-bot);
+  background:var(--bar-bg);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:0.5px solid var(--border);align-items:stretch;
+}
+.bn-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:none;background:none;color:var(--text3);font-size:10px;font-weight:500;cursor:pointer;
+}
+.bn-tab:active{opacity:0.6}
+.bn-icon{font-size:22px;line-height:1}
+.bn-tab.active{color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   PROFILE SHEET
+   ═══════════════════════════════════════════ */
+.profile-sheet{display:none;position:fixed;inset:0;z-index:400}
+.profile-sheet.open{display:block}
+.ps-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ps-card{
+  position:absolute;top:0;left:0;right:0;
+  background:var(--surface);
+  border-bottom-left-radius:24px;border-bottom-right-radius:24px;
+  padding:calc(var(--safe-top) + 16px) 20px 24px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.25);
+  animation:slideDown 0.3s cubic-bezier(0.32,0.72,0,1);
+  max-height:88dvh;overflow-y:auto;
+}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.ps-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ps-pat-info{display:flex;align-items:center;gap:12px}
+.ps-avatar{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:#fff;
+}
+.ps-name{font-weight:700;font-size:22px;letter-spacing:-0.02em}
+.ps-sub{font-size:13px;color:var(--accent);margin-top:2px;font-weight:500}
+.ps-close{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ps-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.ps-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 10px;text-align:center}
+.ps-stat-n{font-family:var(--serif);font-size:24px;font-weight:700}
+.ps-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+.ps-section{margin-bottom:12px}
+.ps-section-title{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.ps-row{display:flex;gap:6px;margin-bottom:6px;font-size:13px}
+.ps-rl{width:72px;flex-shrink:0;color:var(--text3);font-size:12px;padding-top:1px}
+.ps-rv{flex:1;color:var(--text2);line-height:1.4}
+.ps-expand{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.ps-expand-btn{width:100%;background:none;border:none;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left;font-weight:500}
+.ps-expand-body{display:none;padding:0 14px 14px}
+.ps-expand.open .ps-expand-body{display:block}
+
+/* MENU SHEET */
+.menu-sheet{display:none;position:fixed;inset:0;z-index:400}
+.menu-sheet.open{display:block}
+.ms-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ms-panel{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface);
+  border-top-left-radius:24px;border-top-right-radius:24px;
+  padding:10px 20px calc(20px + var(--safe-bot));
+  box-shadow:0 -12px 40px rgba(0,0,0,0.2);
+  animation:slideUp 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ms-handle{width:36px;height:4px;background:var(--text3);border-radius:999px;margin:8px auto 16px;opacity:0.4}
+.ms-title{font-weight:700;font-size:18px;margin-bottom:14px;letter-spacing:-0.01em}
+.ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ms-item{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:16px;
+  padding:16px 10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.ms-item:active{transform:scale(0.96)}
+.ms-icon{font-size:24px}
+.ms-label{font-size:11px;font-weight:600;color:var(--text2)}
+
+/* TASK PANEL */
+#taskPanel{
+  display:none;position:fixed;top:0;right:0;bottom:0;
+  width:min(420px,100vw);background:var(--surface);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-left:0.5px solid var(--border);z-index:500;
+  flex-direction:column;overflow:hidden;box-shadow:-12px 0 40px rgba(0,0,0,0.15);
+}
+#taskPanel.open{display:flex;animation:slideR 0.3s ease}
+@keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.task-tab{padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
+.task-tab.active{background:rgba(11,147,246,0.08);border-color:rgba(11,147,246,0.2);color:var(--accent)}
+.task-item{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:6px;animation:msgIn 0.2s ease}
+.task-item.done{opacity:0.5}
+.ti-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.t-title{font-size:13px;font-weight:600;flex:1;line-height:1.3}
+.t-title.done{text-decoration:line-through;color:var(--text3)}
+.t-desc{font-size:12px;color:var(--text2);margin:3px 0 7px 24px;line-height:1.5}
+.t-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:24px}
+.t-due{font-size:11px;color:var(--text3)}
+.t-due.ov{color:var(--danger);font-weight:600}
+.t-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.pri-high{background:rgba(255,59,48,0.1);color:var(--danger)}
+.pri-medium{background:rgba(255,149,0,0.08);color:var(--warn)}
+.pri-low{background:rgba(52,199,89,0.08);color:var(--teal)}
+.t-acts{display:flex;gap:5px;margin-top:7px;margin-left:24px}
+.t-act{padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)}
+.t-act.del{color:var(--danger)}
+
+/* MODALS */
+.modal{
+  display:none;position:fixed;inset:0;z-index:600;
+  align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.modal.open{display:flex}
+.modal-box{
+  position:relative;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalIn 0.22s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-title{font-weight:700;font-size:20px;margin-bottom:20px;letter-spacing:-0.02em}
+.f-field{margin-bottom:13px}
+.f-lbl{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:5px}
+.f-inp{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
+.f-inp:focus{border-color:var(--accent)}
+.f-row{display:flex;gap:10px}
+.f-row .f-field{flex:1}
+.m-acts{display:flex;gap:9px;margin-top:20px}
+.m-btn{flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent}
+.m-btn.cancel{background:var(--surface-2);border-color:var(--border);color:var(--text2)}
+.m-btn.save{background:var(--accent);color:#fff}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media(min-width:901px){
+  .topbar,.bot-nav,.pull-dashboard,.pull-dashboard-backdrop{display:none!important}
+  .sidebar{display:flex}
+  .desk-topbar{display:flex}
+  .desktop-chat{display:flex;flex-direction:column;flex:1;min-height:0}
+  .mobile-chat{display:none!important}
+}
+@media(max-width:900px){
+  .sidebar,.desk-topbar,.desktop-chat{display:none!important}
+  .topbar{display:flex}
+  .bot-nav{display:flex}
+  .pull-dashboard{display:block}
+  .mobile-chat{display:flex;flex-direction:column;flex:1;min-height:0}
+  .main{
+    padding-top:calc(var(--topbar-h) + var(--safe-top));
+    padding-bottom:calc(var(--botnav-h) + var(--safe-bot));
   }
+  .msg{max-width:80%}
+  .action-card{max-width:88%}
+  .scan-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE TOP BAR -->
+<header class="topbar" id="mobileTopbar">
+  <span class="tb-title">Health Agent</span>
+  <div class="tb-right">
+    <button class="tb-bell" id="notifBtnMobileWrap" onclick="toggleNotifications()" aria-label="Notifications">
+      🔔<span class="notif-badge" id="notifBadgeMobile" style="display:none"></span>
+    </button>
+    <div class="tb-avatar" id="mobilePatAvatar" onclick="openProfileSheet()">LF</div>
+  </div>
+</header>
+
+<!-- PULL-DOWN DASHBOARD -->
+<div class="pull-dashboard-backdrop" id="pdBackdrop" onclick="closePullDashboard()"></div>
+<div class="pull-dashboard" id="pullDashboard">
+  <div class="pd-card">
+    <div class="pd-handle"></div>
+    <div class="pd-title">Dashboard</div>
+    <div class="dash-grid">
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('today')">
+        <div class="dash-label">Today</div>
+        <div class="dash-value" id="todayPrimary">All clear</div>
+        <div class="dash-sub" id="todaySecondary">No urgent items</div>
+      </button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('upcoming')">
+        <div class="dash-label">Upcoming</div>
+        <div class="dash-value" id="upcomingPrimary">0</div>
+        <div class="dash-sub" id="upcomingSecondary">Appointments</div>
+      </button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('tasks')">
+        <div class="dash-label">Tasks</div>
+        <div class="dash-value" id="tasksPrimary">0</div>
+        <div class="dash-sub" id="tasksSecondary">Nothing pending</div>
+      </button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('records')">
+        <div class="dash-label">Records</div>
+        <div class="dash-value" id="recordsPrimary">0</div>
+        <div class="dash-sub" id="recordsSecondary">No uploads</div>
+      </button>
+    </div>
+    <div class="activity-list" id="recentActivityList"></div>
+    <button class="pd-close" onclick="closePullDashboard()">Done</button>
+  </div>
+</div>
+
+<div class="app">
+  <!-- DESKTOP SIDEBAR (unchanged) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-brand"><div class="sb-logo">🏥</div><span class="sb-name">Health Agent</span></div>
+      <div style="position:relative" id="patientSelector">
+        <button class="pat-btn" onclick="togglePatientDropdown()">
+          <div style="flex:1;overflow:hidden"><div class="pat-name" id="selectorName">Loading...</div><div class="pat-rel" id="selectorRel">—</div></div>
+          <span style="color:var(--text3);font-size:11px">▾</span>
+        </button>
+        <div class="pat-dd" id="patientDropdown"></div>
+      </div>
+    </div>
+    <div class="sb-scroll">
+      <div class="sb-card"><div class="s-lbl" style="margin-bottom:9px">Patient Profile</div><div id="cardContent" style="color:var(--text3);font-size:12px">Loading...</div></div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <span class="s-lbl" style="margin-bottom:0">💬 History</span>
+          <button class="new-chat-btn" onclick="newChat()">+ New</button>
+        </div>
+        <div id="chatHistoryList"><div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="s-lbl" style="margin-bottom:7px">Quick Actions</div>
+        <div class="qa-grid">
+          <button class="qa-btn" onclick="qa('What are her current medications?')"><span class="qa-icon">💊</span>Meds</button>
+          <button class="qa-btn" onclick="qa('What are her upcoming appointments?')"><span class="qa-icon">📅</span>Appts</button>
+          <button class="qa-btn" onclick="qa('Draft a prior authorization appeal letter for Medicare')"><span class="qa-icon">✉️</span>Letter</button>
+          <button class="qa-btn" onclick="qa('What is her current insurance coverage?')"><span class="qa-icon">🛡️</span>Insurance</button>
+          <button class="qa-btn" onclick="qa('Call Dr. Martinez at Alamo Heights Family Medicine')"><span class="qa-icon">📞</span>Call Doc</button>
+          <button class="qa-btn" onclick="qa('Call Walgreens pharmacy at (210) 403-0002 about a refill')"><span class="qa-icon">🏪</span>Pharmacy</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="s-lbl" style="margin-bottom:7px">Pages</div>
+        <div class="sb-nav">
+          <a href="/timeline" class="sb-link">🕐 Medical Timeline</a>
+          <a href="/playbooks" class="sb-link">🆘 Emergency Playbooks</a>
+          <a href="/brief" class="sb-link">📋 Doctor Brief PDF</a>
+          <button class="sb-link" onclick="openTaskPanel()">✅ Task Tracker <span id="taskBadge" style="margin-left:auto;background:var(--warn);color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;display:none"></span></button>
+          <button class="sb-link" onclick="openCalendarModal()">📅 Add Calendar Event</button>
+        </div>
+      </div>
+      <div>
+        <div class="s-lbl" style="margin-bottom:6px">Google Calendar</div>
+        <a id="gcalStatus" href="/auth/google" target="_blank" class="gcal-s nc">⚠️ Connect Calendar</a>
+      </div>
+    </div>
+  </aside>
+
+  <div id="taskPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;backdrop-filter:blur(2px)" onclick="closeTaskPanel()"></div>
+
+  <div id="taskPanel">
+    <div style="padding:16px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:calc(16px + var(--safe-top))">
+      <span style="font-weight:700;font-size:18px">✅ Tasks</span><span style="flex:1"></span>
+      <button onclick="openAddTask()" style="background:var(--accent);border:none;color:#fff;padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button>
+      <button onclick="closeTaskPanel()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px;line-height:1">×</button>
+    </div>
+    <div style="display:flex;gap:5px;padding:9px 14px;border-bottom:0.5px solid var(--border);flex-shrink:0;flex-wrap:wrap">
+      <button class="task-tab active" onclick="setTaskFilter('all',this)">All</button>
+      <button class="task-tab" onclick="setTaskFilter('pending',this)">Pending</button>
+      <button class="task-tab" onclick="setTaskFilter('in-progress',this)">In Progress</button>
+      <button class="task-tab" onclick="setTaskFilter('done',this)">Done</button>
+    </div>
+    <div id="taskList" style="flex:1;overflow-y:auto;padding:10px"></div>
+  </div>
+
+  <main class="main">
+    <!-- MOBILE: Full-screen chat -->
+    <section class="mobile-chat">
+      <div class="chat-wrap">
+        <div class="chat-area" id="chatArea"></div>
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Message..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendMessage()" aria-label="Send">➤</button>
+          </div>
+          <div class="tool-row">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">✉️</button>
+            <button class="tool-btn" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
+          </div>
+          <div class="upload-pending" id="uploadPending"><span>📎</span><span id="uploadFileName">Uploading...</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DESKTOP: Chat -->
+    <section class="desktop-chat">
+      <div class="desk-topbar">
+        <div class="status-dot"></div>
+        <span class="desk-title" id="desktopTitle">Health Dashboard</span>
+        <span style="flex:1"></span>
+        <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-area" id="chatAreaDesktop"></div>
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInputDesktop" placeholder="Message Health Agent..." rows="1"></textarea>
+            <button class="send-btn" onclick="sendMessageFromDesktop()" aria-label="Send">➤</button>
+          </div>
+          <div class="tool-row" style="justify-content:flex-start">
+            <button class="tool-btn" onclick="startVoiceCall()">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()">✉️</button>
+            <button class="tool-btn" onclick="triggerUpload()">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()">📅</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="notif-panel" id="notifPanel">
+      <div class="np-head"><span class="np-title">🔔 Notifications</span><button class="np-mark" onclick="markAllRead()">Mark all read</button></div>
+      <div class="notif-list" id="notifList"><div class="ni-empty">No notifications</div></div>
+    </div>
+  </main>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bot-nav" id="botNav">
+  <button class="bn-tab" onclick="openPullDashboard()"><span class="bn-icon">📊</span>Summary</button>
+  <button class="bn-tab active" id="navChat" onclick="closePullDashboard()"><span class="bn-icon">💬</span>Chat</button>
+  <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
+  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">•••</span>More</button>
+</nav>
+
+<!-- PROFILE SHEET -->
+<div class="profile-sheet" id="profileSheet">
+  <div class="ps-backdrop" onclick="closeProfileSheet()"></div>
+  <div class="ps-card">
+    <div class="ps-top">
+      <div class="ps-pat-info">
+        <div class="ps-avatar" id="psAvatar">LF</div>
+        <div><div class="ps-name" id="psName">Patient</div><div class="ps-sub" id="psSub">Family Member</div></div>
+      </div>
+      <button class="ps-close" onclick="closeProfileSheet()">✕</button>
+    </div>
+    <div class="ps-stats">
+      <div class="ps-stat"><div class="ps-stat-n" id="psCondN">0</div><div class="ps-stat-l">Conditions</div></div>
+      <div class="ps-stat"><div class="ps-stat-n" id="psMedN">0</div><div class="ps-stat-l">Meds</div></div>
+      <div class="ps-stat"><div class="ps-stat-n" id="psAlgN">0</div><div class="ps-stat-l">Allergies</div></div>
+    </div>
+    <div class="ps-expand open" id="expDetails">
+      <button class="ps-expand-btn" onclick="toggleExpand('expDetails')"><span>Details</span><span>▾</span></button>
+      <div class="ps-expand-body">
+        <div class="ps-row"><span class="ps-rl">DOB</span><span class="ps-rv" id="psDob">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Doctor</span><span class="ps-rv" id="psDoctor">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Insurance</span><span class="ps-rv" id="psInsurance">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Pharmacy</span><span class="ps-rv" id="psPharmacy">—</span></div>
+      </div>
+    </div>
+    <div class="ps-expand" id="expConditions"><button class="ps-expand-btn" onclick="toggleExpand('expConditions')"><span>Conditions</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psCondPills"></div></div></div>
+    <div class="ps-expand" id="expMeds"><button class="ps-expand-btn" onclick="toggleExpand('expMeds')"><span>Medications</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psMedPills"></div></div></div>
+    <div class="ps-expand" id="expAllergies"><button class="ps-expand-btn" onclick="toggleExpand('expAllergies')"><span>Allergies</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psAlgPills"></div></div></div>
+    <div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border)">
+      <div class="ps-section-title">Switch Patient</div>
+      <div id="psPatientList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      <button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;color:var(--accent);font-size:13px;cursor:pointer">＋ Add Family Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU SHEET -->
+<div class="menu-sheet" id="menuSheet">
+  <div class="ms-backdrop" onclick="closeMenuSheet()"></div>
+  <div class="ms-panel">
+    <div class="ms-handle"></div>
+    <div class="ms-title">More</div>
+    <div class="ms-grid">
+      <a href="/timeline" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🕐</span><span class="ms-label">Timeline</span></a>
+      <a href="/playbooks" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🆘</span><span class="ms-label">Playbooks</span></a>
+      <a href="/brief" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">📋</span><span class="ms-label">Dr Brief</span></a>
+      <button class="ms-item" onclick="closeMenuSheet();openTaskPanel()"><span class="ms-icon">✅</span><span class="ms-label">Tasks</span></button>
+      <button class="ms-item" onclick="closeMenuSheet();openCalendarModal()"><span class="ms-icon">📅</span><span class="ms-label">Calendar</span></button>
+      <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">⚙️</span><span class="ms-label">Settings</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="addPatientModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeAddPatient()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add Family Member</div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Full Name *</label><input class="f-inp" id="newName" placeholder="Jane Fields" /></div><div class="f-field"><label class="f-lbl">Relationship</label><input class="f-inp" id="newRelation" placeholder="Mother, Father..." /></div></div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Date of Birth</label><input class="f-inp" id="newDob" placeholder="MM/DD/YYYY" /></div><div class="f-field"><label class="f-lbl">Primary Doctor</label><input class="f-inp" id="newDoctor" placeholder="Dr. Smith" /></div></div>
+    <div class="f-field"><label class="f-lbl">Address</label><input class="f-inp" id="newAddress" placeholder="Street, City, State ZIP" /></div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Primary Insurance</label><input class="f-inp" id="newInsurance" placeholder="Medicare..." /></div><div class="f-field"><label class="f-lbl">Pharmacy</label><input class="f-inp" id="newPharmacy" placeholder="Walgreens..." /></div></div>
+    <div class="f-field"><label class="f-lbl">Conditions (comma separated)</label><input class="f-inp" id="newConditions" placeholder="Hypertension, Diabetes..." /></div>
+    <div class="f-field"><label class="f-lbl">Allergies (comma separated)</label><input class="f-inp" id="newAllergies" placeholder="Penicillin, Sulfa..." /></div>
+    <div class="m-acts"><button class="m-btn cancel" onclick="closeAddPatient()">Cancel</button><button class="m-btn save" onclick="saveNewPatient()">Add Patient</button></div>
+  </div>
+</div>
+
+<div class="modal" id="addTaskModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeAddTask()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add Task</div>
+    <div class="f-field"><label class="f-lbl">Title *</label><input class="f-inp" id="taskTitle" placeholder="Task title..." /></div>
+    <div class="f-field"><label class="f-lbl">Description</label><textarea class="f-inp" id="taskDesc" style="resize:vertical;min-height:60px"></textarea></div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Due Date</label><input class="f-inp" id="taskDue" type="date" /></div><div class="f-field"><label class="f-lbl">Priority</label><select class="f-inp" id="taskPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div>
+    <div class="f-field"><label class="f-lbl">Category</label><select class="f-inp" id="taskCategory"><option value="appointment">Appointment</option><option value="medication">Medication</option><option value="insurance">Insurance</option><option value="general" selected>General</option></select></div>
+    <div class="m-acts"><button class="m-btn cancel" onclick="closeAddTask()">Cancel</button><button class="m-btn save" onclick="saveTask()">Save Task</button></div>
+  </div>
+</div>
+
+<div class="modal" id="calendarModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeCalendarModal()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add To Calendar</div>
+    <div class="f-field"><label class="f-lbl">Title</label><input class="f-inp" id="calTitle" placeholder="Appointment title" /></div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Date</label><input class="f-inp" id="calDate" type="date" /></div><div class="f-field"><label class="f-lbl">Time</label><input class="f-inp" id="calTime" type="time" /></div></div>
+    <div class="f-row"><div class="f-field"><label class="f-lbl">Duration (min)</label><input class="f-inp" id="calDuration" type="number" min="5" step="5" value="60" /></div><div class="f-field"><label class="f-lbl">Location</label><input class="f-inp" id="calLocation" placeholder="Clinic, office" /></div></div>
+    <div class="f-field"><label class="f-lbl">Notes</label><textarea class="f-inp" id="calDescription" style="min-height:70px;resize:vertical" placeholder="Reason, provider, questions"></textarea></div>
+    <div class="s-lbl" style="margin-bottom:10px">Choose Calendar</div>
+    <div style="display:grid;gap:8px">
+      <button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToAppleCalendar()"> iPhone / Apple Calendar</button>
+      <button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToGoogleCalendar()">Google Calendar</button>
+      <button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToOutlookCalendar()">Outlook Calendar</button>
+    </div>
+    <div class="m-acts"><button class="m-btn cancel" onclick="closeCalendarModal()">Close</button></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileUpload(this)" />
+
+<script>
+'use strict';
+const MODEL_NAME='claude-sonnet-4-20250514';
+let currentMessages=[],currentSessionId=null,currentPatientId=null,allPatients=[],notifications=[],calendarConnected=false,pendingCalendarEvent=null,allTasks=[],taskFilter='all',latestScanData=null;
+
+/* ═══ PULL DASHBOARD ═══ */
+function openPullDashboard(){document.getElementById('pullDashboard').classList.add('open');document.getElementById('pdBackdrop').classList.add('open')}
+function closePullDashboard(){document.getElementById('pullDashboard').classList.remove('open');document.getElementById('pdBackdrop').classList.remove('open')}
+
+/* ═══ INIT ═══ */
+window.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    bindDesktopInput();seedCalendarDefaults();
+    await loadPatients();clearChat();
+    await Promise.all([loadChatHistory(),loadNotifications(),checkCalendarStatus()]);
+    updateDashboard();
+    setTimeout(()=>{loadTasks().catch(()=>{})},800);
+  }catch(err){console.error('init',err);clearChat();addMsg('ai',`❌ ${esc(err.message||'Failed to initialize.')}`,true,false)}
 });
-app.post('/api/save-chat', (req, res) => {
-  try {
-    const body = req.body || {};
-    const messages = body.messages;
-    const patientId = body.patientId;
-    if (!messages?.length) return res.json({ success: false });
-    const id = saveChatSession(patientId || getCurrentPatientId(), messages);
-    res.json({ success: true, id });
-  } catch (e) {
-    res.json({ success: false });
-  }
-});
-// Notifications
-app.get('/api/notifications', (_req, res) => {
-  res.json(loadNotifications());
-});
-app.post('/api/notifications/read/:id', (req, res) => {
-  const data = loadNotifications();
-  const notif = data.notifications.find((n) => n.id === req.params.id);
-  if (notif) notif.read = true;
-  saveNotifications(data);
-  res.json({ success: true });
-});
-app.post('/api/notifications/read-all', (_req, res) => {
-  const data = loadNotifications();
-  data.notifications.forEach((n) => { n.read = true; });
-  saveNotifications(data);
-  res.json({ success: true });
-});
-app.delete('/api/notifications/:id', (req, res) => {
-  const data = loadNotifications();
-  data.notifications = data.notifications.filter((n) => n.id !== req.params.id);
-  saveNotifications(data);
-  res.json({ success: true });
-});
-app.post('/api/notifications/add', (req, res) => {
-  const { type, title, message, patientId, dueDate } = req.body;
-  const notif = addNotification(type, title, message, patientId, dueDate);
-  res.json({ success: true, notification: notif });
-});
-// Patients
-app.get('/api/patients', (_req, res) => {
-  res.json({ patients: getAllPatients() });
-});
-app.get('/api/patients/current', (_req, res) => {
-  const id = getCurrentPatientId();
-  const patients = getAllPatients();
-  const patient = patients.find((p) => p.id === id) || patients[0] || null;
-  res.json({ patient, currentId: id });
-});
-app.post('/api/patients/switch', (req, res) => {
-  const { patientId } = req.body;
-  setCurrentPatientId(patientId);
-  conversationHistory = [];
-  res.json({ success: true, patientId });
-});
-app.post('/api/patients/add', (req, res) => {
-  try {
-    const newPatient = req.body;
-    if (!newPatient.id) {
-      newPatient.id = `${newPatient.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
-    }
-    const patients = getAllPatients();
-    patients.push(newPatient);
-    saveAllPatients(patients);
-    res.json({ success: true, patient: newPatient });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.put('/api/patients/:id', (req, res) => {
-  try {
-    const patients = getAllPatients();
-    const idx = patients.findIndex((p) => p.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: 'Patient not found' });
-    patients[idx] = { ...patients[idx], ...req.body };
-    saveAllPatients(patients);
-    res.json({ success: true, patient: patients[idx] });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// Legacy patient endpoints
-app.get('/api/patient', (_req, res) => {
-  const currentPatientId = getCurrentPatientId();
-  const patients = getAllPatients();
-  const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
-  res.json(patient);
-});
-app.get('/api/patient/:id', (req, res) => {
-  const patients = getAllPatients();
-  const patient = patients.find((p) => p.id === req.params.id);
-  res.json(patient || { error: 'not found' });
-});
-app.put('/api/patient/:id', (req, res) => {
-  try {
-    const patients = getAllPatients();
-    const idx = patients.findIndex((p) => p.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: 'Patient not found' });
-    patients[idx] = { ...patients[idx], ...req.body };
-    saveAllPatients(patients);
-    res.json(patients[idx]);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Chat ──────────────────────────────────────────────────
-app.post('/api/chat', async (req, res) => {
-  const { message, patientId } = req.body;
-  const lower = String(message || '').toLowerCase().trim();
-  // confirm patient updates
-  if (lower === 'confirm' && pendingUpdates) {
-    try {
-      const patients = getAllPatients();
-      const idx = patients.findIndex((p) => p.id === pendingUpdates.id);
-      if (idx >= 0) {
-        patients[idx] = { ...patients[idx], ...pendingUpdates.updates };
-        saveAllPatients(patients);
-      }
-      pendingUpdates = null;
-      return res.json({ reply: '✅ Patient profile updated successfully!' });
-    } catch (e) {
-      return res.json({ reply: `❌ Error updating profile: ${e.message}` });
-    }
-  }
-  if ((lower === 'deny' || lower === 'cancel') && pendingUpdates) {
-    pendingUpdates = null;
-    return res.json({ reply: 'Updates cancelled. No changes were made.' });
-  }
-  // send email
-  if (lower === 'send' && pendingEmailDraft) {
-    try {
-      await emailTools.sendRealEmail(
-        pendingEmailDraft.to,
-        pendingEmailDraft.subject,
-        pendingEmailDraft.body
-      );
-      const sentTo = pendingEmailDraft.to;
-      pendingEmailDraft = null;
-      return res.json({ reply: `✅ **Email sent successfully!** Delivered to ${sentTo}` });
-    } catch (e) {
-      pendingEmailDraft = null;
-      return res.json({ reply: `❌ Failed to send email: ${e.message}` });
-    }
-  }
-  // confirm call
-  if (lower === 'confirm call' && pendingCallRequest) {
-    try {
-      const callResult = await voice.startPhoneCall(
-        normalizeUSPhone(pendingCallRequest.phone),
-        pendingCallRequest.reason
-      );
-      const callName = pendingCallRequest.name;
-      pendingCallRequest = null;
-      return res.json({
-        reply: `📞 Calling ${callName} now... Call ID: ${callResult.callId || callResult.id || 'started'}`,
-        callId: callResult.callId || callResult.id
-      });
-    } catch (e) {
-      pendingCallRequest = null;
-      return res.json({ reply: `❌ Failed to start call: ${e.message}` });
-    }
-  }
-  if (lower === 'cancel call' && pendingCallRequest) {
-    pendingCallRequest = null;
-    return res.json({ reply: 'Call cancelled.' });
-  }
-  const currentPatientId = patientId || getCurrentPatientId();
-  const patients = getAllPatients();
-  const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
-  conversationHistory.push({ role: 'user', content: message });
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: buildSystemPrompt(patient),
-      messages: conversationHistory
-    });
-    const reply = response.content?.[0]?.text || 'No response returned.';
-    conversationHistory.push({ role: 'assistant', content: reply });
-    const emailMatch = reply.match(/EMAIL_DRAFT:(\{[\s\S]*?\})/);
-    if (emailMatch) {
-      try {
-        pendingEmailDraft = JSON.parse(emailMatch[1]);
-        emailTools.saveDraft(
-          pendingEmailDraft.to,
-          pendingEmailDraft.subject,
-          pendingEmailDraft.body
-        );
-      } catch (e) {
-        console.log('Email draft parse error:', e.message);
-      }
-    }
-    const callMatch = reply.match(/CALL_REQUEST:(\{[\s\S]*?\})/);
-    if (callMatch) {
-      try {
-        pendingCallRequest = JSON.parse(callMatch[1]);
-        if (pendingCallRequest.phone) {
-          pendingCallRequest.phone = normalizeUSPhone(pendingCallRequest.phone);
-        }
-        return res.json({
-          reply: reply.replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
-          callRequest: pendingCallRequest
-        });
-      } catch (e) {
-        console.log('Call request parse error:', e.message);
-      }
-    }
-    const calMatch = reply.match(/CALENDAR_EVENT:(\{[\s\S]*?\})/);
-    let calendarEvent = null;
-    if (calMatch) {
-      try {
-        calendarEvent = JSON.parse(calMatch[1]);
-      } catch (e) {}
-    }
-    if (reply.toLowerCase().includes('refill') || reply.toLowerCase().includes('prescription')) {
-      addNotification(
-        'medication',
-        'Medication Refill Reminder',
-        `Chat mention: ${String(message).substring(0, 80)}`,
-        currentPatientId,
-        null
-      );
-    }
-    res.json({
-      reply: reply.replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
-      calendarEvent,
-      hasPendingEmail: !!pendingEmailDraft,
-      hasPendingCall: !!pendingCallRequest
-    });
-  } catch (e) {
-    console.error('Chat error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Upload / Vision ───────────────────────────────────────
-app.post('/api/upload', upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const currentPatientId = getCurrentPatientId();
-  const patients = getAllPatients();
-  const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
-  try {
-    const filePath = req.file.path;
-    const mime = req.file.mimetype;
-    let messages = [];
-    if (mime.startsWith('image/')) {
-      const base64 = fs.readFileSync(filePath).toString('base64');
-      messages = [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: mime === 'image/jpg' ? 'image/jpeg' : mime,
-              data: base64
-            }
-          },
-          {
-            type: 'text',
-            text:
-              'Analyze this medical document image carefully. Read EVERY word, number, and detail visible.\n\n' +
-              'DOCUMENT TYPE DETECTION — Identify what this is:\n' +
-              '- Insurance card: Extract insurance_company, plan_name, member_name, member_id, group_number, rx_bin, rx_pcn, rx_group, copay_amounts, effective_date, phone_numbers (member services, claims, pharmacy)\n' +
-              '- Prescription bottle/label: Extract medication_name, dosage, frequency, quantity, refills_remaining, prescriber, pharmacy_name, pharmacy_phone, rx_number, date_filled, expiration_date, warnings\n' +
-              '- Lab results: Extract test_names, values, reference_ranges, abnormal_flags, ordering_doctor, lab_name, date_of_test, patient_name\n' +
-              '- Medical bill/EOB: Extract provider_name, date_of_service, total_charge, insurance_paid, patient_responsibility, claim_number, procedure_codes\n' +
-              '- Referral/authorization: Extract referring_doctor, specialist, authorization_number, valid_dates, approved_visits\n' +
-              '- Other medical document: Extract all visible text and categorize\n\n' +
-              'For patient: ' + (patient?.name || 'PATIENT_NAME_HERE') + '\n\n' +
-              'Return a JSON object with ALL extracted fields. Format as: EXTRACTED_DATA:{json}\n\n' +
-              'Include a "document_type" field (insurance_card, prescription, lab_result, medical_bill, referral, other).\n' +
-              'Include a "summary" field explaining what this document is and what actions the caregiver should take.\n' +
-              'Include a "confidence" field (high, medium, low) based on image clarity.\n\n' +
-              'Be PRECISE with numbers — member IDs, phone numbers, dates, dosages. Do not guess. If you cannot read something clearly, mark it as "unclear" rather than omitting it.'
-          }
-        ]
-      }];
-    } else if (mime === 'application/pdf') {
-      const pdfBase64 = fs.readFileSync(filePath).toString('base64');
-      messages = [{
-        role: 'user',
-        content: [
-          {
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: 'application/pdf',
-              data: pdfBase64
-            }
-          },
-          {
-            type: 'text',
-            text:
-              'Analyze this medical PDF carefully for patient ' + (patient?.name || 'PATIENT_NAME_HERE') + '. ' +
-              'Read all visible text. Identify the document type and return structured data as EXTRACTED_DATA:{json}. ' +
-              'Include document_type, summary, confidence, and all clearly readable medical, insurance, billing, lab, or prescription details. ' +
-              'If text is unreadable or missing, use "unclear" instead of guessing.'
-          }
-        ]
-      }];
-    } else {
-      let text = '[Could not read file]';
-      try {
-        text = fs.readFileSync(filePath, 'utf-8').substring(0, 5000);
-      } catch (e) {}
-      messages = [{
-        role: 'user',
-        content:
-          text +
-          '\n\nAnalyze this medical document. Return EXTRACTED_DATA:{json} with document_type, summary, confidence, and all clearly readable fields.'
-      }];
-    }
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: buildSystemPrompt(patient),
-      messages
-    });
-    const text = response.content?.[0]?.text || '';
-    const extracted = extractJsonAfterMarker(text, 'EXTRACTED_DATA:');
-    // Timeline event
-    try {
-      const timelineData = loadTimeline();
-      const title = req.file.originalname || 'Uploaded Medical Document';
-      const exists = (timelineData.events || []).some((e) =>
-        e.title === title && e.patientId === currentPatientId
-      );
-      if (!exists) {
-        timelineData.events = timelineData.events || [];
-        timelineData.events.unshift({
-          id: Date.now().toString(),
-          patientId: currentPatientId,
-          date: new Date().toISOString().slice(0, 10),
-          title,
-          summary: 'Medical document uploaded and analyzed',
-          type: 'document',
-          source: req.file.originalname || 'upload'
-        });
-        safeWriteJson(TIMELINE_FILE, timelineData);
-      }
-    } catch (e) {
-      console.log('Timeline save error:', e.message);
-    }
-    // Task
-    try {
-      tasksTools.addTask({
-        patientId: currentPatientId,
-        title: 'Review uploaded document',
-        description: `${req.file.originalname || 'Medical document'} was uploaded and may need follow-up.`,
-        dueDate: null,
-        priority: 'medium',
-        category: 'records',
-        source: req.file.originalname || 'upload'
-      });
-    } catch (e) {
-      console.log('Task auto-create error:', e.message);
-    }
-    // Concern
-    try {
-      let concernTitle = 'Document review pending';
-      let concernDescription = `${req.file.originalname || 'Medical document'} was uploaded and may need follow-up.`;
-      if (extracted) {
-        const docType = String(extracted.document_type || '').toLowerCase();
-        if (docType === 'insurance_denial') {
-          concernTitle = 'Insurance appeal required';
-          concernDescription = 'A denial document was uploaded and may need an appeal or provider follow-up.';
-        } else if (docType === 'imaging_order') {
-          concernTitle = 'Schedule imaging';
-          concernDescription = 'An imaging order was uploaded and may need scheduling.';
-        } else if (docType === 'prescription') {
-          concernTitle = 'Prescription follow-up';
-          concernDescription = 'A prescription document was uploaded and may need refill or medication review.';
-        } else if (docType === 'lab_result') {
-          concernTitle = 'Review lab results';
-          concernDescription = 'A lab result was uploaded and may need provider review.';
-        } else if (docType === 'medical_bill') {
-          concernTitle = 'Review medical bill';
-          concernDescription = 'A medical bill was uploaded and may need billing review.';
-        } else if (docType === 'doctor_note') {
-          concernTitle = 'Review doctor note';
-          concernDescription = 'A doctor note was uploaded and may need follow-up.';
-        } else if (docType === 'insurance_card') {
-          concernTitle = 'Verify insurance details';
-          concernDescription = 'An insurance card was uploaded and coverage details may need verification.';
-        } else if (docType === 'referral') {
-          concernTitle = 'Referral follow-up';
-          concernDescription = 'A referral or authorization was uploaded and may need scheduling or approval review.';
-        }
-      }
-      concernsTools.addConcern({
-        patientId: currentPatientId,
-        title: concernTitle,
-        description: concernDescription,
-        priority: 'medium',
-        source: req.file.originalname || 'upload'
-      });
-    } catch (e) {
-      console.log('Concern auto-create error:', e.message);
-    }
-    if (extracted) {
-      pendingUpdates = {
-        id: currentPatientId,
-        updates: extracted,
-        raw: text
-      };
-      cleanupFile(filePath);
-      return res.json({
-        success: true,
-        extracted,
-        message: 'Review the extracted data. Type "confirm" to save or "deny" to cancel.',
-        pending: true
-      });
-    }
-    cleanupFile(filePath);
-    return res.json({
-      success: true,
-      message: text || 'Upload processed, but no structured data was returned.',
-      pending: false
-    });
-  } catch (e) {
-    cleanupFile(req.file?.path);
-    console.error('Upload error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Voice Calls ───────────────────────────────────────────
-app.post('/api/call', async (req, res) => {
-  try {
-    const { phone, phoneNumber, reason } = req.body;
-    const number = normalizeUSPhone(phone || phoneNumber);
-    if (!number) return res.status(400).json({ error: 'Phone number required' });
-    const result = await voice.startPhoneCall(number, reason);
-    res.json(result);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.get('/api/call/:id', async (req, res) => {
-  try {
-    const status = await voice.getCallStatus(req.params.id);
-    res.json(status);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Email ─────────────────────────────────────────────────
-app.post('/api/send-email', async (req, res) => {
-  try {
-    const { to, subject, body, htmlBody } = req.body;
-    const emailBody = htmlBody || body;
-    if (to && subject && emailBody) {
-      await emailTools.sendRealEmail(to, subject, emailBody);
-      return res.json({ success: true, message: 'Email sent successfully!' });
-    }
-    if (pendingEmailDraft) {
-      await emailTools.sendRealEmail(
-        pendingEmailDraft.to,
-        pendingEmailDraft.subject,
-        pendingEmailDraft.body
-      );
-      const sentTo = pendingEmailDraft.to;
-      pendingEmailDraft = null;
-      return res.json({ success: true, message: `Email sent successfully to ${sentTo}!` });
-    }
-    return res.status(400).json({ success: false, error: 'No email payload or pending draft found.' });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-});
-app.get('/api/drafts', (_req, res) => {
-  try {
-    const drafts = emailTools.listDrafts();
-    res.json({ drafts });
-  } catch (e) {
-    res.json({ drafts: [] });
-  }
-});
-// ─── Google Calendar OAuth ─────────────────────────────────
-app.get('/auth/google', (_req, res) => {
-  if (!oauth2Client) {
-    return res.send('<h2>Google Calendar not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env</h2>');
-  }
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/calendar.events'],
-    prompt: 'consent'
-  });
-  res.redirect(url);
-});
-app.get('/oauth2callback', async (req, res) => {
-  if (!oauth2Client) return res.status(500).send('Google Calendar not configured');
-  const { code } = req.query;
-  try {
-    const { tokens } = await oauth2Client.getToken(code);
-    googleTokens = tokens;
-    oauth2Client.setCredentials(tokens);
-    safeWriteJson(TOKEN_FILE, tokens);
-    res.send(
-      '<html><body style="font-family:sans-serif;padding:40px;text-align:center;">' +
-      '<h2>✅ Google Calendar Connected!</h2>' +
-      '<p>You can now add events from the chat.</p>' +
-      '<script>setTimeout(() => window.close(), 2000)</script>' +
-      '</body></html>'
-    );
-  } catch (e) {
-    res.status(500).send(`Error: ${e.message}`);
-  }
-});
-app.get('/api/calendar/status', (_req, res) => {
-  res.json({ connected: !!googleTokens });
-});
-app.post('/api/calendar/add-event', async (req, res) => {
-  if (!googleTokens || !oauth2Client) {
-    return res.status(401).json({ error: 'Google Calendar not connected. Visit /auth/google first.' });
-  }
-  try {
-    const { title, date, time, duration, description } = req.body;
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    const startDateTime = new Date(`${date}T${time || '09:00'}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + (duration || 60) * 60000);
-    const event = {
-      summary: title,
-      description: description || '',
-      start: { dateTime: startDateTime.toISOString(), timeZone: 'America/Chicago' },
-      end: { dateTime: endDateTime.toISOString(), timeZone: 'America/Chicago' }
-    };
-    const result = await calendar.events.insert({
-      calendarId: 'primary',
-      resource: event
-    });
-    addNotification(
-      'appointment',
-      `Appointment Added: ${title}`,
-      `Added to Google Calendar: ${date} at ${time || '9:00 AM'}`,
-      getCurrentPatientId(),
-      date
-    );
-    res.json({
-      success: true,
-      eventId: result.data.id,
-      link: result.data.htmlLink
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.get('/api/calendar/events', (_req, res) => {
-  try {
-    const events = calendarTools.listEvents ? calendarTools.listEvents() : [];
-    res.json({ events });
-  } catch (e) {
-    res.json({ events: [] });
-  }
-});
-app.get('/api/calendar/ics', (req, res) => {
-  try {
-    const { title, date, time, duration, description } = req.query;
-    if (!title || !date) return res.status(400).send('Missing title or date');
-    const start = new Date(`${date}T${time || '09:00'}:00`);
-    const end = new Date(start.getTime() + (Number(duration || 60) * 60000));
-    function formatICSDate(d) {
-      return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    }
-    const safeTitle = String(title).replace(/\n/g, ' ').trim();
-    const safeDescription = String(description || '').replace(/\n/g, ' ').trim();
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Health Agent//EN',
-      'BEGIN:VEVENT',
-      `SUMMARY:${safeTitle}`,
-      `DESCRIPTION:${safeDescription}`,
-      `DTSTART:${formatICSDate(start)}`,
-      `DTEND:${formatICSDate(end)}`,
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=event.ics');
-    res.send(ics);
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
-});
-// ─── Tasks API ─────────────────────────────────────────────
-app.get('/api/tasks', (req, res) => {
-  try {
-    const patientId = req.query.patientId || getCurrentPatientId();
-    const tasks = tasksTools.listTasks(patientId);
-    res.json({ tasks });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.post('/api/tasks', (req, res) => {
-  try {
-    const patientId = req.body.patientId || getCurrentPatientId();
-    const task = tasksTools.addTask({
-      ...req.body,
-      patientId
-    });
-    res.json({ success: true, task });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.post('/api/tasks/add', (req, res) => {
-  try {
-    const patientId = req.body.patientId || getCurrentPatientId();
-    const task = tasksTools.addTask({
-      ...req.body,
-      patientId
-    });
-    res.json({ success: true, task });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.put('/api/tasks/:id', (req, res) => {
-  try {
-    const task = tasksTools.updateTask(req.params.id, req.body);
-    res.json({ success: true, task });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.delete('/api/tasks/:id', (req, res) => {
-  try {
-    const deleted = tasksTools.deleteTask
-      ? tasksTools.deleteTask(req.params.id)
-      : true;
-    res.json({ success: true, deleted });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.post('/api/tasks/:id/complete', (req, res) => {
-  try {
-    const task = tasksTools.updateTask(req.params.id, {
-      status: 'done',
-      completedAt: new Date().toISOString()
-    });
-    res.json({ success: true, task });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Timeline API ──────────────────────────────────────────
-app.get('/api/timeline', (_req, res) => {
-  try {
-    const patientId = getCurrentPatientId();
-    const data = loadTimeline();
-    const events = (data.events || []).filter((e) => e.patientId === patientId || !e.patientId);
-    res.json({ events });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Brief API ─────────────────────────────────────────────
-app.get('/api/brief', (_req, res) => {
-  try {
-    const patientId = getCurrentPatientId();
-    const patients = getAllPatients();
-    const patient = patients.find((p) => p.id === patientId) || patients[0] || {};
-    const timeline = loadTimeline();
-    const recentTimeline = (timeline.events || [])
-      .filter((e) => e.patientId === patientId || !e.patientId)
-      .slice(0, 10);
-    const openTasks = tasksTools.listTasks(patientId).filter((t) => t.status !== 'done');
-    res.json({
-      patient,
-      recentTimeline,
-      openTasks
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-// ─── Dashboard ─────────────────────────────────────────────
-app.get('/api/dashboard', (_req, res) => {
-  const patient = getAllPatients().find((p) => p.id === getCurrentPatientId());
-  res.json({
-    patient,
-    appointments: appointmentsTools.listUpcoming ? appointmentsTools.listUpcoming() : [],
-    medications: medicationsTools.getMedications ? medicationsTools.getMedications() : [],
-    drafts: emailTools.listDrafts(),
-    notifications: loadNotifications()
-  });
-});
-// ─── Active Concerns ───────────────────────────────────────
-app.get('/api/concerns', (_req, res) => {
-  try {
-    const patientId = getCurrentPatientId();
-    const concerns = concernsTools.listConcerns(patientId);
-    res.json({ concerns });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.post('/api/concerns/add', (req, res) => {
-  try {
-    const patientId = req.body.patientId || getCurrentPatientId();
-    const concern = concernsTools.addConcern({
-      ...req.body,
-      patientId
-    });
-    res.json({ success: true, concern });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.post('/api/concerns/resolve/:id', (req, res) => {
-  try {
-    const updated = concernsTools.resolveConcern(req.params.id);
-    res.json({ success: true, concern: updated });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-app.get('/api/pending', (_req, res) => {
-  res.json(pendingUpdates);
-});
-// ─── Static pages ──────────────────────────────────────────
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-app.get('/settings', (_req, res) => {
-  const settingsPath = path.join(__dirname, 'public', 'settings.html');
-  if (fs.existsSync(settingsPath)) res.sendFile(settingsPath);
-  else res.redirect('/');
-});
-app.get('/timeline', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'timeline.html'));
-});
-app.get('/tasks', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'tasks.html'));
-});
-app.get('/brief', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'brief.html'));
-});
-app.get('/playbooks', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'playbooks.html'));
-});
-// ─── START ─────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\n🏥 Health Agent running on http://localhost:${PORT}`);
-  console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
-  console.log(`🔔 Notifications: ${NOTIFICATIONS_FILE}`);
-  console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
-});
+
+/* ═══ API ═══ */
+async function api(url,options={}){
+  const res=await fetch(url,options);const ct=res.headers.get('content-type')||'';let data=null;
+  try{data=ct.includes('application/json')?await res.json():{raw:await res.text()}}catch(_){data={}}
+  if(!res.ok)throw new Error(data?.error||data?.message||`Request failed (${res.status})`);
+  return data||{};
+}
+
+/* ═══ HELPERS ═══ */
+function lockBody(){document.body.classList.add('modal-open')}
+function unlockBody(){document.body.classList.remove('modal-open')}
+function esc(str){if(str===null||str===undefined)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function formatAssistantText(text){if(!text)return'';let s=esc(text);s=s.replace(/```([\s\S]*?)```/g,(_,c)=>`<pre><code>${c.trim()}</code></pre>`);s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');s=s.replace(/__(.+?)__/g,'<strong>$1</strong>');s=s.replace(/\*(.+?)\*/g,'<em>$1</em>');s=s.replace(/\n/g,'<br>');return s}
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val}
+function calcAge(dob){if(!dob)return null;try{let b;if(dob.includes('/')){const p=dob.split('/');if(p.length!==3)return null;b=new Date(`${p[2]}-${String(p[0]).padStart(2,'0')}-${String(p[1]).padStart(2,'0')}`)}else{b=new Date(dob)}if(Number.isNaN(b.getTime()))return null;return Math.floor((Date.now()-b.getTime())/(365.25*24*3600*1000))}catch{return null}}
+function formatRelTime(iso){if(!iso)return'';const ts=new Date(iso).getTime();if(Number.isNaN(ts))return'';const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return'just now';if(m<60)return`${m}m ago`;const h=Math.floor(m/60);if(h<24)return`${h}h ago`;const dd=Math.floor(h/24);if(dd<7)return`${dd}d ago`;return new Date(ts).toLocaleDateString()}
+function formatTaskDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');if(!y||!m||!d)return iso;const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${months[Math.max(0,parseInt(m,10)-1)]} ${parseInt(d,10)}, ${y}`}
+function getPatientById(id){return allPatients.find(p=>p.id===id)||null}
+function getRecentUploads(){try{const r=localStorage.getItem('healthAgentRecentUploads');const p=r?JSON.parse(r):[];return Array.isArray(p)?p:[]}catch{return[]}}
+function getRecentUploadCount(){return getRecentUploads().filter(x=>!currentPatientId||x.patientId===currentPatientId).length}
+function saveRecentUpload(u){try{const c=getRecentUploads();c.unshift(u);localStorage.setItem('healthAgentRecentUploads',JSON.stringify(c.slice(0,12)))}catch(e){console.error('saveRecentUpload',e)}}
+function inferConfidence(data){if(!data)return{label:'low confidence',className:'info'};if(data.confidence){const c=String(data.confidence).toLowerCase();if(c==='high')return{label:'high confidence',className:'safe'};if(c==='medium')return{label:'review advised',className:'warn'};return{label:'low confidence',className:'info'}}const dt=String(data.document_type||'').toLowerCase();let filled=0,total=0;const check=(keys)=>{keys.forEach(k=>{total++;if(data[k]&&data[k]!=='unclear')filled++})};if(dt==='insurance_card')check(['insurance_company','plan_name','member_id','group_number','member_name']);else if(dt==='prescription')check(['medication_name','dosage','frequency','prescriber','pharmacy_name']);else if(dt==='lab_result')check(['test_names','ordering_doctor','lab_name','date_of_test']);else if(dt==='medical_bill')check(['provider_name','total_charge','patient_responsibility','claim_number']);else if(dt==='referral')check(['referring_doctor','specialist','authorization_number']);else{Object.keys(data).forEach(k=>{if(!['document_type','summary','confidence'].includes(k)&&data[k]&&data[k]!=='unclear')filled++;total++})}const ratio=total>0?filled/total:0;if(ratio>=0.7)return{label:'high confidence',className:'safe'};if(ratio>=0.4)return{label:'review advised',className:'warn'};return{label:'low confidence',className:'info'}}
+function normalizeUSPhone(phone){if(!phone)return'';const c=String(phone).replace(/[^\d+]/g,'');if(c.startsWith('+'))return c;const d=c.replace(/\D/g,'');if(d.length===10)return`+1${d}`;if(d.length===11&&d.startsWith('1'))return`+${d}`;return c}
+function toISODateTimeLocal(d,t){if(!d)throw new Error('Date is required.');const time=t||'09:00';const l=new Date(`${d}T${time}:00`);if(Number.isNaN(l.getTime()))throw new Error('Invalid date or time.');return l}
+function formatICSDate(d){const y=d.getUTCFullYear(),m=String(d.getUTCMonth()+1).padStart(2,'0'),dd=String(d.getUTCDate()).padStart(2,'0'),h=String(d.getUTCHours()).padStart(2,'0'),mi=String(d.getUTCMinutes()).padStart(2,'0'),s=String(d.getUTCSeconds()).padStart(2,'0');return`${y}${m}${dd}T${h}${mi}${s}Z`}
+function buildCalendarEventFromForm(){const title=document.getElementById('calTitle').value.trim(),date=document.getElementById('calDate').value,time=document.getElementById('calTime').value,duration=parseInt(document.getElementById('calDuration').value||'60',10),location=document.getElementById('calLocation').value.trim(),description=document.getElementById('calDescription').value.trim();if(!title)throw new Error('Title is required.');if(!date)throw new Error('Date is required.');const start=toISODateTimeLocal(date,time),end=new Date(start.getTime()+Math.max(5,duration)*60000);return{title,date,time:time||'09:00',duration:Math.max(5,duration),location,description,start,end}}
+function seedCalendarDefaults(){const t=document.getElementById('calTitle'),d=document.getElementById('calDate'),ti=document.getElementById('calTime');if(!t||!d||!ti)return;if(!d.value){const tm=new Date(Date.now()+86400000);d.value=tm.toISOString().split('T')[0]}if(!ti.value)ti.value='09:00';if(!t.value)t.value='Medical appointment'}
+function isMobileView(){return window.innerWidth<=900}
+function toggleExpand(id){document.getElementById(id)?.classList.toggle('open')}
+function openSettingsPlaceholder(){closeMenuSheet();addMsg('ai','⚙️ Settings coming soon.',true,false)}
+
+/* ═══ DASHBOARD CARD TAP ═══ */
+function goToDashboardCard(type){if(type==='tasks'){openTaskPanel();return}if(type==='records'){addMsg('ai','Scan a document to start building records.',true,false);return}if(type==='upcoming'){qa('What are her upcoming appointments?');return}if(type==='today')qa('What needs attention today?')}
+
+/* ═══ DASHBOARD ═══ */
+function updateTopbarTitle(patient){setText('desktopTitle',(patient?.name||'Health Dashboard')+' — Health Dashboard')}
+function renderRecentRecords(){const list=document.getElementById('recentActivityList');if(!list)return;const uploads=getRecentUploads().filter(x=>!currentPatientId||x.patientId===currentPatientId).slice(0,3);if(!uploads.length){list.innerHTML=`<div class="activity-item"><div class="activity-title">No recent activity</div><div class="activity-sub">Scans and records will appear here</div></div>`;return}list.innerHTML=uploads.map(i=>`<div class="activity-item"><div class="activity-title">${esc(i.title||i.name||'Record')}</div><div class="activity-sub">${esc(i.type||'Record')} · ${formatRelTime(i.at)}</div></div>`).join('')}
+function updateDashboard(){const pt=allTasks.filter(t=>t.status!=='done'),hp=pt.filter(t=>t.priority==='high'),today=new Date().toISOString().split('T')[0],dt=pt.filter(t=>t.dueDate===today);let tp='All clear',ts='No urgent items';if(hp.length>0){tp=`${hp.length} urgent`;ts='High priority items'}else if(dt.length>0){tp=`${dt.length} due today`;ts='Tasks for today'}else if(pt.length>0){tp=`${pt.length} open`;ts='Pending tasks'}setText('todayPrimary',tp);setText('todaySecondary',ts);setText('upcomingPrimary','0');setText('upcomingSecondary','Appointments');setText('tasksPrimary',String(pt.length));setText('tasksSecondary',pt.length>0?'Open items':'Nothing pending');const rc=getRecentUploadCount();setText('recordsPrimary',String(rc));setText('recordsSecondary',rc>0?'Recent files':'No uploads');renderRecentRecords()}
+
+/* ═══ PATIENTS ═══ */
+async function loadPatients(){const[pd,cd]=await Promise.all([api('/api/patients'),api('/api/patients/current')]);allPatients=Array.isArray(pd.patients)?pd.patients:[];currentPatientId=cd.currentId||allPatients[0]?.id||null;const cp=cd.patient||allPatients.find(p=>p.id===currentPatientId)||allPatients[0]||null;renderPatientDropdown();renderPatientCard(cp);renderProfileSheet(cp);updateTopbarTitle(cp)}
+function renderPatientDropdown(){const dd=document.getElementById('patientDropdown');if(!dd)return;const c=allPatients.find(p=>p.id===currentPatientId);setText('selectorName',c?.name||'No Patient');setText('selectorRel',c?.relationship||c?.relation||'Family Member');dd.innerHTML=allPatients.map(p=>`<div class="pat-opt ${p.id===currentPatientId?'active':''}" onclick="switchPatient('${esc(p.id)}')"><div class="opt-n">${esc(p.name)}</div><div class="opt-r">${esc(p.relationship||p.relation||'Family Member')} · DOB ${esc(p.dob||'—')}</div></div>`).join('')+`<div class="add-pat" onclick="openAddPatient()">＋ Add family member</div>`}
+async function switchPatient(id){try{await api('/api/patients/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:id,model:MODEL_NAME})});currentPatientId=id;latestScanData=null;closePatientDropdown();closeProfileSheet();await loadPatients();await loadChatHistory();await loadTasks().catch(()=>{});updateDashboard();clearChat();currentMessages=[];currentSessionId=null;const p=getPatientById(id);if(p)addMsg('ai',`Switched to <strong>${esc(p.name)}</strong>. How can I help?`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+function renderPatientCard(patient){const el=document.getElementById('cardContent');if(!el)return;if(!patient){el.innerHTML='<div style="color:var(--text3)">No patient loaded.</div>';return}const meds=(patient.medications||[]).map(m=>`<span class="pill p-teal">${esc(m.name)} ${esc(m.dose||'')}</span>`).join(''),algs=(patient.allergies||[]).map(a=>`<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('');el.innerHTML=`<div class="pc-row"><span class="pc-l">Name</span><span class="pc-v">${esc(patient.name)}</span></div><div class="pc-row"><span class="pc-l">DOB</span><span class="pc-v">${esc(patient.dob||'—')}</span></div><div class="pc-row"><span class="pc-l">Doctor</span><span class="pc-v">${esc(patient.primaryDoctor||'—')}</span></div><div class="pc-row"><span class="pc-l">Insurance</span><span class="pc-v">${esc(patient.insurance?.primary||'—')}</span></div>${meds?`<div style="margin-top:8px"><div class="s-lbl" style="margin-bottom:4px">Medications</div><div class="pill-row">${meds}</div></div>`:''}${algs?`<div style="margin-top:7px"><div class="s-lbl" style="margin-bottom:4px">Allergies</div><div class="pill-row">${algs}</div></div>`:''}`}
+function renderProfileSheet(patient){if(!patient)return;const initials=(patient.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(),age=calcAge(patient.dob),rel=patient.relationship||patient.relation||'';['psAvatar','mobilePatAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=initials});setText('psName',patient.name||'Patient');setText('psSub',[age?`${age}`:null,rel].filter(Boolean).join(' · ')||'Family Member');setText('psCondN',(patient.conditions||[]).length);setText('psMedN',(patient.medications||[]).length);setText('psAlgN',(patient.allergies||[]).length);setText('psDob',patient.dob||'—');setText('psDoctor',`${patient.primaryDoctor||'—'} · ${patient.clinic||'—'}`);setText('psInsurance',patient.insurance?.primary||'—');setText('psPharmacy',`${patient.pharmacy?.name||'—'} ${patient.pharmacy?.phone||''}`.trim());document.getElementById('psCondPills').innerHTML=(patient.conditions||[]).map(c=>`<span class="pill p-gold">${esc(c)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psMedPills').innerHTML=(patient.medications||[]).map(m=>`<span class="pill p-teal">${esc(m.name)} ${esc(m.dose||'')}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psAlgPills').innerHTML=(patient.allergies||[]).map(a=>`<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psPatientList').innerHTML=allPatients.map(p=>`<button onclick="switchPatient('${esc(p.id)}')" style="width:100%;padding:10px 12px;background:${p.id===currentPatientId?'rgba(11,147,246,0.08)':'var(--surface-2)'};border:1px solid ${p.id===currentPatientId?'rgba(11,147,246,0.2)':'var(--border)'};border-radius:12px;font-size:13px;cursor:pointer;text-align:left"><strong>${esc(p.name)}</strong> <span style="color:var(--text2);font-size:11px">· ${esc(p.relationship||p.relation||'Family Member')}</span></button>`).join('')}
+function togglePatientDropdown(){document.getElementById('patientDropdown')?.classList.toggle('open')}
+function closePatientDropdown(){document.getElementById('patientDropdown')?.classList.remove('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('#patientSelector'))closePatientDropdown();if(!e.target.closest('#notifPanel')&&!e.target.closest('.notif-btn')&&!e.target.closest('#notifBtnMobileWrap')&&!e.target.closest('.tb-bell'))document.getElementById('notifPanel')?.classList.remove('open')});
+
+/* ═══ SHEETS / MODALS ═══ */
+function openProfileSheet(){document.getElementById('profileSheet')?.classList.add('open');lockBody()}
+function closeProfileSheet(){document.getElementById('profileSheet')?.classList.remove('open');unlockBody()}
+function openMenuSheet(){document.getElementById('menuSheet')?.classList.add('open');lockBody()}
+function closeMenuSheet(){document.getElementById('menuSheet')?.classList.remove('open');unlockBody()}
+function openAddPatient(){closePatientDropdown();document.getElementById('addPatientModal')?.classList.add('open');lockBody()}
+function closeAddPatient(){document.getElementById('addPatientModal')?.classList.remove('open');unlockBody()}
+function openAddTask(){document.getElementById('addTaskModal').classList.add('open');document.getElementById('taskDue').value=new Date(Date.now()+7*86400000).toISOString().split('T')[0];lockBody()}
+function closeAddTask(){document.getElementById('addTaskModal').classList.remove('open');document.getElementById('taskTitle').value='';document.getElementById('taskDesc').value='';unlockBody()}
+function openCalendarModal(){document.getElementById('calendarModal').classList.add('open');seedCalendarDefaults();lockBody()}
+function closeCalendarModal(){document.getElementById('calendarModal').classList.remove('open');unlockBody()}
+
+/* ═══ ADD PATIENT ═══ */
+async function saveNewPatient(){const name=document.getElementById('newName').value.trim();if(!name){alert('Name is required');return}const patient={name,relationship:document.getElementById('newRelation').value.trim()||'Family Member',dob:document.getElementById('newDob').value.trim(),primaryDoctor:document.getElementById('newDoctor').value.trim(),address:document.getElementById('newAddress').value.trim(),insurance:{primary:document.getElementById('newInsurance').value.trim()},pharmacy:{name:document.getElementById('newPharmacy').value.trim()},conditions:document.getElementById('newConditions').value.split(',').map(s=>s.trim()).filter(Boolean),allergies:document.getElementById('newAllergies').value.split(',').map(s=>s.trim()).filter(Boolean),medications:[]};try{const data=await api('/api/patients/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...patient,model:MODEL_NAME})});closeAddPatient();if(data.patient?.id)await switchPatient(data.patient.id);else await loadPatients()}catch(e){alert(`Error: ${e.message}`)}}
+
+/* ═══ CHAT HISTORY ═══ */
+async function loadChatHistory(){try{const data=await api('/api/chat-history');renderChatHistory(data.sessions||[])}catch(e){console.error('loadChatHistory',e)}}
+function renderChatHistory(sessions){const list=document.getElementById('chatHistoryList');if(!list)return;const f=(sessions||[]).filter(s=>!s.patientId||s.patientId===currentPatientId);if(!f.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div>';return}list.innerHTML=f.slice(0,20).map(s=>`<div class="hist-item ${s.id===currentSessionId?'active':''}" onclick="loadSession('${esc(s.id)}')"><span style="flex-shrink:0;margin-top:1px">💬</span><div class="hist-content"><div class="hist-preview">${esc(s.preview||'Chat session')}</div><div class="hist-time">${formatRelTime(s.timestamp)}</div></div><button class="hist-del" onclick="deleteSession(event,'${esc(s.id)}')">✕</button></div>`).join('')}
+async function loadSession(id){try{const session=await api(`/api/chat-history/${encodeURIComponent(id)}`);currentSessionId=id;currentMessages=Array.isArray(session.messages)?session.messages:[];clearChat(false);for(const m of currentMessages){addMsg(m.role==='user'?'user':'ai',m.content||'',false,m.role!=='user')}closeSidebar();await loadChatHistory()}catch(e){console.error('loadSession',e);addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function deleteSession(e,id){e.stopPropagation();try{await api(`/api/chat-history/${encodeURIComponent(id)}`,{method:'DELETE'});if(currentSessionId===id){currentSessionId=null;currentMessages=[];clearChat()}await loadChatHistory()}catch(err){addMsg('ai',`❌ ${esc(err.message)}`,true,false)}}
+function newChat(){if(currentMessages.length>0)saveChatSession().catch(()=>{});currentSessionId=null;currentMessages=[];clearChat();loadChatHistory().catch(()=>{})}
+async function saveChatSession(){if(!currentMessages.length)return;try{await api('/api/save-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:currentMessages,patientId:currentPatientId,model:MODEL_NAME})})}catch(e){console.error('saveChatSession',e)}}
+setInterval(()=>{if(currentMessages.length>0)saveChatSession().catch(()=>{})},30000);
+window.addEventListener('beforeunload',()=>{if(!currentMessages.length)return;const blob=new Blob([JSON.stringify({messages:currentMessages,patientId:currentPatientId,model:MODEL_NAME})],{type:'application/json'});navigator.sendBeacon('/api/save-chat',blob)});
+
+/* ═══ NOTIFICATIONS ═══ */
+async function loadNotifications(){try{const data=await api('/api/notifications');notifications=data.notifications||[];renderNotifications();updateNotifBadge()}catch(e){console.error('loadNotifications',e)}}
+function renderNotifications(){const list=document.getElementById('notifList');if(!list)return;if(!notifications.length){list.innerHTML='<div class="ni-empty">✅ All clear</div>';return}const icons={medication:'💊',appointment:'📅',insurance:'🛡️',general:'💡'};list.innerHTML=notifications.slice(0,20).map(n=>`<div class="ni ${n.read?'read':'unread'}" onclick="readNotif('${esc(n.id)}')"><div class="ni-head"><span>${icons[n.type]||'🔔'}</span><span class="ni-title">${esc(n.title)}</span></div><div class="ni-msg">${esc(n.message)}</div><div class="ni-time">${formatRelTime(n.createdAt)}</div></div>`).join('')}
+function updateNotifBadge(){const unread=notifications.filter(n=>!n.read).length;['notifBadgeDesktop','notifBadgeMobile'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=unread>9?'9+':String(unread);el.style.display=unread>0?'flex':'none'}})}
+async function readNotif(id){try{await api(`/api/notifications/read/${encodeURIComponent(id)}`,{method:'POST'});const n=notifications.find(x=>x.id===id);if(n)n.read=true;renderNotifications();updateNotifBadge()}catch(e){console.error('readNotif',e)}}
+async function markAllRead(){try{await api('/api/notifications/read-all',{method:'POST'});notifications.forEach(n=>{n.read=true});renderNotifications();updateNotifBadge()}catch(e){console.error('markAllRead',e)}}
+function toggleNotifications(){document.getElementById('notifPanel')?.classList.toggle('open')}
+
+/* ═══ CALENDAR ═══ */
+async function checkCalendarStatus(){try{const data=await api('/api/calendar/status');calendarConnected=!!data.connected;const el=document.getElementById('gcalStatus');if(calendarConnected&&el){el.textContent='✅ Calendar Connected';el.className='gcal-s';el.removeAttribute('href');el.removeAttribute('target')}}catch(e){console.error('checkCalendarStatus',e)}}
+function populateCalendarModalFromEvent(event){document.getElementById('calTitle').value=event.title||'Medical appointment';document.getElementById('calDate').value=event.date||new Date().toISOString().split('T')[0];document.getElementById('calTime').value=event.time||'09:00';document.getElementById('calDuration').value=event.duration||60;document.getElementById('calLocation').value=event.location||'';document.getElementById('calDescription').value=event.description||''}
+async function addToCalendar(event){pendingCalendarEvent=event;populateCalendarModalFromEvent(event);openCalendarModal()}
+function downloadICSFile(event){const uid=`health-agent-${Date.now()}@local`,now=formatICSDate(new Date()),start=formatICSDate(event.start),end=formatICSDate(event.end);const clean=(s='')=>String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Health Agent//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${now}`,`DTSTART:${start}`,`DTEND:${end}`,`SUMMARY:${clean(event.title)}`,`DESCRIPTION:${clean(event.description||'')}`,`LOCATION:${clean(event.location||'')}`,`END:VEVENT`,'END:VCALENDAR'].join('\r\n');const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${(event.title||'event').replace(/[^\w\-]+/g,'-').toLowerCase()||'event'}.ics`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function addEventToAppleCalendar(){try{const e=buildCalendarEventFromForm();downloadICSFile(e);closeCalendarModal();addMsg('ai',`📅 Calendar file created for <strong>${esc(e.title)}</strong>. Open the download to add it.`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function addEventToGoogleCalendar(){try{const event=buildCalendarEventFromForm();if(calendarConnected){const data=await api('/api/calendar/add-event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:event.title,date:event.date,time:event.time,duration:event.duration,location:event.location,description:event.description,model:MODEL_NAME})});closeCalendarModal();if(data.success){const lh=data.link?` <a href="${esc(data.link)}" target="_blank">View →</a>`:'';addMsg('ai',`✅ Added <strong>${esc(event.title)}</strong> to Google Calendar.${lh}`,true,true);return}}const s=event.start.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z',e2=event.end.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';const url=new URL('https://calendar.google.com/calendar/render');url.searchParams.set('action','TEMPLATE');url.searchParams.set('text',event.title);url.searchParams.set('dates',`${s}/${e2}`);if(event.description)url.searchParams.set('details',event.description);if(event.location)url.searchParams.set('location',event.location);window.open(url.toString(),'_blank','noopener,noreferrer');closeCalendarModal();addMsg('ai',`📅 Opened Google Calendar for <strong>${esc(event.title)}</strong>.`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+function addEventToOutlookCalendar(){try{const event=buildCalendarEventFromForm();const url=new URL('https://outlook.live.com/calendar/0/deeplink/compose');url.searchParams.set('subject',event.title);url.searchParams.set('startdt',event.start.toISOString());url.searchParams.set('enddt',event.end.toISOString());if(event.description)url.searchParams.set('body',event.description);if(event.location)url.searchParams.set('location',event.location);window.open(url.toString(),'_blank','noopener,noreferrer');closeCalendarModal();addMsg('ai',`📅 Opened Outlook for <strong>${esc(event.title)}</strong>.`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+
+/* ═══ CHAT ═══ */
+function clearChat(addWelcome=true){const ma=document.getElementById('chatArea'),da=document.getElementById('chatAreaDesktop');if(ma)ma.innerHTML='';if(da)da.innerHTML='';if(addWelcome){const p=getPatientById(currentPatientId),fn=esc((p?.name||'Linda').split(' ')[0]);const html=`<div class="welcome-inline"><div class="welcome-inline-title">I'm here for <strong>${fn}</strong>. What do you need?</div><div class="chip-row"><button class="chip" onclick="qa('What are her current medications?')">Current meds</button><button class="chip" onclick="qa('What appointments are coming up?')">Appointments</button><button class="chip" onclick="qa('Draft a prior authorization appeal letter')">Appeal letter</button><button class="chip" onclick="qa('Check supplement safety')">Supplement check</button></div></div>`;if(ma)ma.innerHTML=html;if(da)da.innerHTML=html}}
+function addMsg(role,content,scroll=true,allowHtml=false){const html=`<div class="msg ${role==='user'?'user':'ai'}"><div class="msg-bubble">${allowHtml?content:esc(String(content||''))}</div></div>`;['chatArea','chatAreaDesktop'].forEach(id=>{const area=document.getElementById(id);if(area)area.insertAdjacentHTML('beforeend',html)});if(scroll)requestAnimationFrame(()=>{['chatArea','chatAreaDesktop'].forEach(id=>{const area=document.getElementById(id);if(area)area.scrollTop=area.scrollHeight})})}
+function addTypingBubble(id){const html=`<div class="msg ai" id="${id}"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;['chatArea','chatAreaDesktop'].forEach(areaId=>{const area=document.getElementById(areaId);if(area){area.insertAdjacentHTML('beforeend',html);area.scrollTop=area.scrollHeight}})}
+function removeTypingBubble(id){document.querySelectorAll(`#${CSS.escape(id)}`).forEach(el=>el.remove())}
+async function sendMessage(prefilledText=null){const input=document.getElementById('chatInput'),desktopInput=document.getElementById('chatInputDesktop'),sourceInput=isMobileView()?input:desktopInput;const raw=prefilledText??sourceInput.value,text=String(raw||'').trim();if(!text)return;input.value='';desktopInput.value='';input.style.height='auto';desktopInput.style.height='auto';addMsg('user',text,true,false);currentMessages.push({role:'user',content:text});const typingId=`typing-${Date.now()}`;addTypingBubble(typingId);try{const data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,patientId:currentPatientId,model:MODEL_NAME})});removeTypingBubble(typingId);const replyText=data.reply||data.error||'Something went wrong';addMsg('ai',formatAssistantText(replyText),true,true);currentMessages.push({role:'assistant',content:replyText});if(data.calendarEvent){pendingCalendarEvent=data.calendarEvent;addCalendarCard(data.calendarEvent)}if(data.callRequest)addCallCard(data.callRequest);if(data.hasPendingEmail)addEmailActionCard();await loadNotifications()}catch(e){removeTypingBubble(typingId);addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+function sendMessageFromDesktop(){if(!isMobileView())sendMessage()}
+function qa(text){closeSidebar();closePullDashboard();sendMessage(text)}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
+function bindDesktopInput(){const input=document.getElementById('chatInputDesktop');if(!input)return;input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessageFromDesktop()}});input.addEventListener('input',()=>autoResize(input))}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';const mirror=el.id==='chatInput'?document.getElementById('chatInputDesktop'):document.getElementById('chatInput');if(mirror){mirror.value=el.value;mirror.style.height='auto';mirror.style.height=Math.min(el.scrollHeight,120)+'px'}}
+
+/* ═══ SCAN CARD — Document-type-specific ═══ */
+function buildScanFieldsHtml(data){const dt=String(data.document_type||'').toLowerCase();function f(label,value,full){const v=value||'';const display=v&&v!=='unclear'?esc(v):'<span style="color:var(--text3)">Not found</span>';return`<div class="scan-field${full?' full':''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`}function fArr(label,value,full){let display='';if(Array.isArray(value)&&value.length)display=value.map(v=>esc(String(v))).join(', ');else if(typeof value==='string'&&value&&value!=='unclear')display=esc(value);else display='<span style="color:var(--text3)">Not found</span>';return`<div class="scan-field${full?' full':''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`}function fPhones(phones){if(!phones||typeof phones!=='object')return'';let html='';Object.keys(phones).forEach(k=>{if(phones[k])html+=f(k.replace(/_/g,' '),phones[k],false)});return html}
+switch(dt){case'insurance_card':return f('Document Type','Insurance Card',false)+f('Insurance Company',data.insurance_company,false)+f('Plan Name',data.plan_name,false)+f('Member Name',data.member_name,false)+f('Member ID',data.member_id,false)+f('Group Number',data.group_number,false)+f('Rx BIN',data.rx_bin,false)+f('Rx PCN',data.rx_pcn,false)+f('Rx Group',data.rx_group,false)+f('Copay',data.copay_amounts,true)+f('Effective Date',data.effective_date,false)+fPhones(data.phone_numbers)+(data.summary?f('Summary',data.summary,true):'');case'prescription':return f('Document Type','Prescription',false)+f('Medication',data.medication_name,false)+f('Dosage',data.dosage,false)+f('Frequency',data.frequency,false)+f('Quantity',data.quantity,false)+f('Refills Remaining',data.refills_remaining,false)+f('Prescriber',data.prescriber,false)+f('Pharmacy',data.pharmacy_name,false)+f('Pharmacy Phone',data.pharmacy_phone,false)+f('Rx Number',data.rx_number,false)+f('Date Filled',data.date_filled,false)+f('Expiration',data.expiration_date,false)+fArr('Warnings',data.warnings,true)+(data.summary?f('Summary',data.summary,true):'');case'lab_result':return f('Document Type','Lab Result',false)+f('Patient',data.patient_name,false)+fArr('Tests',data.test_names,true)+fArr('Values',data.values,true)+fArr('Reference Ranges',data.reference_ranges,true)+fArr('Abnormal Flags',data.abnormal_flags,true)+f('Ordering Doctor',data.ordering_doctor,false)+f('Lab Name',data.lab_name,false)+f('Date of Test',data.date_of_test,false)+(data.summary?f('Summary',data.summary,true):'');case'medical_bill':return f('Document Type','Medical Bill / EOB',false)+f('Provider',data.provider_name,false)+f('Date of Service',data.date_of_service,false)+f('Total Charge',data.total_charge,false)+f('Insurance Paid',data.insurance_paid,false)+f('Patient Owes',data.patient_responsibility,false)+f('Claim Number',data.claim_number,false)+fArr('Procedure Codes',data.procedure_codes,true)+(data.summary?f('Summary',data.summary,true):'');case'referral':return f('Document Type','Referral / Authorization',false)+f('Referring Doctor',data.referring_doctor,false)+f('Specialist',data.specialist,false)+f('Auth Number',data.authorization_number,false)+f('Valid Dates',data.valid_dates,false)+f('Approved Visits',data.approved_visits,false)+(data.summary?f('Summary',data.summary,true):'');default:{const skip=new Set(['document_type','confidence','summary','patient_context']);let html=f('Document Type',data.document_type||'Unknown',false);Object.keys(data).forEach(key=>{if(skip.has(key))return;const val=data[key];if(val===null||val===undefined||val==='')return;const label=key.replace(/_/g,' ');if(Array.isArray(val))html+=fArr(label,val,true);else if(typeof val==='object')Object.keys(val).forEach(sk=>{if(val[sk])html+=f(`${label} — ${sk.replace(/_/g,' ')}`,String(val[sk]),false)});else html+=f(label,String(val),false)});if(data.summary)html+=f('Summary',data.summary,true);return html}}}
+
+function renderScanCard(data,fileName='Scanned item'){latestScanData={...data,fileName,patientId:currentPatientId};const confidence=inferConfidence(data),dt=String(data.document_type||'').toLowerCase();const iconMap={insurance_card:'🛡️',prescription:'💊',lab_result:'🔬',medical_bill:'💰',referral:'📋',doctor_note:'📝',imaging_order:'🩻'};const typeNameMap={insurance_card:'Insurance Card',prescription:'Prescription',lab_result:'Lab Result',medical_bill:'Medical Bill',referral:'Referral',doctor_note:'Doctor Note',imaging_order:'Imaging Order'};const icon=iconMap[dt]||'📷',typeName=typeNameMap[dt]||'Scan Result',fieldsHtml=buildScanFieldsHtml(data);
+const html=`<div class="msg ai"><div class="msg-bubble"><div class="scan-card"><div class="scan-header"><div class="scan-icon">${icon}</div><div class="scan-title">${esc(typeName)}</div><div class="scan-badges"><span class="scan-badge ${confidence.className}">${esc(confidence.label)}</span><span class="scan-badge info">review before save</span></div></div><p>Extracted from <strong>${esc(fileName)}</strong>. Review before saving.</p><div class="scan-grid">${fieldsHtml}</div><div class="scan-actions"><button class="scan-btn primary" onclick="confirmScan()">Save to Chart</button><button class="scan-btn" onclick="checkInteractions()">Check Interactions</button><button class="scan-btn" onclick="askDoctor()">Ask Doctor</button></div><div class="scan-foot">Scan-assisted extraction — confirm before treating as medical record data.</div></div></div></div>`;
+['chatArea','chatAreaDesktop'].forEach(areaId=>{const area=document.getElementById(areaId);if(area){area.insertAdjacentHTML('beforeend',html);area.scrollTop=area.scrollHeight}})}
+function confirmScan(){if(!latestScanData){addMsg('ai','⚠️ No scan ready to save.',true,false);return}const title=latestScanData.product_name||latestScanData.medication_name||latestScanData.insurance_company||latestScanData.fileName||'Scanned record';saveRecentUpload({name:latestScanData.fileName||title,title,type:latestScanData.document_type||'scan',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`✅ Saved <strong>${esc(title)}</strong> to records.`,true,true)}
+function checkInteractions(){if(!latestScanData){addMsg('ai','⚠️ Scan something first.',true,false);return}const product=latestScanData.medication_name||latestScanData.product_name||latestScanData.fileName||'this item';const patient=getPatientById(currentPatientId);const meds=(patient?.medications||[]).map(m=>m.name).filter(Boolean);addMsg('ai',`🔎 I can review <strong>${esc(product)}</strong> against ${meds.length?esc(meds.join(', ')):'the medication list'}. Ask me: <em>"Check ${esc(product)} against current meds"</em>.`,true,true)}
+function askDoctor(){if(!latestScanData){addMsg('ai','⚠️ Scan something first.',true,false);return}const product=latestScanData.medication_name||latestScanData.product_name||latestScanData.fileName||'this item';const doctor=getPatientById(currentPatientId)?.primaryDoctor||'the provider';addMsg('ai',`✉️ Drafting a question for <strong>${esc(doctor)}</strong> about <strong>${esc(product)}</strong>.`,true,true)}
+
+/* ═══ ACTION CARDS ═══ */
+function addCalendarCard(event){const payload=encodeURIComponent(JSON.stringify(event));const html=`<div class="action-card"><div class="ac-title">📅 Add to Calendar?</div><div class="ac-body"><strong>${esc(event.title)}</strong><br/>${esc(event.date)} at ${esc(event.time||'09:00')} · ${esc(String(event.duration||60))} min</div><div class="ac-btns"><button class="ac-btn success" onclick="addToCalendar(JSON.parse(decodeURIComponent('${payload}')))">Add</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
+function addCallCard(callReq){const cid=`call-card-${Date.now()}`;const html=`<div class="action-card" data-call-card="${cid}"><div class="ac-title">📞 Confirm Call</div><div class="ac-body">Call <strong>${esc(callReq.name)}</strong> at ${esc(callReq.phone||'unknown')}<br/>Reason: ${esc(callReq.reason||'Medical inquiry')}</div><div class="ac-btns"><button class="ac-btn warn" data-dyn-action="confirm-call" data-card="${cid}">📞 Confirm</button><button class="ac-btn secondary" data-dyn-action="cancel-call" data-card="${cid}">Cancel</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="confirm-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await confirmCall()});bindDynamicButton(`[data-dyn-action="cancel-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await cancelCall()})}
+function addEmailActionCard(){const eid=`email-card-${Date.now()}`;const html=`<div class="action-card" data-email-card="${eid}"><div class="ac-title">✉️ Email Ready</div><div class="ac-body">Your draft is ready. Send now?</div><div class="ac-btns"><button class="ac-btn primary" data-dyn-action="send-email" data-card="${eid}">📤 Send</button><button class="ac-btn secondary" data-dyn-action="save-email" data-card="${eid}">Save Draft</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="send-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);await sendDraftEmail()});bindDynamicButton(`[data-dyn-action="save-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);addMsg('ai','Draft saved.',true,false)})}
+function removeClosestCard(btn){const card=btn.closest('.action-card');if(card)card.remove()}
+function removeCardsByData(attrName,value){document.querySelectorAll(`[data-${attrName}="${value}"]`).forEach(el=>el.remove())}
+function bindDynamicButton(selector,handler){document.querySelectorAll(selector).forEach(el=>{let fired=false;const wrapped=async(e)=>{if(fired)return;fired=true;e.preventDefault();e.stopPropagation();try{await handler(e,el)}finally{setTimeout(()=>{fired=false},200)}};el.addEventListener('click',wrapped);el.addEventListener('touchend',wrapped,{passive:false})})}
+async function confirmCall(){try{const data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'confirm call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai',formatAssistantText(data.reply||'Call confirmed.'),true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function cancelCall(){try{await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'cancel call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai','Call cancelled.',true,false)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function sendDraftEmail(){try{let data;try{data=await api('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:currentPatientId,model:MODEL_NAME})})}catch(_){data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'send',patientId:currentPatientId,model:MODEL_NAME})})}addMsg('ai',formatAssistantText(data.reply||data.message||'Email sent.'),true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+
+/* ═══ FILE UPLOAD ═══ */
+function triggerUpload(){document.getElementById('fileInput')?.click()}
+async function handleFileUpload(input){const file=input.files?.[0];if(!file)return;const pending=document.getElementById('uploadPending');document.getElementById('uploadFileName').textContent=`Processing: ${file.name}`;pending.classList.add('show');const formData=new FormData();formData.append('file',file);formData.append('model',MODEL_NAME);try{const res=await fetch('/api/upload',{method:'POST',body:formData});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||`Upload failed (${res.status})`);pending.classList.remove('show');if(data.pending){renderScanCard(data.extracted||{},file.name)}else{saveRecentUpload({name:file.name,title:file.name,type:'upload',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`📄 ${esc(data.message||'Upload complete.')}`,true,false)}}catch(e){pending.classList.remove('show');addMsg('ai',`❌ Upload error: ${esc(e.message)}`,true,false)}finally{input.value=''}}
+
+/* ═══ VOICE / EMAIL ═══ */
+async function startVoiceCall(){const patient=getPatientById(currentPatientId);let phone=patient?.phone||prompt('Enter phone number to call:');if(!phone)return;phone=normalizeUSPhone(phone);try{const data=await api('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,reason:'Health check call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai',`📞 Call initiated! ID: ${esc(data.id||'started')}`,true,false)}catch(e){addMsg('ai',`❌ Call failed: ${esc(e.message)}`,true,false)}}
+function startEmailSend(){const pn=getPatientById(currentPatientId)?.name||'the patient';qa(`Draft an email to Dr. Martinez about ${pn}'s recent lab results`)}
+
+/* ═══ SIDEBAR ═══ */
+function toggleSidebar(){document.getElementById('sidebar')?.classList.toggle('open');document.getElementById('sidebarOverlay')?.classList.toggle('show')}
+function closeSidebar(){document.getElementById('sidebar')?.classList.remove('open');document.getElementById('sidebarOverlay')?.classList.remove('show')}
+
+/* ═══ TASKS ═══ */
+async function openTaskPanel(){document.getElementById('taskPanel')?.classList.add('open');document.getElementById('taskPanelOverlay').style.display='block';closeSidebar();closeMenuSheet();lockBody();await loadTasks()}
+function closeTaskPanel(){document.getElementById('taskPanel')?.classList.remove('open');document.getElementById('taskPanelOverlay').style.display='none';unlockBody()}
+async function loadTasks(){try{const data=await api(`/api/tasks?patientId=${encodeURIComponent(currentPatientId||'')}`);allTasks=data.tasks||[];renderTasks();updateTaskBadge();updateDashboard()}catch(e){console.error('loadTasks',e)}}
+function setTaskFilter(status,btn){taskFilter=status;document.querySelectorAll('.task-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderTasks()}
+function renderTasks(){const today=new Date().toISOString().split('T')[0];let tasks=taskFilter==='all'?[...allTasks]:allTasks.filter(t=>t.status===taskFilter);tasks.sort((a,b)=>{const p={high:0,medium:1,low:2};if(a.status==='done'&&b.status!=='done')return 1;if(b.status==='done'&&a.status!=='done')return-1;const pd=(p[a.priority]??1)-(p[b.priority]??1);if(pd!==0)return pd;if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate);return 0});const container=document.getElementById('taskList');if(!container)return;if(!tasks.length){container.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">${taskFilter==='done'?'🎉 No completed tasks':'✅ No tasks here'}</div>`;return}const ci={appointment:'📅',medication:'💊',insurance:'🛡️',general:'📌'};container.innerHTML=tasks.map(t=>{const overdue=t.dueDate&&t.dueDate<today&&t.status!=='done';const ds=t.dueDate?formatTaskDate(t.dueDate):'';return`<div class="task-item ${t.status==='done'?'done':''}" data-id="${esc(t.id)}"><div class="ti-head"><input type="checkbox" class="task-checkbox" ${t.status==='done'?'checked':''} onchange="toggleTaskDone('${esc(t.id)}',this.checked)" /><span class="t-title ${t.status==='done'?'done':''}">${ci[t.category]||'📌'} ${esc(t.title)}</span></div>${t.description?`<div class="t-desc">${esc(t.description)}</div>`:''}<div class="t-meta">${ds?`<span class="t-due ${overdue?'ov':''}">${overdue?'⚠️ ':'📅 '}${ds}</span>`:''}<span class="t-pri pri-${esc(t.priority||'medium')}">${esc(t.priority||'medium')}</span></div><div class="t-acts">${t.status==='pending'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','in-progress')">▶ Start</button>`:''}${t.status==='in-progress'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','pending')">⏸ Pause</button>`:''}<button class="t-act del" onclick="deleteTask('${esc(t.id)}')">🗑</button></div></div>`}).join('')}
+function updateTaskBadge(){const pending=allTasks.filter(t=>t.status!=='done').length;const badge=document.getElementById('taskBadge');if(badge){badge.textContent=String(pending);badge.style.display=pending>0?'inline':'none'}}
+async function toggleTaskDone(id,checked){try{await api(`/api/tasks/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:checked?'done':'pending',model:MODEL_NAME})});await loadTasks()}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function setTaskStatus(id,status){try{await api(`/api/tasks/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,model:MODEL_NAME})});await loadTasks()}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function deleteTask(id){if(!confirm('Delete this task?'))return;try{await api(`/api/tasks/${encodeURIComponent(id)}`,{method:'DELETE'});allTasks=allTasks.filter(t=>t.id!==id);renderTasks();updateTaskBadge();updateDashboard()}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function saveTask(){const title=document.getElementById('taskTitle').value.trim();if(!title){alert('Title is required');return}try{await api('/api/tasks/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,description:document.getElementById('taskDesc').value.trim(),dueDate:document.getElementById('taskDue').value,priority:document.getElementById('taskPriority').value,category:document.getElementById('taskCategory').value,patientId:currentPatientId,model:MODEL_NAME})});closeAddTask();await loadTasks()}catch(e){alert(`Error: ${e.message}`)}}
+</script>
+</body>
+</html>
  
