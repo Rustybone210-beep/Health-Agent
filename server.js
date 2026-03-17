@@ -600,8 +600,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           type: 'document',
           source: req.file.originalname || 'upload'
         });
-        safe
-WriteJson(TIMELINE_FILE, timelineData);
+        safeWriteJson(TIMELINE_FILE, timelineData);
       }
     } catch (e) {
       console.log('Timeline save error:', e.message);
