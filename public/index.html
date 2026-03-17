@@ -1177,7 +1177,7 @@ pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 
   <main class="main">
 
-    <!-- MOBILE: CHAT -->
+    <!-- MOBILE: CHAT (default active state) -->
     <section class="mobile-state active" id="mobileChatState">
       <div class="chat-wrap">
         <div class="chat-area" id="chatArea"></div>
@@ -1202,7 +1202,7 @@ pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
       </div>
     </section>
 
-    <!-- MOBILE: DASHBOARD -->
+    <!-- MOBILE: DASHBOARD (behind Home tab) -->
     <section class="mobile-state" id="mobileHomeState">
       <div class="dashboard-wrap">
         <div class="dash-grid">
@@ -1275,11 +1275,12 @@ pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   </main>
 </div>
 
+<!-- BOTTOM NAV: Chat is active by default, Home is separate tab -->
 <nav class="bot-nav" id="botNav">
   <button class="bn-tab" id="navHome" onclick="setMobileState('home')"><span class="bn-icon">🏠</span>Home</button>
-  <button class="bn-tab active" id="navChat" onclick="setMobileState('chat')"><span class="bn-icon">💬</span>Chat</button>
+  <button class="bn-tab active" id="navChat" onclick="setMobileState('chat')"><span class="bn-icon">💬</span>New Chat</button>
   <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
-  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">☰</span>More</button>
+  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">☰</span>Menu</button>
 </nav>
 
 <div class="profile-sheet" id="profileSheet">
@@ -1463,7 +1464,7 @@ pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 
     <div style="display:grid;gap:10px">
       <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToAppleCalendar()">
-        <span> iPhone / Apple Calendar</span>
+        <span> iPhone / Apple Calendar</span>
       </button>
       <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToGoogleCalendar()">
         <span>Google Calendar</span>
@@ -1647,21 +1648,50 @@ function saveRecentUpload(upload){
 }
 
 function inferConfidence(data){
+  if (!data) return {label:'low confidence', className:'info'};
+
   // Use server-provided confidence if available
-  if (data.confidence === 'high') return {label:'high confidence', className:'safe'};
-  if (data.confidence === 'medium') return {label:'review advised', className:'warn'};
-  if (data.confidence === 'low') return {label:'low confidence', className:'info'};
-  // Fallback scoring
-  let score = 0;
-  if (data.document_type) score += 20;
-  if (data.summary) score += 20;
-  if (data.member_id || data.medication_name || data.test_names) score += 25;
-  if (data.insurance_company || data.prescriber || data.lab_name) score += 15;
-  if (data.confidence) score += 10;
-  const keys = Object.keys(data).filter(k => data[k] && data[k] !== 'Unknown' && data[k] !== 'unclear');
-  score += Math.min(keys.length * 3, 30);
-  if (score >= 60) return {label:'high confidence', className:'safe'};
-  if (score >= 35) return {label:'review advised', className:'warn'};
+  if (data.confidence) {
+    const c = String(data.confidence).toLowerCase();
+    if (c === 'high') return {label:'high confidence', className:'safe'};
+    if (c === 'medium') return {label:'review advised', className:'warn'};
+    return {label:'low confidence', className:'info'};
+  }
+
+  // Otherwise score based on how many fields were extracted
+  const docType = String(data.document_type || '').toLowerCase();
+  let filled = 0;
+  let total = 0;
+
+  if (docType === 'insurance_card') {
+    const keys = ['insurance_company','plan_name','member_id','group_number','member_name'];
+    keys.forEach(k => { total++; if (data[k] && data[k] !== 'unclear') filled++; });
+  } else if (docType === 'prescription') {
+    const keys = ['medication_name','dosage','frequency','prescriber','pharmacy_name'];
+    keys.forEach(k => { total++; if (data[k] && data[k] !== 'unclear') filled++; });
+  } else if (docType === 'lab_result') {
+    const keys = ['test_names','ordering_doctor','lab_name','date_of_test'];
+    keys.forEach(k => { total++; if (data[k] && data[k] !== 'unclear') filled++; });
+  } else if (docType === 'medical_bill') {
+    const keys = ['provider_name','total_charge','patient_responsibility','claim_number'];
+    keys.forEach(k => { total++; if (data[k] && data[k] !== 'unclear') filled++; });
+  } else if (docType === 'referral') {
+    const keys = ['referring_doctor','specialist','authorization_number'];
+    keys.forEach(k => { total++; if (data[k] && data[k] !== 'unclear') filled++; });
+  } else {
+    // Generic fallback
+    const keys = ['document_type','summary'];
+    keys.forEach(k => { total++; if (data[k]) filled++; });
+    // Count any non-meta keys as bonus
+    Object.keys(data).forEach(k => {
+      if (!['document_type','summary','confidence'].includes(k) && data[k] && data[k] !== 'unclear') filled++;
+      total++;
+    });
+  }
+
+  const ratio = total > 0 ? filled / total : 0;
+  if (ratio >= 0.7) return {label:'high confidence', className:'safe'};
+  if (ratio >= 0.4) return {label:'review advised', className:'warn'};
   return {label:'low confidence', className:'info'};
 }
 
@@ -2378,7 +2408,7 @@ function clearChat(addWelcome = true){
     const fn = esc((p?.name || 'Linda').split(' ')[0]);
     const html = `
       <div class="welcome-inline" id="welcomeInline">
-        <div class="welcome-inline-title">Hi, I’m here for <strong>${fn}</strong>. What do you need?</div>
+        <div class="welcome-inline-title">Hi, I'm here for <strong>${fn}</strong>. What do you need?</div>
         <div class="chip-row">
           <button class="chip" onclick="qa('What are her current medications?')">What meds is she taking?</button>
           <button class="chip" onclick="qa('What appointments are coming up?')">What appointments are coming up?</button>
@@ -2542,121 +2572,204 @@ function autoResize(el){
   }
 }
 
-/* SCAN */
+/* ═══════════════════════════════════════════════════════════
+   SCAN CARD — Document-type-specific field rendering
+   ═══════════════════════════════════════════════════════════ */
+
+function buildScanFieldsHtml(data) {
+  const docType = String(data.document_type || '').toLowerCase();
+
+  // Helper: render a single scan field only if value is present and not 'unclear'
+  function f(label, value, full) {
+    const v = value || '';
+    const display = v && v !== 'unclear' ? esc(v) : '<span style="color:var(--text3)">Not found</span>';
+    return `<div class="scan-field${full ? ' full' : ''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`;
+  }
+
+  // Helper: render array or comma-sep values
+  function fArr(label, value, full) {
+    let display = '';
+    if (Array.isArray(value) && value.length) {
+      display = value.map(v => esc(String(v))).join(', ');
+    } else if (typeof value === 'string' && value && value !== 'unclear') {
+      display = esc(value);
+    } else {
+      display = '<span style="color:var(--text3)">Not found</span>';
+    }
+    return `<div class="scan-field${full ? ' full' : ''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`;
+  }
+
+  // Helper: render phone_numbers object
+  function fPhones(phones) {
+    if (!phones || typeof phones !== 'object') return '';
+    let html = '';
+    if (phones.member_services) html += f('Member Services', phones.member_services, false);
+    if (phones.claims) html += f('Claims Phone', phones.claims, false);
+    if (phones.pharmacy) html += f('Pharmacy Phone', phones.pharmacy, false);
+    // Catch any other phone keys
+    Object.keys(phones).forEach(k => {
+      if (!['member_services','claims','pharmacy'].includes(k) && phones[k]) {
+        html += f(k.replace(/_/g,' '), phones[k], false);
+      }
+    });
+    return html;
+  }
+
+  switch (docType) {
+    case 'insurance_card':
+      return `
+        ${f('Document Type', 'Insurance Card', false)}
+        ${f('Insurance Company', data.insurance_company, false)}
+        ${f('Plan Name', data.plan_name, false)}
+        ${f('Member Name', data.member_name, false)}
+        ${f('Member ID', data.member_id, false)}
+        ${f('Group Number', data.group_number, false)}
+        ${f('Rx BIN', data.rx_bin, false)}
+        ${f('Rx PCN', data.rx_pcn, false)}
+        ${f('Rx Group', data.rx_group, false)}
+        ${f('Copay', data.copay_amounts, true)}
+        ${f('Effective Date', data.effective_date, false)}
+        ${fPhones(data.phone_numbers)}
+        ${data.summary ? f('Summary', data.summary, true) : ''}
+      `;
+
+    case 'prescription':
+      return `
+        ${f('Document Type', 'Prescription', false)}
+        ${f('Medication', data.medication_name, false)}
+        ${f('Dosage', data.dosage, false)}
+        ${f('Frequency', data.frequency, false)}
+        ${f('Quantity', data.quantity, false)}
+        ${f('Refills Remaining', data.refills_remaining, false)}
+        ${f('Prescriber', data.prescriber, false)}
+        ${f('Pharmacy', data.pharmacy_name, false)}
+        ${f('Pharmacy Phone', data.pharmacy_phone, false)}
+        ${f('Rx Number', data.rx_number, false)}
+        ${f('Date Filled', data.date_filled, false)}
+        ${f('Expiration', data.expiration_date, false)}
+        ${fArr('Warnings', data.warnings, true)}
+        ${data.summary ? f('Summary', data.summary, true) : ''}
+      `;
+
+    case 'lab_result':
+      return `
+        ${f('Document Type', 'Lab Result', false)}
+        ${f('Patient', data.patient_name, false)}
+        ${fArr('Tests', data.test_names, true)}
+        ${fArr('Values', data.values, true)}
+        ${fArr('Reference Ranges', data.reference_ranges, true)}
+        ${fArr('Abnormal Flags', data.abnormal_flags, true)}
+        ${f('Ordering Doctor', data.ordering_doctor, false)}
+        ${f('Lab Name', data.lab_name, false)}
+        ${f('Date of Test', data.date_of_test, false)}
+        ${data.summary ? f('Summary', data.summary, true) : ''}
+      `;
+
+    case 'medical_bill':
+      return `
+        ${f('Document Type', 'Medical Bill / EOB', false)}
+        ${f('Provider', data.provider_name, false)}
+        ${f('Date of Service', data.date_of_service, false)}
+        ${f('Total Charge', data.total_charge, false)}
+        ${f('Insurance Paid', data.insurance_paid, false)}
+        ${f('Patient Owes', data.patient_responsibility, false)}
+        ${f('Claim Number', data.claim_number, false)}
+        ${fArr('Procedure Codes', data.procedure_codes, true)}
+        ${data.summary ? f('Summary', data.summary, true) : ''}
+      `;
+
+    case 'referral':
+      return `
+        ${f('Document Type', 'Referral / Authorization', false)}
+        ${f('Referring Doctor', data.referring_doctor, false)}
+        ${f('Specialist', data.specialist, false)}
+        ${f('Auth Number', data.authorization_number, false)}
+        ${f('Valid Dates', data.valid_dates, false)}
+        ${f('Approved Visits', data.approved_visits, false)}
+        ${data.summary ? f('Summary', data.summary, true) : ''}
+      `;
+
+    default: {
+      // Generic fallback: render all keys from extracted data
+      // Skip meta keys, render everything else the server found
+      const skipKeys = new Set(['document_type','confidence','summary','patient_context']);
+      let html = f('Document Type', data.document_type || 'Unknown', false);
+
+      Object.keys(data).forEach(key => {
+        if (skipKeys.has(key)) return;
+        const val = data[key];
+        if (val === null || val === undefined || val === '') return;
+        const label = key.replace(/_/g, ' ');
+
+        if (Array.isArray(val)) {
+          html += fArr(label, val, true);
+        } else if (typeof val === 'object') {
+          // Flatten one level of nested objects
+          Object.keys(val).forEach(subKey => {
+            if (val[subKey]) html += f(`${label} — ${subKey.replace(/_/g,' ')}`, String(val[subKey]), false);
+          });
+        } else {
+          html += f(label, String(val), false);
+        }
+      });
+
+      if (data.summary) html += f('Summary', data.summary, true);
+      return html;
+    }
+  }
+}
+
 function renderScanCard(data, fileName = 'Scanned item'){
   latestScanData = { ...data, fileName, patientId: currentPatientId };
 
+  const confidence = inferConfidence(data);
   const docType = String(data.document_type || '').toLowerCase();
-  const conf = data.confidence || 'low';
-  const confClass = conf === 'high' ? 'safe' : conf === 'medium' ? 'warn' : 'info';
 
-  function buildFields(d) {
-    const fields = [];
-    const add = (label, value) => {
-      if (value && value !== 'Unknown' && value !== 'unclear' && value !== 'N/A') {
-        fields.push({ label, value: String(value), full: false });
-      }
-    };
-    const addFull = (label, value) => {
-      if (value && value !== 'Unknown' && value !== 'unclear' && value !== 'N/A') {
-        fields.push({ label, value: String(value), full: true });
-      }
-    };
-
-    add('Document Type', d.document_type);
-
-    if (docType === 'insurance_card') {
-      add('Insurance Co.', d.insurance_company);
-      add('Plan Name', d.plan_name);
-      add('Member Name', d.member_name);
-      add('Member ID', d.member_id);
-      add('Group Number', d.group_number);
-      add('RX BIN', d.rx_bin);
-      add('RX PCN', d.rx_pcn);
-      add('RX Group', d.rx_group);
-      add('Effective Date', d.effective_date);
-      addFull('Copays', typeof d.copay_amounts === 'object' ? JSON.stringify(d.copay_amounts) : d.copay_amounts);
-      addFull('Phone Numbers', typeof d.phone_numbers === 'object' ? JSON.stringify(d.phone_numbers) : d.phone_numbers);
-    } else if (docType === 'prescription') {
-      add('Medication', d.medication_name);
-      add('Dosage', d.dosage);
-      add('Frequency', d.frequency);
-      add('Quantity', d.quantity);
-      add('Refills Left', d.refills_remaining);
-      add('Prescriber', d.prescriber);
-      add('Pharmacy', d.pharmacy_name);
-      add('Pharmacy Phone', d.pharmacy_phone);
-      add('RX Number', d.rx_number);
-      add('Date Filled', d.date_filled);
-      add('Expires', d.expiration_date);
-      addFull('Warnings', d.warnings);
-    } else if (docType === 'lab_result') {
-      add('Lab Name', d.lab_name);
-      add('Date of Test', d.date_of_test);
-      add('Ordering Doctor', d.ordering_doctor);
-      add('Patient Name', d.patient_name);
-      addFull('Tests', typeof d.test_names === 'object' ? JSON.stringify(d.test_names) : d.test_names);
-      addFull('Values', typeof d.values === 'object' ? JSON.stringify(d.values) : d.values);
-      addFull('Abnormal Flags', typeof d.abnormal_flags === 'object' ? JSON.stringify(d.abnormal_flags) : d.abnormal_flags);
-    } else if (docType === 'medical_bill') {
-      add('Provider', d.provider_name);
-      add('Date of Service', d.date_of_service);
-      add('Total Charge', d.total_charge);
-      add('Insurance Paid', d.insurance_paid);
-      add('You Owe', d.patient_responsibility);
-      add('Claim Number', d.claim_number);
-      addFull('Procedure Codes', typeof d.procedure_codes === 'object' ? JSON.stringify(d.procedure_codes) : d.procedure_codes);
-    } else if (docType === 'referral') {
-      add('Referring Doctor', d.referring_doctor);
-      add('Specialist', d.specialist);
-      add('Auth Number', d.authorization_number);
-      add('Valid Dates', d.valid_dates);
-      add('Approved Visits', d.approved_visits);
-    } else {
-      // Generic fallback — show whatever we got
-      add('Brand', d.brand);
-      add('Product', d.product_name);
-      add('Form', d.form);
-      addFull('Purpose', d.purpose);
-      addFull('Description', d.description);
-    }
-
-    addFull('Summary', d.summary);
-    return fields;
-  }
-
-  const fields = buildFields(data);
-  const fieldsHtml = fields.map(f =>
-    `<div class="scan-field${f.full ? ' full' : ''}"><span class="scan-label">${esc(f.label)}</span><span class="scan-value">${esc(f.value)}</span></div>`
-  ).join('');
-
-  const typeLabels = {
-    insurance_card: '🪪 Insurance Card',
-    prescription: '💊 Prescription',
-    lab_result: '🧪 Lab Result',
-    medical_bill: '💰 Medical Bill',
-    referral: '📄 Referral',
-    other: '📋 Document'
+  // Pick icon based on document type
+  const iconMap = {
+    insurance_card: '🛡️',
+    prescription: '💊',
+    lab_result: '🔬',
+    medical_bill: '💰',
+    referral: '📋',
+    doctor_note: '📝',
+    imaging_order: '🩻'
   };
-  const typeLabel = typeLabels[docType] || '📋 Document';
+  const icon = iconMap[docType] || '📷';
 
-  const cardHtml = `
+  // Nice display name for the type
+  const typeNameMap = {
+    insurance_card: 'Insurance Card',
+    prescription: 'Prescription',
+    lab_result: 'Lab Result',
+    medical_bill: 'Medical Bill',
+    referral: 'Referral',
+    doctor_note: 'Doctor Note',
+    imaging_order: 'Imaging Order'
+  };
+  const typeName = typeNameMap[docType] || 'Scan Result';
+
+  const fieldsHtml = buildScanFieldsHtml(data);
+
+  const html = `
     <div class="msg ai">
       <div class="msg-avatar">🤖</div>
       <div class="msg-bubble">
         <div class="scan-card">
           <div class="scan-header">
-            <div class="scan-icon">📷</div>
-            <div class="scan-title">${typeLabel}</div>
+            <div class="scan-icon">${icon}</div>
+            <div class="scan-title">${esc(typeName)}</div>
             <div class="scan-badges">
-              <span class="scan-badge ${confClass}">${esc(conf)} confidence</span>
+              <span class="scan-badge ${confidence.className}">${esc(confidence.label)}</span>
               <span class="scan-badge info">review before save</span>
             </div>
           </div>
 
-          <p>Scanned <strong>${esc(fileName)}</strong>. Review before saving.</p>
+          <p>I extracted structured details from <strong>${esc(fileName)}</strong>. Review this before saving to the chart.</p>
 
-          <div class="scan-grid">${fieldsHtml}</div>
+          <div class="scan-grid">
+            ${fieldsHtml}
+          </div>
 
           <div class="scan-actions">
             <button class="scan-btn primary" onclick="confirmScan()">Save to Chart</button>
@@ -2664,7 +2777,7 @@ function renderScanCard(data, fileName = 'Scanned item'){
             <button class="scan-btn" onclick="askDoctor()">Ask Doctor</button>
           </div>
 
-          <div class="scan-foot">AI-assisted extraction. Verify before treating as medical record.</div>
+          <div class="scan-foot">This is scan-assisted extraction, not guaranteed truth. Confirm before treating it as medical record data.</div>
         </div>
       </div>
     </div>
@@ -2673,7 +2786,7 @@ function renderScanCard(data, fileName = 'Scanned item'){
   ['chatArea','chatAreaDesktop'].forEach(areaId => {
     const area = document.getElementById(areaId);
     if (area) {
-      area.insertAdjacentHTML('beforeend', cardHtml);
+      area.insertAdjacentHTML('beforeend', html);
       area.scrollTop = area.scrollHeight;
     }
   });
@@ -2687,7 +2800,7 @@ function confirmScan(){
     return;
   }
 
-  const title = latestScanData.product_name || latestScanData.fileName || 'Scanned record';
+  const title = latestScanData.product_name || latestScanData.medication_name || latestScanData.insurance_company || latestScanData.fileName || 'Scanned record';
   saveRecentUpload({
     name: latestScanData.fileName || title,
     title,
@@ -2704,11 +2817,11 @@ function checkInteractions(){
     addMsg('ai', '⚠️ Scan something first so I know what to review.', true, false);
     return;
   }
-  const product = latestScanData.product_name || latestScanData.fileName || 'this supplement';
+  const product = latestScanData.medication_name || latestScanData.product_name || latestScanData.fileName || 'this item';
   const patient = getPatientById(currentPatientId);
   const meds = (patient?.medications || []).map(m => m.name).filter(Boolean);
   const medLine = meds.length ? `Current meds on file: ${esc(meds.join(', '))}.` : 'No medication list is on file yet.';
-  addMsg('ai', `🔎 I can review <strong>${esc(product)}</strong> against the patient profile. ${medLine} Ask me: <em>“Check ${esc(product)} against current meds”</em>.`, true, true);
+  addMsg('ai', `🔎 I can review <strong>${esc(product)}</strong> against the patient profile. ${medLine} Ask me: <em>"Check ${esc(product)} against current meds"</em>.`, true, true);
 }
 
 function askDoctor(){
@@ -2716,7 +2829,7 @@ function askDoctor(){
     addMsg('ai', '⚠️ Scan something first so I can draft the right message.', true, false);
     return;
   }
-  const product = latestScanData.product_name || latestScanData.fileName || 'this supplement';
+  const product = latestScanData.medication_name || latestScanData.product_name || latestScanData.fileName || 'this item';
   const patient = getPatientById(currentPatientId);
   const doctor = patient?.primaryDoctor || 'the provider';
   addMsg('ai', `✉️ Drafting a question for <strong>${esc(doctor)}</strong> about <strong>${esc(product)}</strong> and whether it is appropriate for this patient.`, true, true);
