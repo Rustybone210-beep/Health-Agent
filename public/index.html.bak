@@ -1,0 +1,3133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Health Agent</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#08090f;
+  --surface:rgba(18,22,38,0.88);
+  --surface-2:rgba(24,29,46,0.9);
+  --surface-3:rgba(31,37,58,0.96);
+  --border:rgba(255,255,255,0.07);
+  --border-2:rgba(255,255,255,0.12);
+  --teal:#2dd4bf;
+  --teal2:#0d9488;
+  --gold:#d4a843;
+  --gold2:#b8860b;
+  --danger:#f87171;
+  --warn:#fb923c;
+  --info:#60a5fa;
+  --text:#f0f2f8;
+  --text2:#8892aa;
+  --text3:#404860;
+  --textInv:#06080e;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+  --topbar-h:56px;
+  --botnav-h:62px;
+  --radius-card:22px;
+  --radius-bubble:16px;
+  --radius-btn:10px;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.22);
+  --shadow-card:0 6px 20px rgba(0,0,0,0.18);
+  --sans:'DM Sans',sans-serif;
+  --serif:'DM Serif Display',serif;
+}
+html,body{
+  height:100%;
+  height:100dvh;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body.modal-open{overflow:hidden}
+button,input,textarea,select{font:inherit}
+a{color:inherit;text-decoration:none}
+.hidden{display:none!important}
+.muted{color:var(--text2)}
+small{font-size:12px}
+pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.app{
+  display:flex;
+  height:100dvh;
+  overflow:hidden;
+  position:relative;
+  background:radial-gradient(circle at top center, rgba(45,212,191,0.035), transparent 28%), var(--bg);
+}
+
+/* MOBILE TOP BAR */
+.topbar{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:120;
+  height:calc(var(--topbar-h) + var(--safe-top));
+  padding:var(--safe-top) 16px 0;
+  background:rgba(8,9,15,0.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  align-items:center;
+  justify-content:space-between;
+}
+.tb-title{
+  font-family:var(--serif);
+  font-size:18px;
+  color:var(--text);
+}
+.tb-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.tb-bell{
+  position:relative;
+  background:none;
+  border:none;
+  color:var(--text2);
+  font-size:20px;
+  cursor:pointer;
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+}
+.tb-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  border:2px solid rgba(212,168,67,0.38);
+  color:#101114;
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(212,168,67,0.22);
+  cursor:pointer;
+}
+.notif-badge{
+  position:absolute;
+  top:0;right:0;
+  min-width:16px;height:16px;
+  padding:0 4px;
+  border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--danger);
+  color:#fff;
+  font-size:9px;
+  font-weight:700;
+  border:1.5px solid var(--bg);
+}
+
+/* DESKTOP SIDEBAR */
+.sidebar{
+  width:288px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  background:rgba(8,9,15,0.97);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  overflow:hidden;
+  z-index:40;
+}
+.sb-head{
+  padding:20px 16px 14px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sb-brand{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;
+}
+.sb-logo{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  box-shadow:0 3px 10px rgba(45,212,191,0.24);
+  font-size:16px;
+}
+.sb-name{
+  font-family:var(--serif);
+  font-size:17px;
+}
+.pat-btn{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  border-radius:12px;
+  padding:9px 11px;
+  color:var(--text);
+  font-size:13px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;
+  text-align:left;
+}
+.pat-btn:hover{border-color:rgba(45,212,191,0.25)}
+.pat-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pat-rel{font-size:11px;color:var(--text2);margin-top:2px}
+.pat-dd{
+  display:none;
+  position:absolute;
+  left:0;right:0;top:calc(100% + 6px);
+  background:rgba(10,12,22,0.98);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border-2);
+  border-radius:12px;
+  overflow:hidden;
+  z-index:300;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+}
+.pat-dd.open{display:block}
+.pat-opt{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px}
+.pat-opt:hover{background:rgba(45,212,191,0.06)}
+.pat-opt.active{background:rgba(45,212,191,0.1)}
+.opt-n{font-weight:600}
+.opt-r{font-size:11px;color:var(--text2);margin-top:2px}
+.add-pat{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--teal)}
+.add-pat:hover{background:rgba(45,212,191,0.06)}
+
+.sb-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:12px;
+  scrollbar-width:none;
+}
+.sb-scroll::-webkit-scrollbar{display:none}
+.s-lbl{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:7px;
+}
+.sb-card{
+  background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.04));
+  border:1px solid rgba(212,168,67,0.14);
+  border-radius:var(--radius-card);
+  padding:14px;
+  margin-bottom:12px;
+}
+.pc-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px}
+.pc-l{width:62px;flex-shrink:0;color:var(--text3);font-size:11px}
+.pc-v{color:var(--text);line-height:1.4}
+.pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.pill{
+  display:inline-flex;align-items:center;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:500;
+}
+.p-teal{background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.18);color:var(--teal)}
+.p-red{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.18);color:var(--danger)}
+.p-gold{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.18);color:var(--gold)}
+
+.hist-item{
+  padding:8px 9px;border-radius:10px;cursor:pointer;margin-bottom:2px;
+  font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px;
+  border:1px solid transparent;transition:all 0.15s
+}
+.hist-item:hover{background:var(--surface-2);color:var(--text);border-color:var(--border)}
+.hist-item.active{background:rgba(45,212,191,0.08);color:var(--text);border-color:rgba(45,212,191,0.18)}
+.hist-content{flex:1;overflow:hidden}
+.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-time{font-size:10px;color:var(--text3);margin-top:2px}
+.hist-del{
+  opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;
+  padding:2px;font-size:11px;transition:opacity 0.15s;flex-shrink:0
+}
+.hist-item:hover .hist-del{opacity:1}
+.new-chat-btn{
+  background:rgba(45,212,191,0.08);
+  border:1px solid rgba(45,212,191,0.18);
+  color:var(--teal);
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:999px;
+  cursor:pointer;
+}
+.sb-nav{display:flex;flex-direction:column;gap:3px}
+.sb-link{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 10px;border-radius:10px;
+  font-size:12px;color:var(--text2);
+  background:none;border:none;cursor:pointer;text-align:left;width:100%;
+  transition:all 0.15s
+}
+.sb-link:hover{background:var(--surface-2);color:var(--text)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qa-btn{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 8px;
+  color:var(--text2);
+  font-size:11px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s
+}
+.qa-btn:hover{background:var(--surface-3);color:var(--text)}
+.qa-icon{display:block;font-size:14px;margin-bottom:3px}
+.gcal-s{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;padding:5px 10px;border-radius:999px;
+  background:rgba(45,212,191,0.08);
+  border:1px solid rgba(45,212,191,0.18);
+  color:var(--teal)
+}
+.gcal-s.nc{
+  background:rgba(251,146,60,0.08);
+  border-color:rgba(251,146,60,0.18);
+  color:var(--warn)
+}
+
+/* DESKTOP TOP BAR */
+.desk-topbar{
+  height:56px;
+  background:rgba(8,9,15,0.9);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 20px;
+  gap:12px;
+  flex-shrink:0;
+}
+.desk-title{
+  flex:1;
+  font-family:var(--serif);
+  font-size:18px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 8px var(--teal);
+  animation:pdot 2.5s ease infinite
+}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
+.notif-btn{
+  position:relative;
+  width:34px;height:34px;border-radius:50%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+  font-size:15px;
+  cursor:pointer;
+}
+.notif-btn:hover{background:var(--surface-3);color:var(--text)}
+
+/* MAIN */
+.main{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+
+/* MOBILE STATES */
+.mobile-state{
+  display:none;
+  flex:1;
+  min-height:0;
+}
+.mobile-state.active{
+  display:flex;
+  flex-direction:column;
+  animation:fadeState 0.18s ease;
+}
+@keyframes fadeState{from{opacity:0}to{opacity:1}}
+
+/* DASHBOARD */
+.dashboard-wrap{
+  flex:1;
+  overflow-y:auto;
+  padding:14px 14px 12px;
+}
+.dash-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.dash-card{
+  background:var(--surface);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-card);
+  padding:16px;
+  min-height:118px;
+  box-shadow:var(--shadow-card);
+  cursor:pointer;
+  transition:transform 0.15s ease, border-color 0.15s ease;
+}
+.dash-card:active{transform:scale(0.98)}
+.dash-card:hover{border-color:rgba(45,212,191,0.14)}
+.dash-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:10px;
+}
+.dash-value{
+  font-family:var(--serif);
+  font-size:30px;
+  line-height:1;
+  margin-bottom:8px;
+}
+.dash-sub{
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.45;
+}
+.activity-list{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.activity-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 14px;
+}
+.activity-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+}
+.activity-sub{
+  font-size:11px;
+  color:var(--text3);
+  margin-top:3px;
+}
+
+/* CHAT */
+.chat-wrap{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+.chat-area{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:14px 14px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.chat-area::-webkit-scrollbar{display:none}
+
+.welcome-inline{
+  padding:8px 2px 10px;
+  animation:msgIn 0.2s ease;
+}
+.welcome-inline-title{
+  font-size:18px;
+  line-height:1.5;
+  color:var(--text);
+  margin-bottom:10px;
+}
+.chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chip{
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(45,212,191,0.06);
+  border:1px solid rgba(45,212,191,0.14);
+  color:var(--text2);
+  font-size:13px;
+  cursor:pointer;
+  transition:all 0.15s
+}
+.chip:hover{background:rgba(45,212,191,0.1);color:var(--text)}
+.chip:active{transform:scale(0.96)}
+
+.msg{
+  display:flex;
+  gap:8px;
+  max-width:88%;
+  animation:msgIn 0.2s ease;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{margin-left:auto;flex-direction:row-reverse}
+.msg-avatar{
+  width:28px;height:28px;border-radius:50%;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+  margin-top:2px;
+  border:1px solid var(--border);
+}
+.msg.ai .msg-avatar{background:var(--surface-2)}
+.msg.user .msg-avatar{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border-color:rgba(45,212,191,0.24)
+}
+.msg-bubble{
+  max-width:100%;
+  word-wrap:break-word;
+  padding:13px 15px;
+  font-size:16px;
+  line-height:1.6;
+  color:var(--text);
+  border-radius:18px;
+}
+.msg.ai .msg-bubble{
+  background:var(--surface);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-bottom-left-radius:6px;
+}
+.msg.user .msg-bubble{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+  border-bottom-right-radius:6px;
+  box-shadow:0 4px 16px rgba(45,212,191,0.24);
+}
+.msg-bubble strong{font-weight:700}
+.msg-bubble em{font-style:italic}
+.msg-bubble code{
+  background:rgba(255,255,255,0.08);
+  padding:2px 6px;
+  border-radius:6px;
+  font-size:13px;
+}
+.msg-bubble pre{
+  margin-top:10px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:rgba(0,0,0,0.26);
+  padding:10px;
+  border-radius:10px;
+  font-size:12px;
+  line-height:1.45;
+}
+.msg-bubble a{color:inherit;text-decoration:underline}
+
+.typing-indicator{display:flex;gap:4px;align-items:center}
+.typing-indicator span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--text3);
+  animation:tb 1.3s ease infinite
+}
+.typing-indicator span:nth-child(2){animation-delay:0.18s}
+.typing-indicator span:nth-child(3){animation-delay:0.36s}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:0.45}30%{transform:translateY(-5px);opacity:1}}
+
+/* ACTION CARDS */
+.action-card{
+  background:var(--surface);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-card);
+  padding:14px;
+  margin:2px 0;
+  font-size:13px;
+  animation:msgIn 0.2s ease;
+  max-width:88%;
+  box-shadow:var(--shadow-card);
+}
+.action-card.calendar{border-color:rgba(45,212,191,0.18)}
+.action-card.call{border-color:rgba(251,146,60,0.24)}
+.action-card.email{border-color:rgba(139,92,246,0.22)}
+.ac-title{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.07em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:7px;
+}
+.ac-body{
+  color:var(--text2);
+  margin-bottom:10px;
+  line-height:1.55;
+  font-size:13px;
+}
+.ac-btns{display:flex;gap:7px;flex-wrap:wrap}
+.ac-btn{
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  transition:all 0.15s;
+}
+.ac-btn:active{transform:scale(0.95)}
+.ac-btn.primary,.ac-btn.success{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+}
+.ac-btn.secondary{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text2);
+}
+.ac-btn.warn{
+  background:linear-gradient(135deg,var(--warn),#ea580c);
+  color:#fff;
+}
+
+/* SCAN */
+.scan-card{
+  background:var(--surface-3);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-card);
+  padding:16px;
+  box-shadow:var(--shadow-soft);
+}
+.scan-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.scan-icon{font-size:22px}
+.scan-title{font-family:var(--serif);font-size:18px}
+.scan-badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.scan-badge{
+  font-size:10px;padding:4px 8px;border-radius:999px;border:1px solid var(--border-2);
+  letter-spacing:0.04em;text-transform:uppercase
+}
+.scan-badge.safe{color:var(--teal);background:rgba(45,212,191,0.08);border-color:rgba(45,212,191,0.18)}
+.scan-badge.warn{color:var(--warn);background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.18)}
+.scan-badge.info{color:var(--info);background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.18)}
+.scan-card p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:12px}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scan-field{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:14px;
+  padding:10px 11px;
+}
+.scan-field.full{grid-column:1 / -1}
+.scan-label{
+  display:block;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:4px;
+}
+.scan-value{
+  font-size:13px;
+  color:var(--text);
+  line-height:1.45;
+}
+.scan-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.scan-btn{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--border-2);
+  background:var(--surface-2);
+  font-size:13px;
+  color:var(--text);
+  cursor:pointer;
+}
+.scan-btn.primary{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+  border:none;
+}
+.scan-foot{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+  font-size:12px;
+  color:var(--text3);
+}
+
+/* INPUT */
+.input-bar{
+  flex-shrink:0;
+  background:rgba(8,9,15,0.96);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:10px 14px calc(10px + var(--safe-bot));
+}
+.input-row{
+  display:flex;
+  gap:10px;
+  align-items:flex-end;
+}
+.chat-input{
+  flex:1;
+  background:var(--surface);
+  border:1px solid var(--border-2);
+  border-radius:999px;
+  padding:12px 16px;
+  color:var(--text);
+  font-size:16px;
+  resize:none;
+  outline:none;
+  max-height:120px;
+  min-height:46px;
+  line-height:1.45;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:border-color 0.2s ease;
+}
+.chat-input:focus{
+  border-color:rgba(45,212,191,0.32);
+  box-shadow:0 0 0 3px rgba(45,212,191,0.06);
+}
+.chat-input::placeholder{color:var(--text3)}
+.send-btn{
+  width:46px;height:46px;border-radius:50%;
+  flex-shrink:0;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border:none;
+  color:var(--textInv);
+  font-size:18px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(45,212,191,0.24);
+  transition:transform 0.15s ease;
+}
+.send-btn:active{transform:scale(0.95)}
+.tool-row{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:10px;
+}
+.tool-btn{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:17px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
+.tool-btn:hover{background:var(--surface-2);color:var(--text)}
+.tool-btn:active{transform:scale(0.95)}
+.upload-pending{
+  display:none;
+  margin-top:10px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:rgba(45,212,191,0.06);
+  border:1px solid rgba(45,212,191,0.14);
+  color:var(--teal);
+  font-size:12px;
+  align-items:center;
+  gap:6px;
+}
+.upload-pending.show{display:flex}
+
+/* BOTTOM NAV */
+.bot-nav{
+  display:none;
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:90;
+  height:calc(var(--botnav-h) + var(--safe-bot));
+  padding-bottom:var(--safe-bot);
+  background:rgba(8,9,15,0.97);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  align-items:stretch;
+}
+.bn-tab{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  border:none;
+  background:none;
+  color:var(--text3);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.bn-tab:active{opacity:0.75}
+.bn-icon{font-size:21px;line-height:1}
+.bn-tab.active{color:var(--teal)}
+.bn-tab.active .bn-icon{filter:drop-shadow(0 0 6px rgba(45,212,191,0.35))}
+
+/* PROFILE SHEET */
+.profile-sheet{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:400;
+}
+.profile-sheet.open{display:block}
+.ps-backdrop{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.58);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.ps-card{
+  position:absolute;
+  top:0;left:0;right:0;
+  background:rgba(12,14,24,0.98);
+  border-bottom-left-radius:28px;
+  border-bottom-right-radius:28px;
+  padding:calc(var(--safe-top) + 16px) 20px 24px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.56);
+  animation:slideDown 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height:88dvh;
+  overflow-y:auto;
+}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.ps-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ps-pat-info{display:flex;align-items:center;gap:12px}
+.ps-avatar{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:700;
+  color:#101114;
+  border:2px solid rgba(212,168,67,0.36);
+  box-shadow:0 4px 14px rgba(212,168,67,0.22);
+}
+.ps-name{font-family:var(--serif);font-size:24px;line-height:1.1}
+.ps-sub{font-size:13px;color:var(--gold);margin-top:3px;font-weight:500}
+.ps-close{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.ps-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:18px;
+}
+.ps-stat{
+  background:rgba(212,168,67,0.08);
+  border:1px solid rgba(212,168,67,0.15);
+  border-radius:14px;
+  padding:12px 10px;
+  text-align:center;
+}
+.ps-stat-n{font-family:var(--serif);font-size:24px;font-weight:700}
+.ps-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+.ps-section{margin-bottom:12px}
+.ps-section-title{
+  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px
+}
+.ps-row{display:flex;gap:6px;margin-bottom:6px;font-size:13px}
+.ps-rl{width:72px;flex-shrink:0;color:var(--text3);font-size:12px;padding-top:1px}
+.ps-rv{flex:1;color:var(--text2);line-height:1.4}
+.ps-expand{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+.ps-expand-btn{
+  width:100%;
+  background:none;
+  border:none;
+  color:var(--text);
+  padding:13px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;
+  text-align:left;
+}
+.ps-expand-body{
+  display:none;
+  padding:0 14px 14px;
+}
+.ps-expand.open .ps-expand-body{display:block}
+
+/* MENU SHEET */
+.menu-sheet{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:400;
+}
+.menu-sheet.open{display:block}
+.ms-backdrop{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.64);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.ms-panel{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  background:rgba(12,14,24,0.98);
+  border-top-left-radius:28px;
+  border-top-right-radius:28px;
+  padding:10px 20px calc(20px + var(--safe-bot));
+  box-shadow:0 -16px 50px rgba(0,0,0,0.5);
+  animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ms-handle{width:38px;height:4px;background:var(--text3);border-radius:999px;margin:8px auto 16px}
+.ms-title{font-family:var(--serif);font-size:18px;margin-bottom:14px}
+.ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ms-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 10px;
+  text-align:center;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+}
+.ms-item:active{transform:scale(0.96)}
+.ms-icon{font-size:24px}
+.ms-label{font-size:11px;font-weight:600;color:var(--text2)}
+
+/* TASK PANEL */
+#taskPanel{
+  display:none;
+  position:fixed;
+  top:0;right:0;bottom:0;
+  width:min(420px,100vw);
+  background:rgba(8,9,15,0.98);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-left:1px solid var(--border);
+  z-index:500;
+  flex-direction:column;
+  overflow:hidden;
+  box-shadow:-16px 0 48px rgba(0,0,0,0.45);
+}
+#taskPanel.open{display:flex;animation:slideR 0.3s ease}
+@keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.task-tab{
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:12px;
+  cursor:pointer;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text2);
+}
+.task-tab.active{
+  background:rgba(45,212,191,0.08);
+  border-color:rgba(45,212,191,0.18);
+  color:var(--teal);
+}
+.task-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 13px;
+  margin-bottom:6px;
+  animation:msgIn 0.2s ease
+}
+.task-item.done{opacity:0.55}
+.ti-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--teal);cursor:pointer}
+.t-title{font-size:13px;font-weight:600;flex:1;line-height:1.3}
+.t-title.done{text-decoration:line-through;color:var(--text3)}
+.t-desc{font-size:12px;color:var(--text2);margin:3px 0 7px 24px;line-height:1.5}
+.t-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:24px}
+.t-due{font-size:11px;color:var(--text3)}
+.t-due.ov{color:var(--danger);font-weight:600}
+.t-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.pri-high{background:rgba(248,113,113,0.1);color:var(--danger)}
+.pri-medium{background:rgba(251,146,60,0.08);color:var(--warn)}
+.pri-low{background:rgba(45,212,191,0.08);color:var(--teal)}
+.t-acts{display:flex;gap:5px;margin-top:7px;margin-left:24px}
+.t-act{
+  padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text2)
+}
+.t-act.del{color:var(--danger)}
+
+/* MODALS */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:600;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.modal.open{display:flex}
+.modal-box{
+  position:relative;
+  width:100%;
+  max-width:520px;
+  max-height:90dvh;
+  overflow-y:auto;
+  background:rgba(10,12,22,0.99);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--border-2);
+  border-radius:var(--radius-card);
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  animation:modalIn 0.22s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.98) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-title{
+  font-family:var(--serif);
+  font-size:20px;
+  margin-bottom:20px;
+}
+.f-field{margin-bottom:13px}
+.f-lbl{
+  display:block;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.07em;
+  color:var(--text3);
+  margin-bottom:5px;
+}
+.f-inp{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text);
+  font-size:14px;
+  outline:none
+}
+.f-inp:focus{border-color:rgba(45,212,191,0.32)}
+.f-row{display:flex;gap:10px}
+.f-row .f-field{flex:1}
+.m-acts{display:flex;gap:9px;margin-top:20px}
+.m-btn{
+  flex:1;
+  padding:11px;
+  border-radius:10px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  border:1px solid transparent;
+}
+.m-btn.cancel{
+  background:var(--surface-2);
+  border-color:var(--border);
+  color:var(--text2);
+}
+.m-btn.save{
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--textInv);
+}
+
+/* RESPONSIVE */
+@media(min-width:901px){
+  .topbar,.bot-nav,.mobile-state{display:none!important}
+  .sidebar{display:flex}
+  .desk-topbar{display:flex}
+  .desktop-chat{display:flex;flex-direction:column;flex:1;min-height:0}
+}
+@media(max-width:900px){
+  .sidebar,.desk-topbar{display:none!important}
+  .topbar{display:flex}
+  .bot-nav{display:flex}
+  .main{
+    padding-top:calc(var(--topbar-h) + var(--safe-top));
+    padding-bottom:calc(var(--botnav-h) + var(--safe-bot));
+  }
+  .desktop-chat{display:none!important}
+  .msg{max-width:92%}
+  .action-card{max-width:100%}
+  .scan-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="mobileTopbar">
+  <span class="tb-title">Health Agent</span>
+  <div class="tb-right">
+    <button class="tb-bell" id="notifBtnMobileWrap" onclick="toggleNotifications()" aria-label="Notifications">
+      🔔<span class="notif-badge" id="notifBadgeMobile" style="display:none"></span>
+    </button>
+    <div class="tb-avatar" id="mobilePatAvatar" onclick="openProfileSheet()" role="button" aria-label="Patient profile">LF</div>
+  </div>
+</header>
+
+<div class="overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-brand">
+        <div class="sb-logo">🏥</div>
+        <span class="sb-name">Health Agent</span>
+      </div>
+      <div style="position:relative" id="patientSelector">
+        <button class="pat-btn" onclick="togglePatientDropdown()">
+          <div style="flex:1;overflow:hidden">
+            <div class="pat-name" id="selectorName">Loading...</div>
+            <div class="pat-rel" id="selectorRel">—</div>
+          </div>
+          <span style="color:var(--text3);font-size:11px">▾</span>
+        </button>
+        <div class="pat-dd" id="patientDropdown"></div>
+      </div>
+    </div>
+
+    <div class="sb-scroll">
+      <div class="sb-card">
+        <div class="s-lbl" style="margin-bottom:9px">Patient Profile</div>
+        <div id="cardContent" style="color:var(--text3);font-size:12px">Loading...</div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <span class="s-lbl" style="margin-bottom:0">💬 History</span>
+          <button class="new-chat-btn" onclick="newChat()">+ New</button>
+        </div>
+        <div id="chatHistoryList"><div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div></div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div class="s-lbl" style="margin-bottom:7px">Quick Actions</div>
+        <div class="qa-grid">
+          <button class="qa-btn" onclick="qa('What are her current medications?')"><span class="qa-icon">💊</span>Meds</button>
+          <button class="qa-btn" onclick="qa('What are her upcoming appointments?')"><span class="qa-icon">📅</span>Appts</button>
+          <button class="qa-btn" onclick="qa('Draft a prior authorization appeal letter for Medicare')"><span class="qa-icon">✉️</span>Letter</button>
+          <button class="qa-btn" onclick="qa('What is her current insurance coverage?')"><span class="qa-icon">🛡️</span>Insurance</button>
+          <button class="qa-btn" onclick="qa('Call Dr. Martinez at Alamo Heights Family Medicine')"><span class="qa-icon">📞</span>Call Doc</button>
+          <button class="qa-btn" onclick="qa('Call Walgreens pharmacy at (210) 403-0002 about a refill')"><span class="qa-icon">🏪</span>Pharmacy</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div class="s-lbl" style="margin-bottom:7px">Pages</div>
+        <div class="sb-nav">
+          <a href="/timeline" class="sb-link">🕐 Medical Timeline</a>
+          <a href="/playbooks" class="sb-link">🆘 Emergency Playbooks</a>
+          <a href="/brief" class="sb-link">📋 Doctor Brief PDF</a>
+          <button class="sb-link" onclick="openTaskPanel()">✅ Task Tracker <span id="taskBadge" style="margin-left:auto;background:var(--warn);color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;display:none"></span></button>
+          <button class="sb-link" onclick="openCalendarModal()">📅 Add Calendar Event</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="s-lbl" style="margin-bottom:6px">Google Calendar</div>
+        <a id="gcalStatus" href="/auth/google" target="_blank" class="gcal-s nc">⚠️ Connect Calendar</a>
+      </div>
+    </div>
+  </aside>
+
+  <div id="taskPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;backdrop-filter:blur(2px)" onclick="closeTaskPanel()"></div>
+
+  <div id="taskPanel">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:calc(16px + var(--safe-top))">
+      <span style="font-family:var(--serif);font-size:18px">✅ Tasks</span>
+      <span style="flex:1"></span>
+      <button onclick="openAddTask()" style="background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;color:var(--textInv);padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button>
+      <button onclick="closeTaskPanel()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px;line-height:1">×</button>
+    </div>
+
+    <div style="display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap">
+      <button class="task-tab active" onclick="setTaskFilter('all',this)">All</button>
+      <button class="task-tab" onclick="setTaskFilter('pending',this)">Pending</button>
+      <button class="task-tab" onclick="setTaskFilter('in-progress',this)">In Progress</button>
+      <button class="task-tab" onclick="setTaskFilter('done',this)">Done</button>
+    </div>
+
+    <div id="taskList" style="flex:1;overflow-y:auto;padding:10px"></div>
+  </div>
+
+  <main class="main">
+
+    <!-- MOBILE: CHAT -->
+    <section class="mobile-state active" id="mobileChatState">
+      <div class="chat-wrap">
+        <div class="chat-area" id="chatArea"></div>
+
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Message Health Agent..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendMessage()" aria-label="Send">➤</button>
+          </div>
+
+          <div class="tool-row">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">📧</button>
+            <button class="tool-btn" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
+          </div>
+
+          <div class="upload-pending" id="uploadPending">
+            <span>📎</span><span id="uploadFileName">Uploading...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOBILE: DASHBOARD -->
+    <section class="mobile-state" id="mobileHomeState">
+      <div class="dashboard-wrap">
+        <div class="dash-grid">
+          <button class="dash-card" onclick="goToDashboardCard('today')">
+            <div class="dash-label">Today</div>
+            <div class="dash-value" id="todayPrimary">All clear</div>
+            <div class="dash-sub" id="todaySecondary">No urgent items right now</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('upcoming')">
+            <div class="dash-label">Upcoming</div>
+            <div class="dash-value" id="upcomingPrimary">0</div>
+            <div class="dash-sub" id="upcomingSecondary">No appointments loaded</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('tasks')">
+            <div class="dash-label">Tasks</div>
+            <div class="dash-value" id="tasksPrimary">0</div>
+            <div class="dash-sub" id="tasksSecondary">Nothing pending</div>
+          </button>
+
+          <button class="dash-card" onclick="goToDashboardCard('records')">
+            <div class="dash-label">Records</div>
+            <div class="dash-value" id="recordsPrimary">0</div>
+            <div class="dash-sub" id="recordsSecondary">No recent uploads</div>
+          </button>
+        </div>
+
+        <div class="activity-list" id="recentActivityList"></div>
+      </div>
+    </section>
+
+    <!-- DESKTOP -->
+    <section class="desktop-chat">
+      <div class="desk-topbar">
+        <div class="status-dot"></div>
+        <span class="desk-title" id="desktopTitle">Health Dashboard</span>
+        <span style="flex:1"></span>
+        <button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button>
+      </div>
+
+      <div class="chat-wrap">
+        <div class="chat-area" id="desktopChatMirror" style="display:none"></div>
+        <div class="chat-area" id="chatAreaDesktop"></div>
+
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInputDesktop" placeholder="Message Health Agent..." rows="1"></textarea>
+            <button class="send-btn" onclick="sendMessageFromDesktop()" aria-label="Send">➤</button>
+          </div>
+
+          <div class="tool-row" style="justify-content:flex-start">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">📧</button>
+            <button class="tool-btn" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="notif-panel" id="notifPanel">
+      <div class="np-head">
+        <span class="np-title">🔔 Notifications</span>
+        <button class="np-mark" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div class="notif-list" id="notifList"><div class="ni-empty">No notifications</div></div>
+    </div>
+
+  </main>
+</div>
+
+<nav class="bot-nav" id="botNav">
+  <button class="bn-tab" id="navHome" onclick="setMobileState('home')"><span class="bn-icon">🏠</span>Home</button>
+  <button class="bn-tab active" id="navChat" onclick="setMobileState('chat')"><span class="bn-icon">💬</span>Chat</button>
+  <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
+  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">☰</span>More</button>
+</nav>
+
+<div class="profile-sheet" id="profileSheet">
+  <div class="ps-backdrop" onclick="closeProfileSheet()"></div>
+  <div class="ps-card">
+    <div class="ps-top">
+      <div class="ps-pat-info">
+        <div class="ps-avatar" id="psAvatar">LF</div>
+        <div>
+          <div class="ps-name" id="psName">Patient</div>
+          <div class="ps-sub" id="psSub">Family Member</div>
+        </div>
+      </div>
+      <button class="ps-close" onclick="closeProfileSheet()">✕</button>
+    </div>
+
+    <div class="ps-stats">
+      <div class="ps-stat"><div class="ps-stat-n" id="psCondN">0</div><div class="ps-stat-l">Conditions</div></div>
+      <div class="ps-stat"><div class="ps-stat-n" id="psMedN">0</div><div class="ps-stat-l">Meds</div></div>
+      <div class="ps-stat"><div class="ps-stat-n" id="psAlgN">0</div><div class="ps-stat-l">Allergies</div></div>
+    </div>
+
+    <div class="ps-expand open" id="expDetails">
+      <button class="ps-expand-btn" onclick="toggleExpand('expDetails')">
+        <span>Details</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="ps-row"><span class="ps-rl">DOB</span><span class="ps-rv" id="psDob">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Doctor</span><span class="ps-rv" id="psDoctor">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Insurance</span><span class="ps-rv" id="psInsurance">—</span></div>
+        <div class="ps-row"><span class="ps-rl">Pharmacy</span><span class="ps-rv" id="psPharmacy">—</span></div>
+      </div>
+    </div>
+
+    <div class="ps-expand" id="expConditions">
+      <button class="ps-expand-btn" onclick="toggleExpand('expConditions')">
+        <span>Conditions</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psCondPills"></div>
+      </div>
+    </div>
+
+    <div class="ps-expand" id="expMeds">
+      <button class="ps-expand-btn" onclick="toggleExpand('expMeds')">
+        <span>Medications</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psMedPills"></div>
+      </div>
+    </div>
+
+    <div class="ps-expand" id="expAllergies">
+      <button class="ps-expand-btn" onclick="toggleExpand('expAllergies')">
+        <span>Allergies</span><span>▾</span>
+      </button>
+      <div class="ps-expand-body">
+        <div class="pill-row" id="psAlgPills"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="ps-section-title">Switch Patient</div>
+      <div id="psPatientList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      <button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--teal);font-size:13px;cursor:pointer">＋ Add Family Member</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-sheet" id="menuSheet">
+  <div class="ms-backdrop" onclick="closeMenuSheet()"></div>
+  <div class="ms-panel">
+    <div class="ms-handle"></div>
+    <div class="ms-title">More</div>
+    <div class="ms-grid">
+      <a href="/timeline" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🕐</span><span class="ms-label">Timeline</span></a>
+      <a href="/playbooks" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🆘</span><span class="ms-label">Playbooks</span></a>
+      <a href="/brief" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">📋</span><span class="ms-label">Dr Brief</span></a>
+      <button class="ms-item" onclick="closeMenuSheet();openTaskPanel()"><span class="ms-icon">✅</span><span class="ms-label">Tasks</span></button>
+      <button class="ms-item" onclick="closeMenuSheet();openCalendarModal()"><span class="ms-icon">📅</span><span class="ms-label">Calendar</span></button>
+      <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">⚙️</span><span class="ms-label">Settings</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addPatientModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75)" onclick="closeAddPatient()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add Family Member</div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-lbl">Full Name *</label><input class="f-inp" id="newName" placeholder="Jane Fields" /></div>
+      <div class="f-field"><label class="f-lbl">Relationship</label><input class="f-inp" id="newRelation" placeholder="Mother, Father..." /></div>
+    </div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-lbl">Date of Birth</label><input class="f-inp" id="newDob" placeholder="MM/DD/YYYY" /></div>
+      <div class="f-field"><label class="f-lbl">Primary Doctor</label><input class="f-inp" id="newDoctor" placeholder="Dr. Smith" /></div>
+    </div>
+    <div class="f-field"><label class="f-lbl">Address</label><input class="f-inp" id="newAddress" placeholder="Street, City, State ZIP" /></div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-lbl">Primary Insurance</label><input class="f-inp" id="newInsurance" placeholder="Medicare..." /></div>
+      <div class="f-field"><label class="f-lbl">Pharmacy</label><input class="f-inp" id="newPharmacy" placeholder="Walgreens..." /></div>
+    </div>
+    <div class="f-field"><label class="f-lbl">Conditions (comma separated)</label><input class="f-inp" id="newConditions" placeholder="Hypertension, Diabetes..." /></div>
+    <div class="f-field"><label class="f-lbl">Allergies (comma separated)</label><input class="f-inp" id="newAllergies" placeholder="Penicillin, Sulfa..." /></div>
+    <div class="m-acts">
+      <button class="m-btn cancel" onclick="closeAddPatient()">Cancel</button>
+      <button class="m-btn save" onclick="saveNewPatient()">Add Patient</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addTaskModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75)" onclick="closeAddTask()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add Task</div>
+    <div class="f-field"><label class="f-lbl">Title *</label><input class="f-inp" id="taskTitle" placeholder="Task title..." /></div>
+    <div class="f-field"><label class="f-lbl">Description</label><textarea class="f-inp" id="taskDesc" style="resize:vertical;min-height:60px"></textarea></div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-lbl">Due Date</label><input class="f-inp" id="taskDue" type="date" /></div>
+      <div class="f-field"><label class="f-lbl">Priority</label>
+        <select class="f-inp" id="taskPriority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="f-field"><label class="f-lbl">Category</label>
+      <select class="f-inp" id="taskCategory">
+        <option value="appointment">Appointment</option>
+        <option value="medication">Medication</option>
+        <option value="insurance">Insurance</option>
+        <option value="general" selected>General</option>
+      </select>
+    </div>
+    <div class="m-acts">
+      <button class="m-btn cancel" onclick="closeAddTask()">Cancel</button>
+      <button class="m-btn save" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="calendarModal">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75)" onclick="closeCalendarModal()"></div>
+  <div class="modal-box">
+    <div class="m-title">Add To Calendar</div>
+
+    <div class="f-field">
+      <label class="f-lbl">Title</label>
+      <input class="f-inp" id="calTitle" placeholder="Appointment title" />
+    </div>
+
+    <div class="f-row">
+      <div class="f-field">
+        <label class="f-lbl">Date</label>
+        <input class="f-inp" id="calDate" type="date" />
+      </div>
+      <div class="f-field">
+        <label class="f-lbl">Time</label>
+        <input class="f-inp" id="calTime" type="time" />
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="f-field">
+        <label class="f-lbl">Duration (min)</label>
+        <input class="f-inp" id="calDuration" type="number" min="5" step="5" value="60" />
+      </div>
+      <div class="f-field">
+        <label class="f-lbl">Location</label>
+        <input class="f-inp" id="calLocation" placeholder="Clinic, office, hospital" />
+      </div>
+    </div>
+
+    <div class="f-field">
+      <label class="f-lbl">Notes</label>
+      <textarea class="f-inp" id="calDescription" style="min-height:80px;resize:vertical" placeholder="Reason, provider, questions, reminders"></textarea>
+    </div>
+
+    <div class="s-lbl" style="margin-bottom:10px">Choose Calendar</div>
+
+    <div style="display:grid;gap:10px">
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToAppleCalendar()">
+        <span> iPhone / Apple Calendar</span>
+      </button>
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToGoogleCalendar()">
+        <span>Google Calendar</span>
+      </button>
+      <button class="sb-link" style="background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:16px" onclick="addEventToOutlookCalendar()">
+        <span>Outlook Calendar</span>
+      </button>
+    </div>
+
+    <div class="m-acts">
+      <button class="m-btn cancel" onclick="closeCalendarModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileUpload(this)" />
+
+<script>
+'use strict';
+
+const MODEL_NAME = 'claude-sonnet-4-20250514';
+
+let currentMessages = [];
+let currentSessionId = null;
+let currentPatientId = null;
+let allPatients = [];
+let notifications = [];
+let calendarConnected = false;
+let pendingCalendarEvent = null;
+let allTasks = [];
+let taskFilter = 'all';
+let latestScanData = null;
+let mobileState = 'chat';
+
+/* INIT */
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    bindDesktopInput();
+    setMobileState('chat', false);
+    seedCalendarDefaults();
+    await loadPatients();
+    clearChat();
+    await Promise.all([
+      loadChatHistory(),
+      loadNotifications(),
+      checkCalendarStatus()
+    ]);
+    updateDashboard();
+    setTimeout(() => { loadTasks().catch(() => {}); }, 800);
+  } catch (err) {
+    console.error('init error', err);
+    clearChat();
+    addMsg('ai', `❌ ${esc(err.message || 'Failed to initialize app.')}`, true, false);
+  }
+});
+
+/* API */
+async function api(url, options = {}) {
+  const res = await fetch(url, options);
+  const contentType = res.headers.get('content-type') || '';
+  let data = null;
+
+  try {
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      data = text ? { raw: text } : {};
+    }
+  } catch (_) {
+    data = {};
+  }
+
+  if (!res.ok) {
+    throw new Error(data?.error || data?.message || `Request failed (${res.status})`);
+  }
+
+  return data || {};
+}
+
+/* HELPERS */
+function lockBody(){ document.body.classList.add('modal-open'); }
+function unlockBody(){ document.body.classList.remove('modal-open'); }
+
+function esc(str){
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function formatAssistantText(text) {
+  if (!text) return '';
+  let safe = esc(text);
+
+  safe = safe.replace(/```([\s\S]*?)```/g, (_m, code) => `<pre><code>${code.trim()}</code></pre>`);
+  safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  safe = safe.replace(/\n/g, '<br>');
+
+  return safe;
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function calcAge(dob){
+  if(!dob) return null;
+  try{
+    let birth;
+    if (dob.includes('/')) {
+      const p = dob.split('/');
+      if (p.length !== 3) return null;
+      birth = new Date(`${p[2]}-${String(p[0]).padStart(2,'0')}-${String(p[1]).padStart(2,'0')}`);
+    } else {
+      birth = new Date(dob);
+    }
+    if (Number.isNaN(birth.getTime())) return null;
+    return Math.floor((Date.now() - birth.getTime()) / (365.25 * 24 * 3600 * 1000));
+  } catch {
+    return null;
+  }
+}
+
+function formatRelTime(iso){
+  if(!iso) return '';
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return '';
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if(m < 1) return 'just now';
+  if(m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if(h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if(d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function formatTaskDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  if (!y || !m || !d) return iso;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[Math.max(0, parseInt(m,10)-1)]} ${parseInt(d,10)}, ${y}`;
+}
+
+function getPatientById(id){
+  return allPatients.find(p => p.id === id) || null;
+}
+
+function getRecentUploads(){
+  try{
+    const raw = localStorage.getItem('healthAgentRecentUploads');
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  }catch{
+    return [];
+  }
+}
+
+function getRecentUploadCount(){
+  return getRecentUploads().filter(x => !currentPatientId || x.patientId === currentPatientId).length;
+}
+
+function saveRecentUpload(upload){
+  try{
+    const current = getRecentUploads();
+    current.unshift(upload);
+    localStorage.setItem('healthAgentRecentUploads', JSON.stringify(current.slice(0, 12)));
+  }catch(e){
+    console.error('saveRecentUpload', e);
+  }
+}
+
+function inferConfidence(data){
+  // Use server-provided confidence if available
+  if (data.confidence === 'high') return {label:'high confidence', className:'safe'};
+  if (data.confidence === 'medium') return {label:'review advised', className:'warn'};
+  if (data.confidence === 'low') return {label:'low confidence', className:'info'};
+  // Fallback scoring
+  let score = 0;
+  if (data.document_type) score += 20;
+  if (data.summary) score += 20;
+  if (data.member_id || data.medication_name || data.test_names) score += 25;
+  if (data.insurance_company || data.prescriber || data.lab_name) score += 15;
+  if (data.confidence) score += 10;
+  const keys = Object.keys(data).filter(k => data[k] && data[k] !== 'Unknown' && data[k] !== 'unclear');
+  score += Math.min(keys.length * 3, 30);
+  if (score >= 60) return {label:'high confidence', className:'safe'};
+  if (score >= 35) return {label:'review advised', className:'warn'};
+  return {label:'low confidence', className:'info'};
+}
+
+function normalizeUSPhone(phone){
+  if(!phone) return '';
+  const cleaned = String(phone).replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+')) return cleaned;
+  const digits = cleaned.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  return cleaned;
+}
+
+function toISODateTimeLocal(dateStr, timeStr){
+  if(!dateStr) throw new Error('Date is required.');
+  const time = timeStr || '09:00';
+  const local = new Date(`${dateStr}T${time}:00`);
+  if (Number.isNaN(local.getTime())) throw new Error('Invalid date or time.');
+  return local;
+}
+
+function formatICSDate(date){
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2,'0');
+  const d = String(date.getUTCDate()).padStart(2,'0');
+  const h = String(date.getUTCHours()).padStart(2,'0');
+  const min = String(date.getUTCMinutes()).padStart(2,'0');
+  const s = String(date.getUTCSeconds()).padStart(2,'0');
+  return `${y}${m}${d}T${h}${min}${s}Z`;
+}
+
+function buildCalendarEventFromForm(){
+  const title = document.getElementById('calTitle').value.trim();
+  const date = document.getElementById('calDate').value;
+  const time = document.getElementById('calTime').value;
+  const duration = parseInt(document.getElementById('calDuration').value || '60', 10);
+  const location = document.getElementById('calLocation').value.trim();
+  const description = document.getElementById('calDescription').value.trim();
+
+  if (!title) throw new Error('Calendar title is required.');
+  if (!date) throw new Error('Calendar date is required.');
+
+  const start = toISODateTimeLocal(date, time);
+  const end = new Date(start.getTime() + Math.max(5, duration) * 60000);
+
+  return {
+    title,
+    date,
+    time: time || '09:00',
+    duration: Math.max(5, duration),
+    location,
+    description,
+    start,
+    end
+  };
+}
+
+function seedCalendarDefaults(){
+  const titleEl = document.getElementById('calTitle');
+  const dateEl = document.getElementById('calDate');
+  const timeEl = document.getElementById('calTime');
+  if (!titleEl || !dateEl || !timeEl) return;
+
+  if (!dateEl.value) {
+    const tomorrow = new Date(Date.now() + 86400000);
+    dateEl.value = tomorrow.toISOString().split('T')[0];
+  }
+  if (!timeEl.value) timeEl.value = '09:00';
+  if (!titleEl.value) titleEl.value = 'Medical appointment';
+}
+
+function isMobileView(){
+  return window.innerWidth <= 900;
+}
+
+function setMobileState(state, animate = true){
+  mobileState = state;
+  document.querySelectorAll('.mobile-state').forEach(el => el.classList.remove('active'));
+
+  if (state === 'chat') document.getElementById('mobileChatState').classList.add('active');
+  if (state === 'home') document.getElementById('mobileHomeState').classList.add('active');
+
+  document.getElementById('navHome')?.classList.toggle('active', state === 'home');
+  document.getElementById('navChat')?.classList.toggle('active', state === 'chat');
+}
+
+function goToDashboardCard(type){
+  if (type === 'tasks') {
+    openTaskPanel();
+    return;
+  }
+  if (type === 'records') {
+    setMobileState('chat');
+    addMsg('ai', 'Recent records are visible after scans are saved. Scan a document or bottle to start building the record list.', true, false);
+    return;
+  }
+  if (type === 'upcoming') {
+    setMobileState('chat');
+    qa('What are her upcoming appointments?');
+    return;
+  }
+  if (type === 'today') {
+    setMobileState('chat');
+    qa('What needs attention today?');
+  }
+}
+
+function toggleExpand(id){
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+function openSettingsPlaceholder(){
+  closeMenuSheet();
+  addMsg('ai', '⚙️ Settings screen coming next. Right now, the core care tools are chat, tasks, scans, calendar, and patient switching.', true, false);
+  setMobileState('chat');
+}
+
+/* DASHBOARD */
+function updateTopbarTitle(patient){
+  const n = patient?.name || 'Health Dashboard';
+  setText('desktopTitle', `${n} — Health Dashboard`);
+}
+
+function renderRecentRecords(){
+  const list = document.getElementById('recentActivityList');
+  if(!list) return;
+
+  const uploads = getRecentUploads().filter(x => !currentPatientId || x.patientId === currentPatientId).slice(0, 3);
+
+  if (!uploads.length) {
+    list.innerHTML = `
+      <div class="activity-item">
+        <div class="activity-title">No recent activity yet</div>
+        <div class="activity-sub">Scans, saved records, and care actions will appear here.</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = uploads.map(item => `
+    <div class="activity-item">
+      <div class="activity-title">${esc(item.title || item.name || 'Recent record')}</div>
+      <div class="activity-sub">${esc(item.type || 'Record')} · ${formatRelTime(item.at)}</div>
+    </div>
+  `).join('');
+}
+
+function updateDashboard(){
+  const pendingTasks = allTasks.filter(t => t.status !== 'done');
+  const highPriorityTasks = pendingTasks.filter(t => t.priority === 'high');
+  const today = new Date().toISOString().split('T')[0];
+  const dueToday = pendingTasks.filter(t => t.dueDate === today);
+
+  let todayPrimary = 'All clear';
+  let todaySecondary = 'No urgent items right now';
+
+  if (highPriorityTasks.length > 0) {
+    todayPrimary = `${highPriorityTasks.length} urgent`;
+    todaySecondary = 'High priority items need attention';
+  } else if (dueToday.length > 0) {
+    todayPrimary = `${dueToday.length} due today`;
+    todaySecondary = 'Tasks scheduled for today';
+  } else if (pendingTasks.length > 0) {
+    todayPrimary = `${pendingTasks.length} open`;
+    todaySecondary = 'Pending care tasks in progress';
+  }
+
+  setText('todayPrimary', todayPrimary);
+  setText('todaySecondary', todaySecondary);
+
+  setText('upcomingPrimary', '0');
+  setText('upcomingSecondary', 'Appointments coming soon');
+
+  setText('tasksPrimary', String(pendingTasks.length));
+  setText('tasksSecondary', pendingTasks.length > 0 ? 'Open items requiring follow-up' : 'Nothing pending');
+
+  const recordsCount = getRecentUploadCount();
+  setText('recordsPrimary', String(recordsCount));
+  setText('recordsSecondary', recordsCount > 0 ? 'Recent files scanned or uploaded' : 'No recent uploads');
+
+  renderRecentRecords();
+}
+
+/* PATIENTS */
+async function loadPatients(){
+  const [patientsData, currentData] = await Promise.all([
+    api('/api/patients'),
+    api('/api/patients/current')
+  ]);
+
+  allPatients = Array.isArray(patientsData.patients) ? patientsData.patients : [];
+  currentPatientId = currentData.currentId || allPatients[0]?.id || null;
+
+  const currentPatient =
+    currentData.patient ||
+    allPatients.find(p => p.id === currentPatientId) ||
+    allPatients[0] ||
+    null;
+
+  renderPatientDropdown();
+  renderPatientCard(currentPatient);
+  renderProfileSheet(currentPatient);
+  updateTopbarTitle(currentPatient);
+}
+
+function renderPatientDropdown(){
+  const dd = document.getElementById('patientDropdown');
+  if(!dd) return;
+
+  const current = allPatients.find(p => p.id === currentPatientId);
+  setText('selectorName', current?.name || 'No Patient');
+  setText('selectorRel', current?.relationship || current?.relation || 'Family Member');
+
+  dd.innerHTML = allPatients.map(p => `
+    <div class="pat-opt ${p.id === currentPatientId ? 'active' : ''}" onclick="switchPatient('${esc(p.id)}')">
+      <div class="opt-n">${esc(p.name)}</div>
+      <div class="opt-r">${esc(p.relationship || p.relation || 'Family Member')} · DOB ${esc(p.dob || '—')}</div>
+    </div>
+  `).join('') + `<div class="add-pat" onclick="openAddPatient()">＋ Add family member</div>`;
+}
+
+async function switchPatient(id){
+  try{
+    await api('/api/patients/switch', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ patientId:id, model:MODEL_NAME })
+    });
+
+    currentPatientId = id;
+    latestScanData = null;
+    closePatientDropdown();
+    closeProfileSheet();
+
+    await loadPatients();
+    await loadChatHistory();
+    await loadTasks().catch(() => {});
+    updateDashboard();
+    clearChat();
+    currentMessages = [];
+    currentSessionId = null;
+
+    const p = getPatientById(id);
+    if (p) addMsg('ai', `Switched to <strong>${esc(p.name)}</strong>'s profile. How can I help?`, true, true);
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+function renderPatientCard(patient){
+  const el = document.getElementById('cardContent');
+  if(!el) return;
+
+  if(!patient){
+    el.innerHTML = `<div style="color:var(--text3)">No patient loaded.</div>`;
+    return;
+  }
+
+  const meds = (patient.medications || []).map(m => `<span class="pill p-teal">${esc(m.name)} ${esc(m.dose || '')}</span>`).join('');
+  const algs = (patient.allergies || []).map(a => `<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('');
+
+  el.innerHTML = `
+    <div class="pc-row"><span class="pc-l">Name</span><span class="pc-v">${esc(patient.name)}</span></div>
+    <div class="pc-row"><span class="pc-l">DOB</span><span class="pc-v">${esc(patient.dob || '—')}</span></div>
+    <div class="pc-row"><span class="pc-l">Doctor</span><span class="pc-v">${esc(patient.primaryDoctor || '—')}</span></div>
+    <div class="pc-row"><span class="pc-l">Insurance</span><span class="pc-v">${esc(patient.insurance?.primary || '—')}</span></div>
+    ${meds ? `<div style="margin-top:8px"><div class="s-lbl" style="margin-bottom:4px">Medications</div><div class="pill-row">${meds}</div></div>` : ''}
+    ${algs ? `<div style="margin-top:7px"><div class="s-lbl" style="margin-bottom:4px">Allergies</div><div class="pill-row">${algs}</div></div>` : ''}
+  `;
+}
+
+function renderProfileSheet(patient){
+  if(!patient) return;
+
+  const initials = (patient.name || 'P').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  const age = calcAge(patient.dob);
+  const rel = patient.relationship || patient.relation || '';
+
+  ['psAvatar','mobilePatAvatar'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = initials;
+  });
+
+  setText('psName', patient.name || 'Patient');
+  setText('psSub', [age ? `${age}` : null, rel].filter(Boolean).join(' · ') || 'Family Member');
+  setText('psCondN', (patient.conditions || []).length);
+  setText('psMedN', (patient.medications || []).length);
+  setText('psAlgN', (patient.allergies || []).length);
+  setText('psDob', patient.dob || '—');
+  setText('psDoctor', `${patient.primaryDoctor || '—'} · ${patient.clinic || '—'}`);
+  setText('psInsurance', patient.insurance?.primary || '—');
+  setText('psPharmacy', `${patient.pharmacy?.name || '—'} ${patient.pharmacy?.phone || ''}`.trim());
+
+  const conds = (patient.conditions || []).map(c => `<span class="pill p-gold">${esc(c)}</span>`).join('');
+  const meds = (patient.medications || []).map(m => `<span class="pill p-teal">${esc(m.name)} ${esc(m.dose || '')}</span>`).join('');
+  const algs = (patient.allergies || []).map(a => `<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('');
+
+  document.getElementById('psCondPills').innerHTML = conds || '<span style="color:var(--text3);font-size:12px">None</span>';
+  document.getElementById('psMedPills').innerHTML = meds || '<span style="color:var(--text3);font-size:12px">None</span>';
+  document.getElementById('psAlgPills').innerHTML = algs || '<span style="color:var(--text3);font-size:12px">None</span>';
+
+  const pl = document.getElementById('psPatientList');
+  pl.innerHTML = allPatients.map(p => `
+    <button onclick="switchPatient('${esc(p.id)}')" style="width:100%;padding:10px 12px;background:${p.id===currentPatientId?'rgba(45,212,191,0.1)':'var(--surface)'};border:1px solid ${p.id===currentPatientId?'rgba(45,212,191,0.2)':'var(--border)'};border-radius:12px;color:var(--text);font-size:13px;cursor:pointer;text-align:left">
+      <strong>${esc(p.name)}</strong> <span style="color:var(--text2);font-size:11px">· ${esc(p.relationship || p.relation || 'Family Member')}</span>
+    </button>
+  `).join('');
+}
+
+function togglePatientDropdown(){ document.getElementById('patientDropdown')?.classList.toggle('open'); }
+function closePatientDropdown(){ document.getElementById('patientDropdown')?.classList.remove('open'); }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#patientSelector')) closePatientDropdown();
+
+  const notifOpen =
+    e.target.closest('#notifPanel') ||
+    e.target.closest('.notif-btn') ||
+    e.target.closest('#notifBtnMobileWrap') ||
+    e.target.closest('.tb-bell');
+
+  if (!notifOpen) document.getElementById('notifPanel')?.classList.remove('open');
+});
+
+/* SHEETS / MODALS */
+function openProfileSheet(){ document.getElementById('profileSheet')?.classList.add('open'); lockBody(); }
+function closeProfileSheet(){ document.getElementById('profileSheet')?.classList.remove('open'); unlockBody(); }
+function openMenuSheet(){ document.getElementById('menuSheet')?.classList.add('open'); lockBody(); }
+function closeMenuSheet(){ document.getElementById('menuSheet')?.classList.remove('open'); unlockBody(); }
+function openAddPatient(){ closePatientDropdown(); document.getElementById('addPatientModal')?.classList.add('open'); lockBody(); }
+function closeAddPatient(){ document.getElementById('addPatientModal')?.classList.remove('open'); unlockBody(); }
+function openAddTask(){ document.getElementById('addTaskModal').classList.add('open'); document.getElementById('taskDue').value = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]; lockBody(); }
+function closeAddTask(){ document.getElementById('addTaskModal').classList.remove('open'); document.getElementById('taskTitle').value = ''; document.getElementById('taskDesc').value = ''; unlockBody(); }
+function openCalendarModal(){ document.getElementById('calendarModal').classList.add('open'); seedCalendarDefaults(); lockBody(); }
+function closeCalendarModal(){ document.getElementById('calendarModal').classList.remove('open'); unlockBody(); }
+
+/* ADD PATIENT */
+async function saveNewPatient(){
+  const name = document.getElementById('newName').value.trim();
+  if(!name){ alert('Name is required'); return; }
+
+  const patient = {
+    name,
+    relationship: document.getElementById('newRelation').value.trim() || 'Family Member',
+    dob: document.getElementById('newDob').value.trim(),
+    primaryDoctor: document.getElementById('newDoctor').value.trim(),
+    address: document.getElementById('newAddress').value.trim(),
+    insurance: { primary: document.getElementById('newInsurance').value.trim() },
+    pharmacy: { name: document.getElementById('newPharmacy').value.trim() },
+    conditions: document.getElementById('newConditions').value.split(',').map(s => s.trim()).filter(Boolean),
+    allergies: document.getElementById('newAllergies').value.split(',').map(s => s.trim()).filter(Boolean),
+    medications: []
+  };
+
+  try{
+    const data = await api('/api/patients/add', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ ...patient, model:MODEL_NAME })
+    });
+
+    closeAddPatient();
+    if (data.patient?.id) {
+      await switchPatient(data.patient.id);
+    } else {
+      await loadPatients();
+    }
+  }catch(e){
+    alert(`Error: ${e.message}`);
+  }
+}
+
+/* CHAT HISTORY */
+async function loadChatHistory(){
+  try{
+    const data = await api('/api/chat-history');
+    renderChatHistory(data.sessions || []);
+  }catch(e){
+    console.error('loadChatHistory', e);
+  }
+}
+
+function renderChatHistory(sessions){
+  const list = document.getElementById('chatHistoryList');
+  if(!list) return;
+
+  const filtered = (sessions || []).filter(s => !s.patientId || s.patientId === currentPatientId);
+
+  if(!filtered.length){
+    list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.slice(0,20).map(s => `
+    <div class="hist-item ${s.id === currentSessionId ? 'active' : ''}" onclick="loadSession('${esc(s.id)}')">
+      <span style="flex-shrink:0;margin-top:1px">💬</span>
+      <div class="hist-content">
+        <div class="hist-preview">${esc(s.preview || 'Chat session')}</div>
+        <div class="hist-time">${formatRelTime(s.timestamp)}</div>
+      </div>
+      <button class="hist-del" onclick="deleteSession(event,'${esc(s.id)}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function loadSession(id){
+  try{
+    const session = await api(`/api/chat-history/${encodeURIComponent(id)}`);
+    currentSessionId = id;
+    currentMessages = Array.isArray(session.messages) ? session.messages : [];
+    clearChat(false);
+
+    for (const m of currentMessages) {
+      const isUser = m.role === 'user';
+      addMsg(isUser ? 'user' : 'ai', m.content || '', false, !isUser);
+    }
+
+    closeSidebar();
+    await loadChatHistory();
+  }catch(e){
+    console.error('loadSession', e);
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function deleteSession(e, id){
+  e.stopPropagation();
+  try{
+    await api(`/api/chat-history/${encodeURIComponent(id)}`, { method:'DELETE' });
+    if (currentSessionId === id) {
+      currentSessionId = null;
+      currentMessages = [];
+      clearChat();
+    }
+    await loadChatHistory();
+  }catch(err){
+    addMsg('ai', `❌ ${esc(err.message)}`, true, false);
+  }
+}
+
+function newChat(){
+  if(currentMessages.length > 0) saveChatSession().catch(() => {});
+  currentSessionId = null;
+  currentMessages = [];
+  clearChat();
+  loadChatHistory().catch(() => {});
+  if (isMobileView()) setMobileState('chat');
+}
+
+async function saveChatSession(){
+  if(!currentMessages.length) return;
+  try{
+    await api('/api/save-chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ messages: currentMessages, patientId: currentPatientId, model:MODEL_NAME })
+    });
+  }catch(e){
+    console.error('saveChatSession', e);
+  }
+}
+
+setInterval(() => {
+  if (currentMessages.length > 0) saveChatSession().catch(() => {});
+}, 30000);
+
+window.addEventListener('beforeunload', () => {
+  if(!currentMessages.length) return;
+  const blob = new Blob([JSON.stringify({ messages: currentMessages, patientId: currentPatientId, model:MODEL_NAME })], { type:'application/json' });
+  navigator.sendBeacon('/api/save-chat', blob);
+});
+
+/* NOTIFICATIONS */
+async function loadNotifications(){
+  try{
+    const data = await api('/api/notifications');
+    notifications = data.notifications || [];
+    renderNotifications();
+    updateNotifBadge();
+  }catch(e){
+    console.error('loadNotifications', e);
+  }
+}
+
+function renderNotifications(){
+  const list = document.getElementById('notifList');
+  if(!list) return;
+
+  if(!notifications.length){
+    list.innerHTML = `<div class="ni-empty">✅ All clear</div>`;
+    return;
+  }
+
+  const icons = { medication:'💊', appointment:'📅', insurance:'🛡️', general:'💡' };
+
+  list.innerHTML = notifications.slice(0,20).map(n => `
+    <div class="ni ${n.read ? 'read' : 'unread'}" onclick="readNotif('${esc(n.id)}')">
+      <div class="ni-head"><span class="ni-dot"></span><span>${icons[n.type] || '🔔'}</span><span class="ni-title">${esc(n.title)}</span></div>
+      <div class="ni-msg">${esc(n.message)}</div>
+      <div class="ni-time">${formatRelTime(n.createdAt)}</div>
+    </div>
+  `).join('');
+}
+
+function updateNotifBadge(){
+  const unread = notifications.filter(n => !n.read).length;
+  ['notifBadgeDesktop','notifBadgeMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = unread > 9 ? '9+' : String(unread);
+      el.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+async function readNotif(id){
+  try{
+    await api(`/api/notifications/read/${encodeURIComponent(id)}`, { method:'POST' });
+    const n = notifications.find(x => x.id === id);
+    if(n) n.read = true;
+    renderNotifications();
+    updateNotifBadge();
+  }catch(e){
+    console.error('readNotif', e);
+  }
+}
+
+async function markAllRead(){
+  try{
+    await api('/api/notifications/read-all', { method:'POST' });
+    notifications.forEach(n => { n.read = true; });
+    renderNotifications();
+    updateNotifBadge();
+  }catch(e){
+    console.error('markAllRead', e);
+  }
+}
+
+function toggleNotifications(){
+  document.getElementById('notifPanel')?.classList.toggle('open');
+}
+
+/* CALENDAR */
+async function checkCalendarStatus(){
+  try{
+    const data = await api('/api/calendar/status');
+    calendarConnected = !!data.connected;
+    const el = document.getElementById('gcalStatus');
+    if(calendarConnected && el){
+      el.textContent = '✅ Calendar Connected';
+      el.className = 'gcal-s';
+      el.removeAttribute('href');
+      el.removeAttribute('target');
+    }
+  }catch(e){
+    console.error('checkCalendarStatus', e);
+  }
+}
+
+function populateCalendarModalFromEvent(event){
+  document.getElementById('calTitle').value = event.title || 'Medical appointment';
+  document.getElementById('calDate').value = event.date || new Date().toISOString().split('T')[0];
+  document.getElementById('calTime').value = event.time || '09:00';
+  document.getElementById('calDuration').value = event.duration || 60;
+  document.getElementById('calLocation').value = event.location || '';
+  document.getElementById('calDescription').value = event.description || '';
+}
+
+async function addToCalendar(event){
+  pendingCalendarEvent = event;
+  populateCalendarModalFromEvent(event);
+  openCalendarModal();
+}
+
+function downloadICSFile(event){
+  const uid = `health-agent-${Date.now()}@local`;
+  const now = formatICSDate(new Date());
+  const start = formatICSDate(event.start);
+  const end = formatICSDate(event.end);
+
+  const clean = (s='') => String(s)
+    .replace(/\\/g,'\\\\')
+    .replace(/\n/g,'\\n')
+    .replace(/,/g,'\\,')
+    .replace(/;/g,'\\;');
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Health Agent//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${clean(event.title)}`,
+    `DESCRIPTION:${clean(event.description || '')}`,
+    `LOCATION:${clean(event.location || '')}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type:'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(event.title || 'event').replace(/[^\w\-]+/g,'-').toLowerCase() || 'event'}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function addEventToAppleCalendar(){
+  try{
+    const event = buildCalendarEventFromForm();
+    downloadICSFile(event);
+    closeCalendarModal();
+    addMsg('ai', `📅 Apple Calendar file created for <strong>${esc(event.title)}</strong>. On iPhone, open the downloaded file to add it to Calendar.`, true, true);
+    if (isMobileView()) setMobileState('chat');
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function addEventToGoogleCalendar(){
+  try{
+    const event = buildCalendarEventFromForm();
+
+    if (calendarConnected) {
+      const data = await api('/api/calendar/add-event', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          duration: event.duration,
+          location: event.location,
+          description: event.description,
+          model:MODEL_NAME
+        })
+      });
+
+      closeCalendarModal();
+
+      if (data.success) {
+        const linkHtml = data.link ? ` <a href="${esc(data.link)}" target="_blank" rel="noopener noreferrer">View →</a>` : '';
+        addMsg('ai', `✅ Added <strong>${esc(event.title)}</strong> to Google Calendar.${linkHtml}`, true, true);
+        if (isMobileView()) setMobileState('chat');
+        return;
+      }
+    }
+
+    const start = event.start.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+    const end = event.end.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+
+    const url = new URL('https://calendar.google.com/calendar/render');
+    url.searchParams.set('action', 'TEMPLATE');
+    url.searchParams.set('text', event.title);
+    url.searchParams.set('dates', `${start}/${end}`);
+    if (event.description) url.searchParams.set('details', event.description);
+    if (event.location) url.searchParams.set('location', event.location);
+
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    closeCalendarModal();
+    addMsg('ai', `📅 Opened Google Calendar for <strong>${esc(event.title)}</strong>.`, true, true);
+    if (isMobileView()) setMobileState('chat');
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+function addEventToOutlookCalendar(){
+  try{
+    const event = buildCalendarEventFromForm();
+    const url = new URL('https://outlook.live.com/calendar/0/deeplink/compose');
+    url.searchParams.set('subject', event.title);
+    url.searchParams.set('startdt', event.start.toISOString());
+    url.searchParams.set('enddt', event.end.toISOString());
+    if (event.description) url.searchParams.set('body', event.description);
+    if (event.location) url.searchParams.set('location', event.location);
+
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    closeCalendarModal();
+    addMsg('ai', `📅 Opened Outlook Calendar for <strong>${esc(event.title)}</strong>.`, true, true);
+    if (isMobileView()) setMobileState('chat');
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+/* CHAT */
+function getPrimaryChatArea(){
+  return isMobileView() ? document.getElementById('chatArea') : document.getElementById('chatAreaDesktop');
+}
+
+function getPrimaryChatInput(){
+  return isMobileView() ? document.getElementById('chatInput') : document.getElementById('chatInputDesktop');
+}
+
+function clearChat(addWelcome = true){
+  const mobileArea = document.getElementById('chatArea');
+  const desktopArea = document.getElementById('chatAreaDesktop');
+
+  if (mobileArea) mobileArea.innerHTML = '';
+  if (desktopArea) desktopArea.innerHTML = '';
+
+  if(addWelcome){
+    const p = getPatientById(currentPatientId);
+    const fn = esc((p?.name || 'Linda').split(' ')[0]);
+    const html = `
+      <div class="welcome-inline" id="welcomeInline">
+        <div class="welcome-inline-title">Hi, I’m here for <strong>${fn}</strong>. What do you need?</div>
+        <div class="chip-row">
+          <button class="chip" onclick="qa('What are her current medications?')">What meds is she taking?</button>
+          <button class="chip" onclick="qa('What appointments are coming up?')">What appointments are coming up?</button>
+          <button class="chip" onclick="qa('Draft a prior authorization appeal letter for Medicare')">Draft an appeal letter</button>
+          <button class="chip" onclick="qa('Check supplement safety')">Check supplement safety</button>
+        </div>
+      </div>
+    `;
+    if (mobileArea) mobileArea.innerHTML = html;
+    if (desktopArea) desktopArea.innerHTML = html;
+  }
+}
+
+function syncChatAreas(){
+  const mobileArea = document.getElementById('chatArea');
+  const desktopArea = document.getElementById('chatAreaDesktop');
+  if (!mobileArea || !desktopArea) return;
+  if (isMobileView()) {
+    desktopArea.innerHTML = mobileArea.innerHTML;
+  } else {
+    mobileArea.innerHTML = desktopArea.innerHTML;
+  }
+}
+
+function addMsg(role, content, scroll = true, allowHtml = false){
+  const html = `
+    <div class="msg ${role === 'user' ? 'user' : 'ai'}">
+      <div class="msg-avatar">${role === 'user' ? '👤' : '🤖'}</div>
+      <div class="msg-bubble">${allowHtml ? content : esc(String(content || ''))}</div>
+    </div>
+  `;
+
+  ['chatArea','chatAreaDesktop'].forEach(id => {
+    const area = document.getElementById(id);
+    if (area) area.insertAdjacentHTML('beforeend', html);
+  });
+
+  if(scroll){
+    requestAnimationFrame(() => {
+      ['chatArea','chatAreaDesktop'].forEach(id => {
+        const area = document.getElementById(id);
+        if (area) area.scrollTop = area.scrollHeight;
+      });
+    });
+  }
+}
+
+function addTypingBubble(id){
+  const html = `
+    <div class="msg ai" id="${id}">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">
+        <div class="typing-indicator"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+}
+
+function removeTypingBubble(id){
+  document.querySelectorAll(`#${CSS.escape(id)}`).forEach(el => el.remove());
+}
+
+async function sendMessage(prefilledText = null){
+  if (isMobileView()) setMobileState('chat');
+
+  const input = document.getElementById('chatInput');
+  const desktopInput = document.getElementById('chatInputDesktop');
+  const sourceInput = isMobileView() ? input : desktopInput;
+  const raw = prefilledText ?? sourceInput.value;
+  const text = String(raw || '').trim();
+  if(!text) return;
+
+  input.value = '';
+  desktopInput.value = '';
+  input.style.height = 'auto';
+  desktopInput.style.height = 'auto';
+
+  addMsg('user', text, true, false);
+  currentMessages.push({ role:'user', content:text });
+
+  const typingId = `typing-${Date.now()}`;
+  addTypingBubble(typingId);
+
+  try{
+    const data = await api('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message:text,
+        patientId:currentPatientId,
+        model:MODEL_NAME
+      })
+    });
+
+    removeTypingBubble(typingId);
+
+    const replyText = data.reply || data.error || 'Something went wrong';
+    addMsg('ai', formatAssistantText(replyText), true, true);
+    currentMessages.push({ role:'assistant', content:replyText });
+
+    if(data.calendarEvent){
+      pendingCalendarEvent = data.calendarEvent;
+      addCalendarCard(data.calendarEvent);
+    }
+    if(data.callRequest) addCallCard(data.callRequest);
+    if(data.hasPendingEmail) addEmailActionCard();
+
+    await loadNotifications();
+  }catch(e){
+    removeTypingBubble(typingId);
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+function sendMessageFromDesktop(){
+  if (!isMobileView()) sendMessage();
+}
+
+function qa(text){
+  closeSidebar();
+  setMobileState('chat');
+  sendMessage(text);
+}
+
+function handleKey(e){
+  if (isMobileView() && mobileState !== 'chat') setMobileState('chat');
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function bindDesktopInput(){
+  const input = document.getElementById('chatInputDesktop');
+  if (!input) return;
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessageFromDesktop();
+    }
+  });
+  input.addEventListener('input', () => autoResize(input));
+}
+
+function autoResize(el){
+  if (isMobileView() && mobileState !== 'chat') setMobileState('chat');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  const mirror = el.id === 'chatInput' ? document.getElementById('chatInputDesktop') : document.getElementById('chatInput');
+  if (mirror) {
+    mirror.value = el.value;
+    mirror.style.height = 'auto';
+    mirror.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+}
+
+/* SCAN */
+function renderScanCard(data, fileName = 'Scanned item'){
+  latestScanData = { ...data, fileName, patientId: currentPatientId };
+
+  const docType = String(data.document_type || '').toLowerCase();
+  const conf = data.confidence || 'low';
+  const confClass = conf === 'high' ? 'safe' : conf === 'medium' ? 'warn' : 'info';
+
+  function buildFields(d) {
+    const fields = [];
+    const add = (label, value) => {
+      if (value && value !== 'Unknown' && value !== 'unclear' && value !== 'N/A') {
+        fields.push({ label, value: String(value), full: false });
+      }
+    };
+    const addFull = (label, value) => {
+      if (value && value !== 'Unknown' && value !== 'unclear' && value !== 'N/A') {
+        fields.push({ label, value: String(value), full: true });
+      }
+    };
+
+    add('Document Type', d.document_type);
+
+    if (docType === 'insurance_card') {
+      add('Insurance Co.', d.insurance_company);
+      add('Plan Name', d.plan_name);
+      add('Member Name', d.member_name);
+      add('Member ID', d.member_id);
+      add('Group Number', d.group_number);
+      add('RX BIN', d.rx_bin);
+      add('RX PCN', d.rx_pcn);
+      add('RX Group', d.rx_group);
+      add('Effective Date', d.effective_date);
+      addFull('Copays', typeof d.copay_amounts === 'object' ? JSON.stringify(d.copay_amounts) : d.copay_amounts);
+      addFull('Phone Numbers', typeof d.phone_numbers === 'object' ? JSON.stringify(d.phone_numbers) : d.phone_numbers);
+    } else if (docType === 'prescription') {
+      add('Medication', d.medication_name);
+      add('Dosage', d.dosage);
+      add('Frequency', d.frequency);
+      add('Quantity', d.quantity);
+      add('Refills Left', d.refills_remaining);
+      add('Prescriber', d.prescriber);
+      add('Pharmacy', d.pharmacy_name);
+      add('Pharmacy Phone', d.pharmacy_phone);
+      add('RX Number', d.rx_number);
+      add('Date Filled', d.date_filled);
+      add('Expires', d.expiration_date);
+      addFull('Warnings', d.warnings);
+    } else if (docType === 'lab_result') {
+      add('Lab Name', d.lab_name);
+      add('Date of Test', d.date_of_test);
+      add('Ordering Doctor', d.ordering_doctor);
+      add('Patient Name', d.patient_name);
+      addFull('Tests', typeof d.test_names === 'object' ? JSON.stringify(d.test_names) : d.test_names);
+      addFull('Values', typeof d.values === 'object' ? JSON.stringify(d.values) : d.values);
+      addFull('Abnormal Flags', typeof d.abnormal_flags === 'object' ? JSON.stringify(d.abnormal_flags) : d.abnormal_flags);
+    } else if (docType === 'medical_bill') {
+      add('Provider', d.provider_name);
+      add('Date of Service', d.date_of_service);
+      add('Total Charge', d.total_charge);
+      add('Insurance Paid', d.insurance_paid);
+      add('You Owe', d.patient_responsibility);
+      add('Claim Number', d.claim_number);
+      addFull('Procedure Codes', typeof d.procedure_codes === 'object' ? JSON.stringify(d.procedure_codes) : d.procedure_codes);
+    } else if (docType === 'referral') {
+      add('Referring Doctor', d.referring_doctor);
+      add('Specialist', d.specialist);
+      add('Auth Number', d.authorization_number);
+      add('Valid Dates', d.valid_dates);
+      add('Approved Visits', d.approved_visits);
+    } else {
+      // Generic fallback — show whatever we got
+      add('Brand', d.brand);
+      add('Product', d.product_name);
+      add('Form', d.form);
+      addFull('Purpose', d.purpose);
+      addFull('Description', d.description);
+    }
+
+    addFull('Summary', d.summary);
+    return fields;
+  }
+
+  const fields = buildFields(data);
+  const fieldsHtml = fields.map(f =>
+    `<div class="scan-field${f.full ? ' full' : ''}"><span class="scan-label">${esc(f.label)}</span><span class="scan-value">${esc(f.value)}</span></div>`
+  ).join('');
+
+  const typeLabels = {
+    insurance_card: '🪪 Insurance Card',
+    prescription: '💊 Prescription',
+    lab_result: '🧪 Lab Result',
+    medical_bill: '💰 Medical Bill',
+    referral: '📄 Referral',
+    other: '📋 Document'
+  };
+  const typeLabel = typeLabels[docType] || '📋 Document';
+
+  const cardHtml = `
+    <div class="msg ai">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">
+        <div class="scan-card">
+          <div class="scan-header">
+            <div class="scan-icon">📷</div>
+            <div class="scan-title">${typeLabel}</div>
+            <div class="scan-badges">
+              <span class="scan-badge ${confClass}">${esc(conf)} confidence</span>
+              <span class="scan-badge info">review before save</span>
+            </div>
+          </div>
+
+          <p>Scanned <strong>${esc(fileName)}</strong>. Review before saving.</p>
+
+          <div class="scan-grid">${fieldsHtml}</div>
+
+          <div class="scan-actions">
+            <button class="scan-btn primary" onclick="confirmScan()">Save to Chart</button>
+            <button class="scan-btn" onclick="checkInteractions()">Check Interactions</button>
+            <button class="scan-btn" onclick="askDoctor()">Ask Doctor</button>
+          </div>
+
+          <div class="scan-foot">AI-assisted extraction. Verify before treating as medical record.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', cardHtml);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+
+  setMobileState('chat');
+}
+
+function confirmScan(){
+  if(!latestScanData){
+    addMsg('ai', '⚠️ No scan is ready to save.', true, false);
+    return;
+  }
+
+  const title = latestScanData.product_name || latestScanData.fileName || 'Scanned record';
+  saveRecentUpload({
+    name: latestScanData.fileName || title,
+    title,
+    type: latestScanData.document_type || 'scan',
+    at: new Date().toISOString(),
+    patientId: currentPatientId
+  });
+  updateDashboard();
+  addMsg('ai', `✅ Saved <strong>${esc(title)}</strong> to recent records for this patient.`, true, true);
+}
+
+function checkInteractions(){
+  if(!latestScanData){
+    addMsg('ai', '⚠️ Scan something first so I know what to review.', true, false);
+    return;
+  }
+  const product = latestScanData.product_name || latestScanData.fileName || 'this supplement';
+  const patient = getPatientById(currentPatientId);
+  const meds = (patient?.medications || []).map(m => m.name).filter(Boolean);
+  const medLine = meds.length ? `Current meds on file: ${esc(meds.join(', '))}.` : 'No medication list is on file yet.';
+  addMsg('ai', `🔎 I can review <strong>${esc(product)}</strong> against the patient profile. ${medLine} Ask me: <em>“Check ${esc(product)} against current meds”</em>.`, true, true);
+}
+
+function askDoctor(){
+  if(!latestScanData){
+    addMsg('ai', '⚠️ Scan something first so I can draft the right message.', true, false);
+    return;
+  }
+  const product = latestScanData.product_name || latestScanData.fileName || 'this supplement';
+  const patient = getPatientById(currentPatientId);
+  const doctor = patient?.primaryDoctor || 'the provider';
+  addMsg('ai', `✉️ Drafting a question for <strong>${esc(doctor)}</strong> about <strong>${esc(product)}</strong> and whether it is appropriate for this patient.`, true, true);
+}
+
+/* ACTION CARDS */
+function addCalendarCard(event){
+  const payload = encodeURIComponent(JSON.stringify(event));
+  const html = `
+    <div class="action-card calendar">
+      <div class="ac-title">📅 Add to Calendar?</div>
+      <div class="ac-body"><strong>${esc(event.title)}</strong><br/>${esc(event.date)} at ${esc(event.time || '09:00')} · ${esc(String(event.duration || 60))} min</div>
+      <div class="ac-btns">
+        <button class="ac-btn success" onclick="addToCalendar(JSON.parse(decodeURIComponent('${payload}')))">Add</button>
+        <button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button>
+      </div>
+    </div>
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+}
+
+function addCallCard(callReq){
+  const callId = `call-card-${Date.now()}`;
+  const html = `
+    <div class="action-card call" data-call-card="${callId}">
+      <div class="ac-title">📞 Confirm Phone Call</div>
+      <div class="ac-body">Call <strong>${esc(callReq.name)}</strong> at ${esc(callReq.phone || 'unknown')}<br/>Reason: ${esc(callReq.reason || 'Medical inquiry')}</div>
+      <div class="ac-btns">
+        <button class="ac-btn warn" data-dyn-action="confirm-call" data-card="${callId}">📞 Confirm Call</button>
+        <button class="ac-btn secondary" data-dyn-action="cancel-call" data-card="${callId}">Cancel</button>
+      </div>
+    </div>
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+
+  bindDynamicButton(`[data-dyn-action="confirm-call"][data-card="${callId}"]`, async (_e, btn) => {
+    removeCardsByData('call-card', callId);
+    await confirmCall();
+  });
+
+  bindDynamicButton(`[data-dyn-action="cancel-call"][data-card="${callId}"]`, async (_e, btn) => {
+    removeCardsByData('call-card', callId);
+    await cancelCall();
+  });
+}
+
+function addEmailActionCard(){
+  const emailId = `email-card-${Date.now()}`;
+  const html = `
+    <div class="action-card email" data-email-card="${emailId}">
+      <div class="ac-title">✉️ Email Draft Ready</div>
+      <div class="ac-body">Your email draft is ready. Send it now?</div>
+      <div class="ac-btns">
+        <button class="ac-btn primary" data-dyn-action="send-email" data-card="${emailId}">📤 Send</button>
+        <button class="ac-btn secondary" data-dyn-action="save-email" data-card="${emailId}">Save Draft</button>
+      </div>
+    </div>
+  `;
+  ['chatArea','chatAreaDesktop'].forEach(areaId => {
+    const area = document.getElementById(areaId);
+    if (area) {
+      area.insertAdjacentHTML('beforeend', html);
+      area.scrollTop = area.scrollHeight;
+    }
+  });
+
+  bindDynamicButton(`[data-dyn-action="send-email"][data-card="${emailId}"]`, async (_e, btn) => {
+    removeCardsByData('email-card', emailId);
+    await sendDraftEmail(btn);
+  });
+
+  bindDynamicButton(`[data-dyn-action="save-email"][data-card="${emailId}"]`, async () => {
+    removeCardsByData('email-card', emailId);
+    addMsg('ai', 'Email draft saved.', true, false);
+  });
+}
+
+function removeClosestCard(btn){
+  const card = btn.closest('.action-card');
+  if (!card) return;
+  const attr = [...card.attributes].find(a => a.name.startsWith('data-'));
+  if (attr) {
+    const dataName = attr.name.replace('data-','');
+    removeCardsByData(dataName, attr.value);
+  } else {
+    card.remove();
+  }
+}
+
+function removeCardsByData(attrName, value){
+  document.querySelectorAll(`[data-${attrName}="${value}"]`).forEach(el => el.remove());
+}
+
+function bindDynamicButton(selector, handler){
+  document.querySelectorAll(selector).forEach(el => {
+    let fired = false;
+    const wrapped = async (e) => {
+      if (fired) return;
+      fired = true;
+      e.preventDefault();
+      e.stopPropagation();
+      try { await handler(e, el); }
+      finally { setTimeout(() => { fired = false; }, 200); }
+    };
+    el.addEventListener('click', wrapped);
+    el.addEventListener('touchend', wrapped, { passive:false });
+  });
+}
+
+async function confirmCall(){
+  try{
+    const data = await api('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ message:'confirm call', patientId:currentPatientId, model:MODEL_NAME })
+    });
+    addMsg('ai', formatAssistantText(data.reply || 'Call confirmed.'), true, true);
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function cancelCall(){
+  try{
+    await api('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ message:'cancel call', patientId:currentPatientId, model:MODEL_NAME })
+    });
+    addMsg('ai', 'Call cancelled.', true, false);
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function sendDraftEmail(){
+  try{
+    let data;
+    try{
+      data = await api('/api/send-email', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ patientId:currentPatientId, model:MODEL_NAME })
+      });
+    }catch(_err){
+      data = await api('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ message:'send', patientId:currentPatientId, model:MODEL_NAME })
+      });
+    }
+    addMsg('ai', formatAssistantText(data.reply || data.message || 'Email sent.'), true, true);
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+/* FILE UPLOAD */
+function triggerUpload(){
+  document.getElementById('fileInput')?.click();
+}
+
+async function handleFileUpload(input){
+  const file = input.files?.[0];
+  if(!file) return;
+
+  const pending = document.getElementById('uploadPending');
+  document.getElementById('uploadFileName').textContent = `Processing: ${file.name}`;
+  pending.classList.add('show');
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('model', MODEL_NAME);
+
+  try{
+    const res = await fetch('/api/upload', { method:'POST', body:formData });
+    const data = await res.json().catch(() => ({}));
+
+    if(!res.ok){
+      throw new Error(data.error || `Upload failed (${res.status})`);
+    }
+
+    pending.classList.remove('show');
+
+    if(data.pending){
+      renderScanCard(data.extracted || {}, file.name);
+      setMobileState('chat');
+    } else {
+      saveRecentUpload({
+        name: file.name,
+        title: file.name,
+        type: 'upload',
+        at: new Date().toISOString(),
+        patientId: currentPatientId
+      });
+      updateDashboard();
+      addMsg('ai', `📄 ${esc(data.message || 'Upload complete.')}`, true, false);
+    }
+  }catch(e){
+    pending.classList.remove('show');
+    addMsg('ai', `❌ Upload error: ${esc(e.message)}`, true, false);
+  }finally{
+    input.value = '';
+  }
+}
+
+/* VOICE / EMAIL */
+async function startVoiceCall(){
+  const patient = getPatientById(currentPatientId);
+  let phone = patient?.phone || prompt('Enter phone number to call:');
+  if(!phone) return;
+
+  phone = normalizeUSPhone(phone);
+
+  try{
+    const data = await api('/api/call', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ phone, reason:'Health check call', patientId:currentPatientId, model:MODEL_NAME })
+    });
+
+    addMsg('ai', `📞 Call initiated! ID: ${esc(data.id || 'started')}. Status: ${esc(data.status || 'connecting...')}`, true, false);
+  }catch(e){
+    addMsg('ai', `❌ Call failed: ${esc(e.message)}`, true, false);
+  }
+}
+
+function startEmailSend(){
+  const patientName = getPatientById(currentPatientId)?.name || 'the patient';
+  setMobileState('chat');
+  qa(`Draft an email to Dr. Martinez about ${patientName}'s recent lab results`);
+}
+
+/* SIDEBAR */
+function toggleSidebar(){
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebarOverlay')?.classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('show');
+}
+
+/* TASKS */
+async function openTaskPanel(){
+  document.getElementById('taskPanel')?.classList.add('open');
+  document.getElementById('taskPanelOverlay').style.display = 'block';
+  closeSidebar();
+  closeMenuSheet();
+  lockBody();
+  await loadTasks();
+}
+
+function closeTaskPanel(){
+  document.getElementById('taskPanel')?.classList.remove('open');
+  document.getElementById('taskPanelOverlay').style.display = 'none';
+  unlockBody();
+}
+
+async function loadTasks(){
+  try{
+    const data = await api(`/api/tasks?patientId=${encodeURIComponent(currentPatientId || '')}`);
+    allTasks = data.tasks || [];
+    renderTasks();
+    updateTaskBadge();
+    updateDashboard();
+  }catch(e){
+    console.error('loadTasks', e);
+  }
+}
+
+function setTaskFilter(status, btn){
+  taskFilter = status;
+  document.querySelectorAll('.task-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks(){
+  const today = new Date().toISOString().split('T')[0];
+  let tasks = taskFilter === 'all' ? [...allTasks] : allTasks.filter(t => t.status === taskFilter);
+
+  tasks.sort((a,b) => {
+    const p = { high:0, medium:1, low:2 };
+    if(a.status === 'done' && b.status !== 'done') return 1;
+    if(b.status === 'done' && a.status !== 'done') return -1;
+    const priorityDiff = (p[a.priority] ?? 1) - (p[b.priority] ?? 1);
+    if(priorityDiff !== 0) return priorityDiff;
+    if(a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    return 0;
+  });
+
+  const container = document.getElementById('taskList');
+  if(!container) return;
+
+  if(!tasks.length){
+    container.innerHTML = `<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">${taskFilter === 'done' ? '🎉 No completed tasks' : '✅ No tasks here'}</div>`;
+    return;
+  }
+
+  const ci = { appointment:'📅', medication:'💊', insurance:'🛡️', general:'📌' };
+
+  container.innerHTML = tasks.map(t => {
+    const overdue = t.dueDate && t.dueDate < today && t.status !== 'done';
+    const ds = t.dueDate ? formatTaskDate(t.dueDate) : '';
+    return `
+      <div class="task-item ${t.status === 'done' ? 'done' : ''}" data-id="${esc(t.id)}">
+        <div class="ti-head">
+          <input type="checkbox" class="task-checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleTaskDone('${esc(t.id)}',this.checked)" />
+          <span class="t-title ${t.status === 'done' ? 'done' : ''}">${ci[t.category] || '📌'} ${esc(t.title)}</span>
+        </div>
+        ${t.description ? `<div class="t-desc">${esc(t.description)}</div>` : ''}
+        <div class="t-meta">
+          ${ds ? `<span class="t-due ${overdue ? 'ov' : ''}">${overdue ? '⚠️ ' : '📅 '}${ds}</span>` : ''}
+          <span class="t-pri pri-${esc(t.priority || 'medium')}">${esc(t.priority || 'medium')}</span>
+        </div>
+        <div class="t-acts">
+          ${t.status === 'pending' ? `<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','in-progress')">▶ Start</button>` : ''}
+          ${t.status === 'in-progress' ? `<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','pending')">⏸ Pause</button>` : ''}
+          <button class="t-act del" onclick="deleteTask('${esc(t.id)}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateTaskBadge(){
+  const pending = allTasks.filter(t => t.status !== 'done').length;
+  const badge = document.getElementById('taskBadge');
+  if(badge){
+    badge.textContent = String(pending);
+    badge.style.display = pending > 0 ? 'inline' : 'none';
+  }
+}
+
+async function toggleTaskDone(id, checked){
+  try{
+    await api(`/api/tasks/${encodeURIComponent(id)}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ status: checked ? 'done' : 'pending', model:MODEL_NAME })
+    });
+    await loadTasks();
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function setTaskStatus(id, status){
+  try{
+    await api(`/api/tasks/${encodeURIComponent(id)}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ status, model:MODEL_NAME })
+    });
+    await loadTasks();
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function deleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  try{
+    await api(`/api/tasks/${encodeURIComponent(id)}`, { method:'DELETE' });
+    allTasks = allTasks.filter(t => t.id !== id);
+    renderTasks();
+    updateTaskBadge();
+    updateDashboard();
+  }catch(e){
+    addMsg('ai', `❌ ${esc(e.message)}`, true, false);
+  }
+}
+
+async function saveTask(){
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title){ alert('Title is required'); return; }
+
+  try{
+    await api('/api/tasks/add', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        title,
+        description: document.getElementById('taskDesc').value.trim(),
+        dueDate: document.getElementById('taskDue').value,
+        priority: document.getElementById('taskPriority').value,
+        category: document.getElementById('taskCategory').value,
+        patientId: currentPatientId,
+        model:MODEL_NAME
+      })
+    });
+
+    closeAddTask();
+    await loadTasks();
+  }catch(e){
+    alert(`Error: ${e.message}`);
+  }
+}
+</script>
+</body>
+</html>
