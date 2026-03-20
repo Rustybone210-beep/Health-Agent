@@ -201,6 +201,10 @@ YOUR CAPABILITIES:
 6. CALENDAR - Detect appointment dates and suggest adding to Google Calendar (use CALENDAR_EVENT format)
 7. MEDICATION MANAGEMENT - Track meds, check interactions, refill reminders
 8. INSURANCE TRACKING - Track claims, denials, appeals
+9. PROVIDER FINDER - Help find doctors who accept specific insurance plans. When user asks to find a doctor, respond with:
+PROVIDER_SEARCH:{"insurance":"Insurance Name","specialty":"Doctor Type","location":"City, State"}
+The system will return search links from Zocdoc, Healthgrades, and Google.
+10. MEDICATION TRACKER - Track all medications with doses, refill dates, pharmacy, prescriber, and Rx numbers. Flag upcoming refills. Check for common drug interactions.
 9. MEDICAL TRANSLATION - Explain medical jargon in plain English
 10. APPOINTMENT PREP - Checklists and questions to ask
 CALL_REQUEST FORMAT: When user asks to call someone, respond with:
@@ -462,13 +466,14 @@ app.post('/api/chat', async (req, res) => {
           pendingCallRequest.phone = normalizeUSPhone(pendingCallRequest.phone);
         }
         return res.json({
-          reply: reply.replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
+          reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
           callRequest: pendingCallRequest
         });
       } catch (e) {
         console.log('Call request parse error:', e.message);
       }
     }
+    const provMatch = reply.match(/PROVIDER_SEARCH:(\{[\s\S]*?\})/);let providerLinks=null;if(provMatch){try{const pData=JSON.parse(provMatch[1]);const{buildProviderSearchURL}=require("./tools/insurance");providerLinks=buildProviderSearchURL(pData.insurance,pData.specialty,pData.location)}catch(e){}}
     const calMatch = reply.match(/CALENDAR_EVENT:(\{[\s\S]*?\})/);
     let calendarEvent = null;
     if (calMatch) {
@@ -486,10 +491,10 @@ app.post('/api/chat', async (req, res) => {
       );
     }
     res.json({
-      reply: reply.replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
+      reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
       calendarEvent,
       hasPendingEmail: !!pendingEmailDraft,
-      hasPendingCall: !!pendingCallRequest
+      hasPendingCall: !!pendingCallRequest,providerLinks
     });
   } catch (e) {
     console.error('Chat error:', e.message);

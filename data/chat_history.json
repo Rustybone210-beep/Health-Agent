@@ -1,6 +1,210 @@
 {
   "sessions": [
     {
+      "id": "1773978727812",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:52:07.812Z",
+      "preview": "ind me a cardiologist who accepts Blue Cross Blue Shield in ",
+      "messages": [
+        {
+          "role": "user",
+          "content": "ind me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist in San Antonio who accepts Blue Cross Blue Shield insurance.\n\n\n\nWhile the system searches for cardiologist options, here are some additional steps you can take to find the right cardiologist:\n\n## **Next Steps:**\n\n1. **Check Your Specific Plan** - Blue Cross Blue Shield has many different plan types (PPO, HMO, etc.), so you'll want to verify the cardiologist accepts your specific plan variation\n\n2. **Get a Referral** - Contact Dr. Martinez at Alamo Heights Family Medicine to discuss whether you need a referral for cardiology care and if they have preferred cardiologists they work with\n\n3. **Consider Your Needs** - Think about whether you need:\n   - General cardiology consultation\n   - Specific subspecialty (like interventional cardiology, electrophysiology, etc.)\n   - Hospital affiliation preference (Methodist Hospital where you prefer to receive care)\n\n4. **Verify Coverage** - Once you find potential cardiologists, call Blue Cross Blue Shield member services to confirm:\n   - The doctor is in-network\n   - Your copay amount\n   - If prior authorization is needed\n\nWould you like me to help you call Dr. Martinez's office to discuss a cardiology referral, or do you have a specific heart concern you'd like to address with the cardiologist?"
+        }
+      ]
+    },
+    {
+      "id": "1773978697810",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:51:37.810Z",
+      "preview": "ind me a cardiologist who accepts Blue Cross Blue Shield in ",
+      "messages": [
+        {
+          "role": "user",
+          "content": "ind me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist in San Antonio who accepts Blue Cross Blue Shield insurance.\n\n\n\nWhile the system searches for cardiologist options, here are some additional steps you can take to find the right cardiologist:\n\n## **Next Steps:**\n\n1. **Check Your Specific Plan** - Blue Cross Blue Shield has many different plan types (PPO, HMO, etc.), so you'll want to verify the cardiologist accepts your specific plan variation\n\n2. **Get a Referral** - Contact Dr. Martinez at Alamo Heights Family Medicine to discuss whether you need a referral for cardiology care and if they have preferred cardiologists they work with\n\n3. **Consider Your Needs** - Think about whether you need:\n   - General cardiology consultation\n   - Specific subspecialty (like interventional cardiology, electrophysiology, etc.)\n   - Hospital affiliation preference (Methodist Hospital where you prefer to receive care)\n\n4. **Verify Coverage** - Once you find potential cardiologists, call Blue Cross Blue Shield member services to confirm:\n   - The doctor is in-network\n   - Your copay amount\n   - If prior authorization is needed\n\nWould you like me to help you call Dr. Martinez's office to discuss a cardiology referral, or do you have a specific heart concern you'd like to address with the cardiologist?"
+        }
+      ]
+    },
+    {
+      "id": "1773978667808",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:51:07.808Z",
+      "preview": "ind me a cardiologist who accepts Blue Cross Blue Shield in ",
+      "messages": [
+        {
+          "role": "user",
+          "content": "ind me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist in San Antonio who accepts Blue Cross Blue Shield insurance.\n\n\n\nWhile the system searches for cardiologist options, here are some additional steps you can take to find the right cardiologist:\n\n## **Next Steps:**\n\n1. **Check Your Specific Plan** - Blue Cross Blue Shield has many different plan types (PPO, HMO, etc.), so you'll want to verify the cardiologist accepts your specific plan variation\n\n2. **Get a Referral** - Contact Dr. Martinez at Alamo Heights Family Medicine to discuss whether you need a referral for cardiology care and if they have preferred cardiologists they work with\n\n3. **Consider Your Needs** - Think about whether you need:\n   - General cardiology consultation\n   - Specific subspecialty (like interventional cardiology, electrophysiology, etc.)\n   - Hospital affiliation preference (Methodist Hospital where you prefer to receive care)\n\n4. **Verify Coverage** - Once you find potential cardiologists, call Blue Cross Blue Shield member services to confirm:\n   - The doctor is in-network\n   - Your copay amount\n   - If prior authorization is needed\n\nWould you like me to help you call Dr. Martinez's office to discuss a cardiology referral, or do you have a specific heart concern you'd like to address with the cardiologist?"
+        }
+      ]
+    },
+    {
+      "id": "1773978637809",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:50:37.809Z",
+      "preview": "ind me a cardiologist who accepts Blue Cross Blue Shield in ",
+      "messages": [
+        {
+          "role": "user",
+          "content": "ind me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist in San Antonio who accepts Blue Cross Blue Shield insurance.\n\n\n\nWhile the system searches for cardiologist options, here are some additional steps you can take to find the right cardiologist:\n\n## **Next Steps:**\n\n1. **Check Your Specific Plan** - Blue Cross Blue Shield has many different plan types (PPO, HMO, etc.), so you'll want to verify the cardiologist accepts your specific plan variation\n\n2. **Get a Referral** - Contact Dr. Martinez at Alamo Heights Family Medicine to discuss whether you need a referral for cardiology care and if they have preferred cardiologists they work with\n\n3. **Consider Your Needs** - Think about whether you need:\n   - General cardiology consultation\n   - Specific subspecialty (like interventional cardiology, electrophysiology, etc.)\n   - Hospital affiliation preference (Methodist Hospital where you prefer to receive care)\n\n4. **Verify Coverage** - Once you find potential cardiologists, call Blue Cross Blue Shield member services to confirm:\n   - The doctor is in-network\n   - Your copay amount\n   - If prior authorization is needed\n\nWould you like me to help you call Dr. Martinez's office to discuss a cardiology referral, or do you have a specific heart concern you'd like to address with the cardiologist?"
+        }
+      ]
+    },
+    {
+      "id": "1773978607441",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:50:07.441Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978607434",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:50:07.434Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978559601",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:49:19.601Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978411074",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:46:51.074Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978341601",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:45:41.601Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978300025",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:45:00.025Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978269929",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:44:29.929Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978239926",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:43:59.926Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll help you find a cardiologist who accepts Blue Cross Blue Shield in San Antonio.\n\nPROVIDER_SEARCH:{\"insurance\":\"Blue Cross Blue Shield\",\"specialty\":\"Cardiologist\",\"location\":\"San Antonio, Texas\"}\n\nWhile the system searches for cardiologists, here are some additional steps you can take:\n\n**Immediate Actions:**\n1. **Call Blue Cross Blue Shield** member services to get a list of in-network cardiologists\n   - Look for the member services number on your insurance card\n   - Ask specifically for cardiologists in San Antonio with current availability\n\n2. **Get a referral** from Dr. Martinez at Alamo Heights Family Medicine\n   - Many cardiologists prefer or require referrals\n   - Dr. Martinez may have preferred cardiologists they work with regularly\n\n**Questions to Ask When Calling Cardiology Offices:**\n- \"Do you accept Blue Cross Blue Shield insurance?\"\n- \"What is the earliest available appointment?\"\n- \"Do you need a referral from my primary care doctor?\"\n- \"What should I bring to my first appointment?\"\n\n**Next Steps:**\n1. Review the search results when they appear\n2. Call 2-3 offices to compare availability\n3. Verify insurance coverage before scheduling\n4. Request referral from Dr. Martinez if needed\n\nWould you like me to help you prepare questions for the cardiologist once you find one, or do you need help with getting a referral from your current doctor?"
+        }
+      ]
+    },
+    {
+      "id": "1773978209923",
+      "patientId": "maria-fields",
+      "timestamp": "2026-03-20T03:43:29.923Z",
+      "preview": "Find me a cardiologist who accepts Blue Cross Blue Shield in",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me a cardiologist who accepts Blue Cross Blue Shield in San Antonio"
+        }
+      ]
+    },
+    {
       "id": "1773632139420",
       "patientId": "maria-fields",
       "timestamp": "2026-03-16T03:35:39.420Z",
@@ -580,214 +784,6 @@
       "id": "1773534876612",
       "patientId": "maria-fields",
       "timestamp": "2026-03-15T00:34:36.612Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534846612",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:34:06.612Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534816612",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:33:36.612Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534786611",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:33:06.611Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534756607",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:32:36.607Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534726612",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:32:06.612Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534696603",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:31:36.603Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534666602",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:31:06.602Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534636601",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:30:36.601Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534606603",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:30:06.603Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534576602",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:29:36.602Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534546596",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:29:06.596Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534516594",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:28:36.594Z",
-      "preview": "call and make an appointment on march 23 for 3:30pm at touch",
-      "messages": [
-        {
-          "role": "user",
-          "content": "call and make an appointment on march 23 for 3:30pm at touchstone imaging 12103157759"
-        },
-        {
-          "role": "assistant",
-          "content": "I'll help you call Touchstone Imaging to schedule that appointment for March 23rd at 3:30pm.\n\n\n\n**What the AI agent will say on the call:**\n\n\"Hello, I'm calling on behalf of Linda Fields, DOB 11/03/1952, to schedule an imaging appointment. We'd like to request March 23rd at 3:30pm if possible.\n\nPatient information:\n- Name: Linda Fields  \n- DOB: 11/03/1952\n- Insurance: Medicare + Aetna Medicare Supplement Plan G\n- Member ID: 6VG3-TR1-TK42\n- Address: 13203 Sunset Meadow, San Antonio TX 78258\n\nCould you please let me know:\n1. If March 23rd at 3:30pm is available?\n2. What type of imaging study this is for?\n3. Any prep instructions needed?\n4. Should we expect any prior authorization requirements?\n5. What's the confirmation number once scheduled?\"\n\n**Would you like me to proceed with this call?** \n\nAlso, could you let me know what type of imaging study this is for (CT, MRI, ultrasound, etc.)? This will help ensure we get all the right information during the scheduling call."
-        }
-      ]
-    },
-    {
-      "id": "1773534486591",
-      "patientId": "maria-fields",
-      "timestamp": "2026-03-15T00:28:06.591Z",
       "preview": "call and make an appointment on march 23 for 3:30pm at touch",
       "messages": [
         {
