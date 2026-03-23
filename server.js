@@ -1197,6 +1197,69 @@ app.get("/api/insurance/match-current", (_req, res) => {
   }
 });
 
+// ─── Auth System ─────────────────────────────────────────
+const auth = require("./tools/auth");
+app.get("/login", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+    if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+    const user = await auth.registerUser({ email, password, name });
+    res.json({ success: true, user });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await auth.loginWithPassword(email, password);
+    res.json(result);
+  } catch (e) {
+    res.status(401).json({ error: e.message });
+  }
+});
+app.get("/api/auth/verify", (req, res) => {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  const session = auth.validateSession(token);
+  if (!session) return res.status(401).json({ error: "Invalid session" });
+  res.json({ valid: true, session });
+});
+app.post("/api/auth/logout", (req, res) => {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  auth.logout(token);
+  res.json({ success: true });
+});
+app.get("/api/auth/biometric-challenge", (_req, res) => {
+  const crypto = require("crypto");
+  const challenge = crypto.randomBytes(32).toString("base64");
+  res.json({ challenge });
+});
+app.post("/api/auth/biometric-login", (req, res) => {
+  try {
+    const { credentialId } = req.body;
+    const result = auth.loginWithBiometric(credentialId);
+    res.json(result);
+  } catch (e) {
+    res.status(401).json({ error: e.message });
+  }
+});
+app.post("/api/auth/biometric-register", (req, res) => {
+  try {
+    const token = (req.headers.authorization || "").replace("Bearer ", "");
+    const session = auth.validateSession(token);
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const { credentialId } = req.body;
+    auth.registerBiometric(session.userId, credentialId);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (_req, res) => {
   // Auto-redirect to onboarding if no patients exist

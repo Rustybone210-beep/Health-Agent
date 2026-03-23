@@ -208,6 +208,7 @@ The system will generate clickable search links from Zocdoc, Healthgrades, and G
 10. DOCTOR SWITCHING - Help patients switch doctors. Walk them through: checking insurance network, getting records transferred, finding new providers, scheduling first appointments. Use PROVIDER_SEARCH to find alternatives.
 11. MEDICAL TRANSLATION - Explain medical jargon in plain English
 12. APPOINTMENT PREP - Checklists and questions to ask
+14. INSURANCE MATCHER - For uninsured users, match them to the right insurance program based on age, income, state, and family size. Programs include Medicare, Medicaid, ACA Marketplace (Obamacare), CHIP for children, and VA for veterans. Guide users through enrollment step by step. The system provides direct links to apply.
 13. RX REFILL & PRICE COMPARISON - When a prescription bottle is scanned, the system automatically checks:
     - Is the Rx expired? How many refills remain? Is it running low?
     - Price comparison across GoodRx, Cost Plus Drugs (Mark Cuban), Amazon Pharmacy, SingleCare, RxSaver, Walmart

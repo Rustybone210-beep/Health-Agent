@@ -1,0 +1,15 @@
+[
+  {
+    "id": "e1ac3d21-5384-44ee-9813-db0526767fa7",
+    "email": "test@example.com",
+    "password": "$2b$12$JFw9lrUygj9Zun0WEzS5eemiZMXH21nTKsUcJf5OZB7Dvz7auuxpS",
+    "name": "Test User",
+    "role": "caregiver",
+    "biometricEnabled": false,
+    "biometricCredentialId": null,
+    "createdAt": 1774279098097,
+    "lastLogin": 1774279098293,
+    "tier": "free",
+    "patientsAllowed": 1
+  }
+]

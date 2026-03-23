@@ -1,0 +1,10 @@
+{
+  "ee33d2f0-8ccd-4ea3-9144-8707e003256a": {
+    "userId": "e1ac3d21-5384-44ee-9813-db0526767fa7",
+    "email": "test@example.com",
+    "name": "Test User",
+    "role": "caregiver",
+    "tier": "free",
+    "createdAt": 1774279098293
+  }
+}
