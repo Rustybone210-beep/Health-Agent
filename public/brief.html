@@ -1,117 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Doctor Brief</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body{
-      font-family:Arial, sans-serif;
-      background:#f5f6fb;
-      padding:30px;
-      margin:0;
-      color:#111827;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:24px;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      text-decoration:none;
-      background:#ffffff;
-      color:#111827;
-      border:1px solid #d1d5db;
-      padding:10px 14px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:14px;
-    }
-    .box{
-      background:white;
-      padding:20px;
-      border-radius:10px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.06);
-    }
-    h1,h2,h3{
-      margin-top:0;
-    }
-    .muted{
-      color:#6b7280;
-      font-size:14px;
-    }
-    @media print {
-      .topbar { display:none; }
-      body { background:white; padding:0; }
-      .box { box-shadow:none; border:none; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+<title>Doctor Brief — Health Agent</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#ffffff;--bg2:#f2f2f7;--surface:#ffffff;--surface-2:#f2f2f7;--border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);--text:#1c1c1e;--text2:#6e6e73;--text3:#aeaeb2;--teal:#34c759;--accent:#0b93f6;--danger:#ff3b30;--warn:#ff9500;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);--sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;--serif:'Source Serif 4',Georgia,serif}
+@media(prefers-color-scheme:dark){:root{--bg:#000000;--bg2:#1c1c1e;--surface:#1c1c1e;--surface-2:#2c2c2e;--border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.14);--text:#f2f2f7;--text2:#8e8e93;--text3:#48484a;--teal:#30d158;--accent:#0a84ff}}
+html,body{min-height:100dvh;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.page{max-width:640px;margin:0 auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 16px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px}
+.topbar h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.actions{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;font-family:var(--sans)}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+
+/* Brief card */
+.brief{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.brief-header{padding:20px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:14px}
+.brief-logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--teal),#248a3d);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.brief-header-text h2{font-size:20px;font-weight:700;letter-spacing:-0.02em}
+.brief-header-text p{font-size:13px;color:var(--text2);margin-top:2px}
+.brief-body{padding:20px}
+.section{margin-bottom:20px}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-item{background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.info-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:3px}
+.info-value{font-size:14px;font-weight:500}
+.info-item.full{grid-column:1/-1}
+.pill-row{display:flex;flex-wrap:wrap;gap:5px}
+.pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.pill-teal{background:rgba(52,199,89,0.1);border:1px solid rgba(52,199,89,0.2);color:var(--teal)}
+.pill-red{background:rgba(255,59,48,0.08);border:1px solid rgba(255,59,48,0.15);color:var(--danger)}
+.pill-gold{background:rgba(255,149,0,0.08);border:1px solid rgba(255,149,0,0.15);color:var(--warn)}
+.med-row{background:var(--surface-2);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.med-name{font-size:14px;font-weight:600}
+.med-detail{font-size:12px;color:var(--text2);margin-top:2px}
+.tl-item{padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.tl-item:last-child{border-bottom:none}
+.tl-date{font-size:11px;font-weight:600;color:var(--accent)}
+.task-item{padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;display:flex;align-items:center;gap:8px}
+.task-item:last-child{border-bottom:none}
+.task-pri{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pri-h{background:var(--danger)}
+.pri-m{background:var(--warn)}
+.pri-l{background:var(--teal)}
+.brief-footer{padding:16px 20px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3);text-align:center}
+.none{color:var(--text3);font-size:13px;font-style:italic}
+.interaction-warn{background:rgba(255,59,48,0.04);border:1px solid rgba(255,59,48,0.12);border-radius:10px;padding:10px 12px;margin-top:8px}
+.ix-title{font-size:12px;font-weight:600;color:var(--danger);margin-bottom:4px}
+.ix-text{font-size:12px;color:var(--text2);line-height:1.5}
+
+@media print{
+  .topbar{display:none}
+  body{background:#fff;color:#000}
+  .brief{border:none;box-shadow:none}
+  .brief-header{background:#f8f8f8}
+  .pill-teal,.pill-red,.pill-gold{border-color:#ccc}
+}
+</style>
 </head>
-
 <body>
-
+<div class="page">
   <div class="topbar">
-    <h1>Doctor Visit Summary</h1>
+    <h1>📋 Doctor Brief</h1>
     <div class="actions">
-      <a class="btn" href="/">← Back to Dashboard</a>
-      <button class="btn" onclick="window.print()">Print</button>
+      <a class="btn" href="/">← Back</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
     </div>
   </div>
+  <div id="brief"><div style="text-align:center;padding:40px;color:var(--text3)">Loading brief...</div></div>
+</div>
+<script>
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+async function load(){
+  try{
+    const[briefRes,medsRes]=await Promise.all([fetch('/api/brief'),fetch('/api/medications')]);
+    const data=await briefRes.json();
+    const medsData=await medsRes.json().catch(()=>({interactions:[]}));
+    const p=data.patient||{};
+    const now=new Date();
+    const dateStr=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+    const interactions=medsData.interactions||[];
 
-  <div class="box" id="brief">Loading brief...</div>
-
-  <script>
-    function escapeHtml(str){
-      if(!str) return '';
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
-    }
-
-    async function loadBrief(){
-      try{
-        const res = await fetch('/api/brief');
-        const data = await res.json();
-        const p = data.patient || {};
-
-        document.getElementById("brief").innerHTML = `
-          <h2>${escapeHtml(p.name || '')}</h2>
-          <p class="muted">DOB: ${escapeHtml(p.dob || '')}</p>
-          <p class="muted">Primary Doctor: ${escapeHtml(p.primaryDoctor || '')}</p>
-          <p class="muted">Insurance: ${escapeHtml((p.insurance && p.insurance.primary) || '')}</p>
-
-          <h3>Conditions</h3>
-          <ul>${(p.conditions || []).map(c => "<li>" + escapeHtml(c) + "</li>").join("") || "<li>None listed</li>"}</ul>
-
-          <h3>Allergies</h3>
-          <ul>${(p.allergies || []).map(a => "<li>" + escapeHtml(a) + "</li>").join("") || "<li>None listed</li>"}</ul>
-
-          <h3>Medications</h3>
-          <ul>${(p.medications || []).map(m => "<li>" + escapeHtml((m.name || '') + " " + (m.dose || '') + " " + (m.frequency || '')) + "</li>").join("") || "<li>None listed</li>"}</ul>
-
-          <h3>Recent Timeline</h3>
-          <ul>${(data.recentTimeline || []).map(e => "<li><strong>" + escapeHtml(e.date || '') + "</strong> — " + escapeHtml(e.title || '') + (e.summary ? " — " + escapeHtml(e.summary) : "") + "</li>").join("") || "<li>No recent events</li>"}</ul>
-
-          <h3>Open Tasks</h3>
-          <ul>${(data.openTasks || []).map(t => "<li>" + escapeHtml(t.title || '') + (t.dueDate ? " — due " + escapeHtml(t.dueDate) : "") + "</li>").join("") || "<li>No open tasks</li>"}</ul>
-        `;
-      } catch (err) {
-        document.getElementById("brief").innerHTML = "Error loading brief";
-      }
-    }
-
-    loadBrief();
-  </script>
-
+    document.getElementById('brief').innerHTML=`
+    <div class="brief">
+      <div class="brief-header">
+        <div class="brief-logo">HA</div>
+        <div class="brief-header-text">
+          <h2>${esc(p.name||'Patient')}</h2>
+          <p>Health Agent Brief — Generated ${esc(dateStr)}</p>
+        </div>
+      </div>
+      <div class="brief-body">
+        <div class="section">
+          <div class="section-title">👤 Patient Information</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${esc(p.dob||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Primary Doctor</div><div class="info-value">${esc(p.primaryDoctor||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Clinic</div><div class="info-value">${esc(p.clinic||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Preferred Hospital</div><div class="info-value">${esc(p.preferredHospital||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Insurance</div><div class="info-value">${esc(p.insurance?.primary||'—')}${p.insurance?.secondary?' + '+esc(p.insurance.secondary):''}</div></div>
+            <div class="info-item"><div class="info-label">Member ID</div><div class="info-value">${esc(p.insurance?.memberId||'—')}</div></div>
+            <div class="info-item full"><div class="info-label">Address</div><div class="info-value">${esc(p.address||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Pharmacy</div><div class="info-value">${esc(p.pharmacy?.name||'—')}</div></div>
+            <div class="info-item"><div class="info-label">Pharmacy Phone</div><div class="info-value">${esc(p.pharmacy?.phone||'—')}</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">🏥 Conditions</div>
+          ${(p.conditions||[]).length?`<div class="pill-row">${(p.conditions||[]).map(c=>`<span class="pill pill-gold">${esc(c)}</span>`).join('')}</div>`:'<div class="none">None listed</div>'}
+        </div>
+        <div class="section">
+          <div class="section-title">⚠️ Allergies</div>
+          ${(p.allergies||[]).length?`<div class="pill-row">${(p.allergies||[]).map(a=>`<span class="pill pill-red">${esc(a)}</span>`).join('')}</div>`:'<div class="none">None listed</div>'}
+        </div>
+        <div class="section">
+          <div class="section-title">💊 Current Medications</div>
+          ${(p.medications||[]).length?(p.medications||[]).map(m=>`<div class="med-row"><div class="med-name">${esc(m.name||'')}</div><div class="med-detail">${esc(m.dose||'')} · ${esc(m.frequency||'')}</div></div>`).join(''):'<div class="none">None listed</div>'}
+          ${interactions.length?interactions.map(ix=>`<div class="interaction-warn"><div class="ix-title">${ix.severity==='high'?'🔴':'🟡'} ${esc(ix.severity).toUpperCase()}: ${esc(ix.drug1)} + ${esc(ix.drug2)}</div><div class="ix-text">${esc(ix.description)}</div></div>`).join(''):''}
+        </div>
+        <div class="section">
+          <div class="section-title">🕐 Recent Timeline</div>
+          ${(data.recentTimeline||[]).length?(data.recentTimeline||[]).map(e=>`<div class="tl-item"><div class="tl-date">${esc(e.date||'')}</div><div>${esc(e.title||'')}${e.summary?' — '+esc(e.summary):''}</div></div>`).join(''):'<div class="none">No recent events</div>'}
+        </div>
+        <div class="section">
+          <div class="section-title">✅ Open Tasks</div>
+          ${(data.openTasks||[]).length?(data.openTasks||[]).map(t=>`<div class="task-item"><div class="task-pri pri-${t.priority==='high'?'h':t.priority==='low'?'l':'m'}"></div><div>${esc(t.title||'')}${t.dueDate?' — due '+esc(t.dueDate):''}</div></div>`).join(''):'<div class="none">No open tasks</div>'}
+        </div>
+      </div>
+      <div class="brief-footer">Generated by Health Agent · ${esc(dateStr)} · This is a caregiver reference document, not a medical record.</div>
+    </div>`;
+  }catch(e){document.getElementById('brief').innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">Error loading brief</div>'}
+}
+load();
+</script>
 </body>
 </html>

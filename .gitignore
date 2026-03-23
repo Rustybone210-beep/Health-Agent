@@ -4,3 +4,5 @@ uploads/
 drafts/
 data/patients.json
 node_modules/
+.encryption-key
+*.backup

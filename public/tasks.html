@@ -1,117 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Task Tracker</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body{
-      font-family:Arial, sans-serif;
-      background:#0e1426;
-      color:white;
-      padding:30px;
-      margin:0;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:24px;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .back{
-      color:white;
-      text-decoration:none;
-      background:#182040;
-      padding:10px 14px;
-      border-radius:10px;
-    }
-    .task{
-      background:#182040;
-      margin-bottom:10px;
-      padding:12px;
-      border-radius:8px;
-    }
-    button{
-      margin-top:8px;
-      background:#2c4da7;
-      color:white;
-      border:none;
-      border-radius:8px;
-      padding:8px 12px;
-      cursor:pointer;
-    }
-    .meta{
-      font-size:12px;
-      opacity:.8;
-      margin-top:6px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+<title>Tasks — Health Agent</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#ffffff;--bg2:#f2f2f7;--surface:#ffffff;--surface-2:#f2f2f7;--border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);--text:#1c1c1e;--text2:#6e6e73;--text3:#aeaeb2;--teal:#34c759;--accent:#0b93f6;--danger:#ff3b30;--warn:#ff9500;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);--sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#000000;--bg2:#1c1c1e;--surface:#1c1c1e;--surface-2:#2c2c2e;--border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.14);--text:#f2f2f7;--text2:#8e8e93;--text3:#48484a;--teal:#30d158;--accent:#0a84ff}}
+html,body{min-height:100dvh;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.page{max-width:640px;margin:0 auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 16px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px}
+.topbar h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.back{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none}
+.back:active{transform:scale(0.97)}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--sans)}
+.tab.active{background:rgba(11,147,246,0.08);border-color:rgba(11,147,246,0.2);color:var(--accent)}
+.tab:active{transform:scale(0.96)}
+.stat-row{display:flex;gap:8px;margin-bottom:20px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.stat-n{font-size:24px;font-weight:700}
+.stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+.task{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;transition:opacity 0.2s}
+.task.done{opacity:0.5}
+.task-head{display:flex;align-items:flex-start;gap:10px}
+.task-check{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.task-title{font-size:14px;font-weight:600;flex:1;line-height:1.4}
+.task-title.done{text-decoration:line-through;color:var(--text3)}
+.task-desc{font-size:12px;color:var(--text2);margin:4px 0 8px 28px;line-height:1.5}
+.task-meta{display:flex;gap:6px;align-items:center;margin-left:28px;flex-wrap:wrap}
+.task-due{font-size:11px;color:var(--text3)}
+.task-due.ov{color:var(--danger);font-weight:600}
+.task-pri{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.ph{background:rgba(255,59,48,0.08);color:var(--danger)}
+.pm{background:rgba(255,149,0,0.06);color:var(--warn)}
+.pl{background:rgba(52,199,89,0.06);color:var(--teal)}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
+</style>
 </head>
 <body>
-
+<div class="page">
   <div class="topbar">
-    <h1>Task Tracker</h1>
-    <a class="back" href="/">← Back to Dashboard</a>
+    <h1>✅ Tasks</h1>
+    <a class="back" href="/">← Back</a>
   </div>
-
-  <div id="tasks">Loading tasks...</div>
-
-  <script>
-    function escapeHtml(str){
-      if(!str) return '';
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
-    }
-
-    async function loadTasks(){
-      try{
-        const res = await fetch('/api/tasks');
-        const data = await res.json();
-
-        const el = document.getElementById("tasks");
-
-        if(!data.tasks || !data.tasks.length){
-          el.innerHTML = "No tasks";
-          return;
-        }
-
-        el.innerHTML = data.tasks.map(t => `
-          <div class="task">
-            <h3>${escapeHtml(t.title || 'Untitled Task')}</h3>
-            <p>${escapeHtml(t.description || "")}</p>
-            <div class="meta">
-              ${t.dueDate ? 'Due: ' + escapeHtml(t.dueDate) + ' • ' : ''}
-              ${escapeHtml(t.priority || 'medium')} •
-              ${escapeHtml(t.category || 'general')} •
-              ${escapeHtml(t.status || 'open')}
-            </div>
-            ${t.status === 'done'
-              ? ''
-              : `<button onclick="completeTask('${String(t.id).replace(/'/g, "\\'")}')">Complete</button>`
-            }
-          </div>
-        `).join("");
-      } catch (err) {
-        document.getElementById("tasks").innerHTML = "Error loading tasks";
-      }
-    }
-
-    async function completeTask(id){
-      try{
-        await fetch('/api/tasks/' + encodeURIComponent(id) + '/complete', { method: 'POST' });
-        loadTasks();
-      } catch (err) {
-        alert('Failed to complete task');
-      }
-    }
-
-    loadTasks();
-  </script>
-
+  <div class="stat-row" id="stats"></div>
+  <div class="tabs">
+    <button class="tab active" onclick="setFilter('all',this)">All</button>
+    <button class="tab" onclick="setFilter('pending',this)">Pending</button>
+    <button class="tab" onclick="setFilter('in-progress',this)">In Progress</button>
+    <button class="tab" onclick="setFilter('done',this)">Done</button>
+  </div>
+  <div id="taskList"><div class="empty">Loading...</div></div>
+</div>
+<script>
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+let tasks=[],filter='all';
+const icons={appointment:'📅',medication:'💊',insurance:'🛡️',records:'📄',general:'📌'};
+function fmtDate(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${months[parseInt(m,10)-1]} ${parseInt(d,10)}`}
+function setFilter(f,btn){filter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');render()}
+function render(){
+  const today=new Date().toISOString().split('T')[0];
+  let list=filter==='all'?[...tasks]:tasks.filter(t=>t.status===filter);
+  list.sort((a,b)=>{const p={high:0,medium:1,low:2};if(a.status==='done'&&b.status!=='done')return 1;if(b.status==='done'&&a.status!=='done')return-1;return(p[a.priority]??1)-(p[b.priority]??1)});
+  const el=document.getElementById('taskList');
+  if(!list.length){el.innerHTML=`<div class="empty">${filter==='done'?'No completed tasks yet':'No tasks here'}</div>`;return}
+  el.innerHTML=list.map(t=>{
+    const ov=t.dueDate&&t.dueDate<today&&t.status!=='done';
+    return`<div class="task ${t.status==='done'?'done':''}"><div class="task-head"><input type="checkbox" class="task-check" ${t.status==='done'?'checked':''} onchange="toggle('${esc(t.id)}',this.checked)"><span class="task-title ${t.status==='done'?'done':''}">${icons[t.category]||'📌'} ${esc(t.title)}</span></div>${t.description?`<div class="task-desc">${esc(t.description)}</div>`:''}<div class="task-meta">${t.dueDate?`<span class="task-due ${ov?'ov':''}">${ov?'⚠️ ':'📅 '}${fmtDate(t.dueDate)}</span>`:''}<span class="task-pri p${(t.priority||'m')[0]}">${esc(t.priority||'medium')}</span></div></div>`
+  }).join('');
+}
+function updateStats(){
+  const pending=tasks.filter(t=>t.status!=='done').length;
+  const high=tasks.filter(t=>t.priority==='high'&&t.status!=='done').length;
+  const done=tasks.filter(t=>t.status==='done').length;
+  document.getElementById('stats').innerHTML=`<div class="stat"><div class="stat-n">${pending}</div><div class="stat-l">Open</div></div><div class="stat"><div class="stat-n" style="color:var(--danger)">${high}</div><div class="stat-l">Urgent</div></div><div class="stat"><div class="stat-n" style="color:var(--teal)">${done}</div><div class="stat-l">Done</div></div>`;
+}
+async function toggle(id,checked){
+  try{await fetch(`/api/tasks/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:checked?'done':'pending'})});await load()}catch(e){console.error(e)}
+}
+async function load(){
+  try{const res=await fetch('/api/tasks');const data=await res.json();tasks=data.tasks||[];updateStats();render()}catch(e){document.getElementById('taskList').innerHTML='<div class="empty">Error loading tasks</div>'}
+}
+load();
+</script>
 </body>
 </html>

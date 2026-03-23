@@ -1,99 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Medical Timeline</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body{
-      font-family:Arial, sans-serif;
-      background:#0e1426;
-      color:white;
-      margin:0;
-      padding:30px;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:24px;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .back{
-      color:white;
-      text-decoration:none;
-      background:#182040;
-      padding:10px 14px;
-      border-radius:10px;
-    }
-    .item{
-      background:#182040;
-      margin-bottom:12px;
-      padding:14px;
-      border-radius:10px;
-    }
-    .date{
-      font-weight:bold;
-      color:#9fc1ff;
-      margin-bottom:6px;
-    }
-    .meta{
-      font-size:12px;
-      opacity:.8;
-      margin-top:8px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+<title>Medical Timeline — Health Agent</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#ffffff;--bg2:#f2f2f7;--surface:#ffffff;--surface-2:#f2f2f7;--border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);--text:#1c1c1e;--text2:#6e6e73;--text3:#aeaeb2;--teal:#34c759;--accent:#0b93f6;--danger:#ff3b30;--warn:#ff9500;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);--sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#000000;--bg2:#1c1c1e;--surface:#1c1c1e;--surface-2:#2c2c2e;--border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.14);--text:#f2f2f7;--text2:#8e8e93;--text3:#48484a;--teal:#30d158;--accent:#0a84ff}}
+html,body{min-height:100dvh;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.page{max-width:640px;margin:0 auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 16px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px}
+.topbar h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.back{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none}
+.back:active{transform:scale(0.97)}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:14px}
+.tl-item{display:flex;gap:14px;margin-bottom:4px}
+.tl-line{display:flex;flex-direction:column;align-items:center;width:20px;flex-shrink:0}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+.tl-stem{flex:1;width:2px;background:var(--border-2);margin-top:4px}
+.tl-item:last-child .tl-stem{display:none}
+.tl-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.tl-date{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.tl-title{font-size:15px;font-weight:600;margin-bottom:3px}
+.tl-summary{font-size:13px;color:var(--text2);line-height:1.5}
+.tl-meta{font-size:11px;color:var(--text3);margin-top:6px}
+.tl-type{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;background:var(--surface-2);border:1px solid var(--border);margin-right:6px}
+</style>
 </head>
 <body>
-
+<div class="page">
   <div class="topbar">
-    <h1>Medical Timeline</h1>
-    <a class="back" href="/">← Back to Dashboard</a>
+    <h1>🕐 Medical Timeline</h1>
+    <a class="back" href="/">← Back</a>
   </div>
-
-  <div id="timeline">Loading timeline...</div>
-
-  <script>
-    function escapeHtml(str){
-      if(!str) return '';
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
-    }
-
-    async function loadTimeline(){
-      try{
-        const res = await fetch('/api/timeline');
-        const data = await res.json();
-
-        const el = document.getElementById('timeline');
-
-        if(!data.events || !data.events.length){
-          el.innerHTML = "No timeline events yet";
-          return;
-        }
-
-        el.innerHTML = data.events.map(e => `
-          <div class="item">
-            <div class="date">${escapeHtml(e.date || '')}</div>
-            <h3>${escapeHtml(e.title || 'Medical Event')}</h3>
-            <p>${escapeHtml(e.summary || '')}</p>
-            <div class="meta">
-              ${escapeHtml(e.type || 'event')}
-              ${e.source ? ' • Source: ' + escapeHtml(e.source) : ''}
-            </div>
-          </div>
-        `).join("");
-      } catch (err) {
-        document.getElementById('timeline').innerHTML = 'Error loading timeline';
-      }
-    }
-
-    loadTimeline();
-  </script>
-
+  <div id="timeline"><div class="empty">Loading...</div></div>
+</div>
+<script>
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+async function load(){
+  try{
+    const res=await fetch('/api/timeline');
+    const data=await res.json();
+    const el=document.getElementById('timeline');
+    if(!data.events?.length){el.innerHTML='<div class="empty">No timeline events yet. Upload documents or chat to build your timeline.</div>';return}
+    const icons={document:'📄',appointment:'📅',medication:'💊',lab:'🔬',insurance:'🛡️',call:'📞',email:'✉️'};
+    el.innerHTML=data.events.map(e=>`<div class="tl-item"><div class="tl-line"><div class="tl-dot"></div><div class="tl-stem"></div></div><div class="tl-card"><div class="tl-date">${esc(e.date||'')}</div><div class="tl-title">${icons[e.type]||'📌'} ${esc(e.title||'Event')}</div>${e.summary?`<div class="tl-summary">${esc(e.summary)}</div>`:''}<div class="tl-meta"><span class="tl-type">${esc(e.type||'event')}</span>${e.source?esc(e.source):''}</div></div></div>`).join('');
+  }catch(e){document.getElementById('timeline').innerHTML='<div class="empty">Error loading timeline</div>'}
+}
+load();
+</script>
 </body>
 </html>

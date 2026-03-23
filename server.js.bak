@@ -22,6 +22,7 @@ const appointmentsTools = require('./tools/appointments');
 const medicationsTools = require('./tools/medications');
 const tasksTools = require('./tools/tasks');
 const concernsTools = require('./tools/concerns');
+const rxRefillTools = require('./tools/rx-refill');
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
@@ -199,10 +200,21 @@ YOUR CAPABILITIES:
 4. EMAIL SENDING - Draft and send real emails (use EMAIL_DRAFT format below)
 5. PHONE CALLS - Trigger real phone calls to providers (use CALL_REQUEST format below)
 6. CALENDAR - Detect appointment dates and suggest adding to Google Calendar (use CALENDAR_EVENT format)
-7. MEDICATION MANAGEMENT - Track meds, check interactions, refill reminders
+7. MEDICATION MANAGEMENT - Track meds with doses, refill dates, pharmacy, prescriber, Rx numbers. Flag upcoming refills. Check for common drug interactions.
 8. INSURANCE TRACKING - Track claims, denials, appeals
-9. MEDICAL TRANSLATION - Explain medical jargon in plain English
-10. APPOINTMENT PREP - Checklists and questions to ask
+9. PROVIDER FINDER - Help find doctors who accept specific insurance plans. When user asks to find a doctor, ALWAYS respond with:
+PROVIDER_SEARCH:{"insurance":"Insurance Name","specialty":"Doctor Type","location":"City, State"}
+The system will generate clickable search links from Zocdoc, Healthgrades, and Google. Always include the tag so the user gets real search links.
+10. DOCTOR SWITCHING - Help patients switch doctors. Walk them through: checking insurance network, getting records transferred, finding new providers, scheduling first appointments. Use PROVIDER_SEARCH to find alternatives.
+11. MEDICAL TRANSLATION - Explain medical jargon in plain English
+12. APPOINTMENT PREP - Checklists and questions to ask
+13. RX REFILL & PRICE COMPARISON - When a prescription bottle is scanned, the system automatically checks:
+    - Is the Rx expired? How many refills remain? Is it running low?
+    - Price comparison across GoodRx, Cost Plus Drugs (Mark Cuban), Amazon Pharmacy, SingleCare, RxSaver, Walmart
+    - If expired or no refills: recommend calling the doctor for a new prescription
+    - If refills available: recommend calling the pharmacy to refill
+    - Always show the price comparison so the patient gets the best deal
+    When discussing medications or refills, remind users they can scan their bottle to check status and compare prices.
 CALL_REQUEST FORMAT: When user asks to call someone, respond with:
 CALL_REQUEST:{"name":"Provider Name","phone":"+12105551234","reason":"Reason for calling"}
 Then explain what the AI agent will say on the call. User will confirm before the call is made.
@@ -218,7 +230,15 @@ CRITICAL RULES:
 - Always ask for confirmation before sending emails or making calls
 - Use **bold** for important information
 - Always end with clear next steps
-- You are an advocate for the patient — fight hard for their care`;
+- You are an advocate for the patient — fight hard for their care
+- When asked to find a doctor, ALWAYS include the PROVIDER_SEARCH tag so the user gets clickable links
+DOCTOR SWITCHING WORKFLOW:
+When a user wants to switch doctors, walk them through these steps:
+1. Ask which doctor they want to switch FROM and what specialty they need
+2. Use PROVIDER_SEARCH to find alternatives that accept their insurance
+3. Offer to help call the current doctor for medical records transfer
+4. Offer to schedule the first appointment with the new doctor
+5. Remind them to update their primary care designation with insurance if switching PCPs`;
 }
 // ─── Google OAuth2 Setup ───────────────────────────────────
 let oauth2Client = null;
@@ -462,13 +482,14 @@ app.post('/api/chat', async (req, res) => {
           pendingCallRequest.phone = normalizeUSPhone(pendingCallRequest.phone);
         }
         return res.json({
-          reply: reply.replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
+          reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
           callRequest: pendingCallRequest
         });
       } catch (e) {
         console.log('Call request parse error:', e.message);
       }
     }
+    const provMatch = reply.match(/PROVIDER_SEARCH:(\{[\s\S]*?\})/);let providerLinks=null;if(provMatch){try{const pData=JSON.parse(provMatch[1]);const{buildProviderSearchURL}=require("./tools/insurance");providerLinks=buildProviderSearchURL(pData.insurance,pData.specialty,pData.location)}catch(e){}}
     const calMatch = reply.match(/CALENDAR_EVENT:(\{[\s\S]*?\})/);
     let calendarEvent = null;
     if (calMatch) {
@@ -486,10 +507,10 @@ app.post('/api/chat', async (req, res) => {
       );
     }
     res.json({
-      reply: reply.replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
+      reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
       calendarEvent,
       hasPendingEmail: !!pendingEmailDraft,
-      hasPendingCall: !!pendingCallRequest
+      hasPendingCall: !!pendingCallRequest,providerLinks
     });
   } catch (e) {
     console.error('Chat error:', e.message);
@@ -667,12 +688,48 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         updates: extracted,
         raw: text
       };
+      // Auto-check Rx status if this is a prescription
+      let rxStatus = null;
+      let rxPlan = null;
+      let priceLinks = null;
+      const docType = String(extracted.document_type || '').toLowerCase();
+      if (docType === 'prescription' || extracted.medication_name || extracted.rx_number) {
+        try {
+          rxStatus = rxRefillTools.checkRxStatus(extracted);
+          rxPlan = rxRefillTools.buildRefillPlan(extracted, rxStatus, patient);
+          const drugName = extracted.medication_name || extracted.drug_name;
+          if (drugName) {
+            const patientZip = (patient?.address || '').match(/\d{5}/)?.[0] || '78258';
+            priceLinks = rxRefillTools.buildPriceCompareLinks(
+              drugName,
+              extracted.dosage,
+              extracted.quantity,
+              patientZip
+            );
+          }
+          // Add notification if Rx needs attention
+          if (rxStatus && (rxStatus.status === 'expired' || rxStatus.status === 'no_refills')) {
+            addNotification(
+              'medication',
+              `⚠️ Rx Alert: ${extracted.medication_name || 'Medication'}`,
+              rxStatus.warnings.join('. '),
+              currentPatientId,
+              null
+            );
+          }
+        } catch (e) {
+          console.log('Rx status check error:', e.message);
+        }
+      }
       cleanupFile(filePath);
       return res.json({
         success: true,
         extracted,
         message: 'Review the extracted data. Type "confirm" to save or "deny" to cancel.',
-        pending: true
+        pending: true,
+        rxStatus,
+        rxPlan,
+        priceLinks
       });
     }
     cleanupFile(filePath);
@@ -846,6 +903,51 @@ app.get('/api/calendar/ics', (req, res) => {
     res.status(500).send(e.message);
   }
 });
+// ─── Medications API ──────────────────────────────────────
+app.get('/api/medications', (req, res) => {
+  try {
+    const meds = medicationsTools.getMedications ? medicationsTools.getMedications() : [];
+    res.json({ medications: meds });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.post('/api/medications/check-interactions', (req, res) => {
+  try {
+    const { medications } = req.body;
+    let medNames = medications;
+    // If no meds passed, use current patient's meds
+    if (!medNames || !medNames.length) {
+      const patientId = getCurrentPatientId();
+      const patients = getAllPatients();
+      const patient = patients.find(p => p.id === patientId) || patients[0];
+      medNames = (patient?.medications || []).map(m => m.name).filter(Boolean);
+    }
+    if (!medNames || medNames.length < 2) {
+      return res.json({ interactions: [], message: 'Need at least 2 medications to check interactions.' });
+    }
+    const interactions = medicationsTools.checkInteractions(medNames);
+    res.json({
+      interactions,
+      checked: medNames,
+      count: interactions.length,
+      message: interactions.length > 0
+        ? `Found ${interactions.length} potential interaction(s). Review with your healthcare provider.`
+        : 'No known interactions found between these medications.'
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get('/api/medications/refills', (req, res) => {
+  try {
+    const days = parseInt(req.query.days || '7', 10);
+    const meds = medicationsTools.getMedsNeedingRefill(days);
+    res.json({ medications: meds, daysAhead: days });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 // ─── Tasks API ─────────────────────────────────────────────
 app.get('/api/tasks', (req, res) => {
   try {
@@ -984,9 +1086,127 @@ app.post('/api/concerns/resolve/:id', (req, res) => {
 app.get('/api/pending', (_req, res) => {
   res.json(pendingUpdates);
 });
+// ─── Medication Interaction Check ────────────────────────
+app.post('/api/medications/check-interactions', (req, res) => {
+  try {
+    const { medications } = req.body;
+    if (!medications || !Array.isArray(medications) || medications.length === 0) {
+      const patient = getAllPatients().find(p => p.id === getCurrentPatientId());
+      const medNames = (patient?.medications || []).map(m => m.name);
+      const interactions = medicationsTools.checkInteractions(medNames);
+      return res.json({ interactions, medications: medNames });
+    }
+    const interactions = medicationsTools.checkInteractions(medications);
+    res.json({ interactions, medications });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get('/api/medications', (_req, res) => {
+  try {
+    const patient = getAllPatients().find(p => p.id === getCurrentPatientId());
+    const meds = patient?.medications || [];
+    const refillsSoon = medicationsTools.getMedsNeedingRefill(7);
+    const interactions = medicationsTools.checkInteractions(meds.map(m => m.name));
+    res.json({ medications: meds, refillsSoon, interactions });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ─── Rx Refill & Price Comparison ────────────────────────
+app.post('/api/rx/check-status', (req, res) => {
+  try {
+    const { rxData } = req.body;
+    const status = rxRefillTools.checkRxStatus(rxData || {});
+    const patient = getAllPatients().find(p => p.id === getCurrentPatientId());
+    const plan = rxRefillTools.buildRefillPlan(rxData || {}, status, patient);
+    res.json({ status, plan });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.post('/api/rx/price-compare', (req, res) => {
+  try {
+    const { drugName, dosage, quantity, zipCode } = req.body;
+    if (!drugName) return res.status(400).json({ error: 'Drug name required' });
+    const patient = getAllPatients().find(p => p.id === getCurrentPatientId());
+    // Try to extract zip from patient address
+    const patientZip = (patient?.address || '').match(/\d{5}/)?.[0] || '78258';
+    const links = rxRefillTools.buildPriceCompareLinks(
+      drugName,
+      dosage,
+      quantity,
+      zipCode || patientZip
+    );
+    // Include insurance info for comparison context
+    const insurance = patient?.insurance || {};
+    res.json({
+      drugName,
+      dosage,
+      quantity,
+      links,
+      insurance: {
+        primary: insurance.primary || null,
+        memberId: insurance.memberId || null
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ─── Insurance Matcher ──────────────────────────────────
+const insuranceMatcher = require("./tools/insurance-matcher");
+app.post("/api/insurance/match", (req, res) => {
+  try {
+    const profile = req.body;
+    const results = insuranceMatcher.matchInsurance(profile);
+    res.json(results);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get("/api/insurance/match-current", (_req, res) => {
+  try {
+    const patients = getAllPatients();
+    const patient = patients.find(p => p.id === getCurrentPatientId()) || patients[0] || {};
+    const age = null;
+    if (patient.dob) {
+      try {
+        const parts = patient.dob.split("/");
+        if (parts.length === 3) {
+          const born = new Date(parts[2] + "-" + parts[0].padStart(2,"0") + "-" + parts[1].padStart(2,"0"));
+          if (!isNaN(born.getTime())) {
+            const ageDiff = Date.now() - born.getTime();
+            const ageDate = new Date(ageDiff);
+            var calcAge = Math.abs(ageDate.getUTCFullYear() - 1970);
+          }
+        }
+      } catch(e) {}
+    }
+    const profile = {
+      age: calcAge || null,
+      state: (patient.address || "").match(/[A-Z]{2}\s*\d{5}/)?.[0]?.substring(0,2) || "TX",
+      familySize: 1,
+      annualIncome: null
+    };
+    const results = insuranceMatcher.matchInsurance(profile);
+    res.json({ patient: patient.name, ...results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (_req, res) => {
+  // Auto-redirect to onboarding if no patients exist
+  const patients = getAllPatients();
+  if (!patients || patients.length === 0) {
+    return res.redirect('/onboarding');
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/onboarding', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));
 });
 app.get('/settings', (_req, res) => {
   const settingsPath = path.join(__dirname, 'public', 'settings.html');

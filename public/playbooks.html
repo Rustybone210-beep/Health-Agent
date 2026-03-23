@@ -1,110 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Emergency Playbooks</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body{
-      font-family:Arial, sans-serif;
-      background:#0e1426;
-      color:white;
-      padding:30px;
-      margin:0;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:24px;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .back{
-      color:white;
-      text-decoration:none;
-      background:#182040;
-      padding:10px 14px;
-      border-radius:10px;
-    }
-    .card{
-      background:#182040;
-      padding:18px;
-      margin-bottom:16px;
-      border-radius:12px;
-    }
-    h1,h2,h3{margin-top:0}
-    ul,ol{line-height:1.5}
-    .tag{
-      display:inline-block;
-      background:#24305f;
-      padding:4px 8px;
-      border-radius:999px;
-      font-size:12px;
-      margin-bottom:10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+<title>Emergency Playbooks — Health Agent</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#ffffff;--bg2:#f2f2f7;--surface:#ffffff;--surface-2:#f2f2f7;--border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);--text:#1c1c1e;--text2:#6e6e73;--text3:#aeaeb2;--teal:#34c759;--accent:#0b93f6;--danger:#ff3b30;--warn:#ff9500;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);--sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#000000;--bg2:#1c1c1e;--surface:#1c1c1e;--surface-2:#2c2c2e;--border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.14);--text:#f2f2f7;--text2:#8e8e93;--text3:#48484a;--teal:#30d158;--accent:#0a84ff}}
+html,body{min-height:100dvh;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.page{max-width:640px;margin:0 auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 16px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px}
+.topbar h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.back{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none}
+.back:active{transform:scale(0.97)}
+.pb{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.pb-sev{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px}
+.sev-911{background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.2);color:var(--danger)}
+.sev-urgent{background:rgba(255,149,0,0.1);border:1px solid rgba(255,149,0,0.2);color:var(--warn)}
+.sev-admin{background:rgba(52,199,89,0.1);border:1px solid rgba(52,199,89,0.2);color:var(--teal)}
+.pb h3{font-size:17px;font-weight:700;margin-bottom:10px}
+.pb ol,.pb ul{padding-left:20px;margin:0}
+.pb li{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:4px}
+.pb-note{font-size:12px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-style:italic}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin:20px 0 10px}
+</style>
 </head>
 <body>
-
+<div class="page">
   <div class="topbar">
-    <h1>Emergency Playbooks</h1>
-    <a class="back" href="/">← Back to Dashboard</a>
+    <h1>🆘 Emergency Playbooks</h1>
+    <a class="back" href="/">← Back</a>
   </div>
 
-  <div class="card">
-    <div class="tag">911 Emergency</div>
-    <h3>Possible Stroke</h3>
-    <ul>
-      <li>Call 911 immediately.</li>
-      <li>Note the exact time symptoms started.</li>
-      <li>Do not give food, drink, or extra medication unless instructed by emergency professionals.</li>
-      <li>Bring medication list, allergy list, insurance card, and ID.</li>
-    </ul>
-  </div>
+  <div class="section-label">Call 911 immediately</div>
 
-  <div class="card">
-    <div class="tag">911 Emergency</div>
-    <h3>Chest Pain / Heart Emergency</h3>
-    <ul>
-      <li>Call 911 right away.</li>
-      <li>Have the patient sit or lie down and stay calm.</li>
-      <li>Unlock the front door if possible.</li>
-      <li>Gather current medications and insurance information.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <div class="tag">Urgent</div>
-    <h3>Fall / Possible Fracture</h3>
-    <ul>
-      <li>Do not force standing if fracture is possible.</li>
-      <li>Call 911 for severe pain, head injury, confusion, or inability to move safely.</li>
-      <li>If stable, contact urgent care or the primary doctor for same-day guidance.</li>
-      <li>Write down what happened, when, and who witnessed it.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <div class="tag">Urgent</div>
-    <h3>Medication Reaction</h3>
-    <ul>
-      <li>Call 911 for trouble breathing, facial swelling, or collapse.</li>
-      <li>Stop the suspected medication unless a doctor tells you otherwise.</li>
-      <li>Take a photo of any visible rash if safe.</li>
-      <li>Keep the medication bottle available for EMS or the doctor.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <div class="tag">Admin / Same Day</div>
-    <h3>Medication Running Out</h3>
+  <div class="pb">
+    <div class="pb-sev sev-911">911 Emergency</div>
+    <h3>Possible Stroke (FAST Check)</h3>
     <ol>
-      <li>Call the pharmacy and confirm remaining refills.</li>
-      <li>Call the prescribing office and request an urgent refill.</li>
-      <li>If prior authorization is needed, ask for the authorization staff member.</li>
-      <li>Write down the name of each person you speak to and the time of the call.</li>
+      <li><strong>F</strong>ace — Ask them to smile. Is one side drooping?</li>
+      <li><strong>A</strong>rms — Ask them to raise both arms. Does one drift down?</li>
+      <li><strong>S</strong>peech — Ask them to repeat a phrase. Is it slurred or strange?</li>
+      <li><strong>T</strong>ime — If ANY of these are yes, call 911. Note the exact time symptoms started.</li>
+      <li>Do not give food, drink, or extra medication.</li>
+      <li>Bring medication list, allergy list, insurance card, and ID to the hospital.</li>
+    </ol>
+    <div class="pb-note">Time is critical — every minute without treatment can mean brain damage. The ER needs to know exact symptom onset time.</div>
+  </div>
+
+  <div class="pb">
+    <div class="pb-sev sev-911">911 Emergency</div>
+    <h3>Chest Pain / Heart Emergency</h3>
+    <ol>
+      <li>Call 911 immediately — do not drive to the hospital.</li>
+      <li>Have the patient sit or lie down in a comfortable position.</li>
+      <li>If they take nitroglycerin, help them take it as prescribed.</li>
+      <li>If they have aspirin and aren't allergic, have them chew one regular aspirin (325mg).</li>
+      <li>Unlock the front door for EMS.</li>
+      <li>Gather current medications, insurance card, and ID.</li>
+    </ol>
+    <div class="pb-note">Do NOT let the patient talk you out of calling 911. Heart attacks often present with denial.</div>
+  </div>
+
+  <div class="pb">
+    <div class="pb-sev sev-911">911 Emergency</div>
+    <h3>Severe Allergic Reaction (Anaphylaxis)</h3>
+    <ol>
+      <li>Call 911 immediately.</li>
+      <li>Use epinephrine auto-injector (EpiPen) if available — inject into outer thigh.</li>
+      <li>Have the patient lie on their back with legs elevated (unless breathing difficulty — then sit upright).</li>
+      <li>Remove the allergen if possible (stop eating the food, remove the bee stinger).</li>
+      <li>Note what triggered the reaction and when symptoms started.</li>
+    </ol>
+    <div class="pb-note">Known allergens for this patient are in the profile. Check before giving any new medication or food.</div>
+  </div>
+
+  <div class="section-label">Urgent — same day</div>
+
+  <div class="pb">
+    <div class="pb-sev sev-urgent">Urgent</div>
+    <h3>Fall / Possible Fracture</h3>
+    <ol>
+      <li>Do not force them to stand if fracture is possible.</li>
+      <li>Check for head injury: confusion, vomiting, unequal pupils → call 911.</li>
+      <li>Apply ice to swelling, keep the injured area still.</li>
+      <li>If stable, call primary doctor for same-day guidance.</li>
+      <li>Write down what happened, when, where, and who witnessed it.</li>
+      <li>Take photos of any visible injuries.</li>
     </ol>
   </div>
 
+  <div class="pb">
+    <div class="pb-sev sev-urgent">Urgent</div>
+    <h3>Medication Reaction</h3>
+    <ol>
+      <li>If trouble breathing, facial swelling, or collapse → call 911.</li>
+      <li>Stop the suspected medication (unless it's a critical med — check with doctor first).</li>
+      <li>Take a photo of any visible rash or swelling.</li>
+      <li>Note the medication name, dose taken, and time of the reaction.</li>
+      <li>Call the prescribing doctor and pharmacy.</li>
+      <li>Keep the medication bottle available for reference.</li>
+    </ol>
+    <div class="pb-note">If stopping a critical medication (blood thinner, seizure med, heart medication), call the doctor BEFORE stopping.</div>
+  </div>
+
+  <div class="pb">
+    <div class="pb-sev sev-urgent">Urgent</div>
+    <h3>Blood Sugar Emergency (Diabetic)</h3>
+    <ol>
+      <li><strong>Low blood sugar</strong> (shaking, sweating, confusion): Give 15g fast sugar — 4 glucose tablets, 4oz juice, or 1 tbsp honey. Recheck in 15 minutes.</li>
+      <li><strong>High blood sugar</strong> (excessive thirst, frequent urination, fruity breath): Call doctor. If vomiting or confused → call 911.</li>
+      <li>Check blood sugar if a meter is available and record the reading.</li>
+      <li>Note what they ate, when they last took medication, and any unusual activity.</li>
+    </ol>
+  </div>
+
+  <div class="section-label">Administrative — take action today</div>
+
+  <div class="pb">
+    <div class="pb-sev sev-admin">Same Day</div>
+    <h3>Medication Running Out</h3>
+    <ol>
+      <li>Call the pharmacy — confirm how many refills remain.</li>
+      <li>If no refills, call the prescribing doctor's office and request an urgent refill.</li>
+      <li>Ask for the authorization staff if prior auth is needed.</li>
+      <li>Write down every person's name and the time you called.</li>
+      <li>If the medication will run out before the refill arrives, ask the pharmacy about emergency partial fills.</li>
+    </ol>
+  </div>
+
+  <div class="pb">
+    <div class="pb-sev sev-admin">Same Day</div>
+    <h3>Insurance Denial Received</h3>
+    <ol>
+      <li>Read the denial letter — note the denial reason and deadline to appeal.</li>
+      <li>Call the insurance company's member services number on the letter.</li>
+      <li>Ask for the clinical criteria they used to deny the claim.</li>
+      <li>Call the prescribing/ordering doctor and ask them to submit a peer-to-peer review.</li>
+      <li>File a formal appeal before the deadline — use Health Agent to draft the letter.</li>
+    </ol>
+    <div class="pb-note">Most denials can be overturned on appeal. The key is acting fast and getting the doctor involved.</div>
+  </div>
+</div>
 </body>
 </html>
