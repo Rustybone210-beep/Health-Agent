@@ -21,7 +21,7 @@
     "biometricEnabled": false,
     "biometricCredentialId": null,
     "createdAt": 1774386415857,
-    "lastLogin": null,
+    "lastLogin": 1774387626793,
     "tier": "free",
     "patientsAllowed": 1
   }
