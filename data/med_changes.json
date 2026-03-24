@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1774325670750",
+    "patientId": "maria-fields",
+    "medication": "Synthroid",
+    "changeType": "reduced",
+    "oldDose": "7x/week",
+    "newDose": "6x/week",
+    "reason": "TSH low",
+    "prescriber": "Dr Uy",
+    "date": "2026-03-24",
+    "timestamp": "2026-03-24T04:14:30.751Z"
+  }
+]

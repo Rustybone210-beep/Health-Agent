@@ -208,6 +208,9 @@ The system will generate clickable search links from Zocdoc, Healthgrades, and G
 10. DOCTOR SWITCHING - Help patients switch doctors. Walk them through: checking insurance network, getting records transferred, finding new providers, scheduling first appointments. Use PROVIDER_SEARCH to find alternatives.
 11. MEDICAL TRANSLATION - Explain medical jargon in plain English
 12. APPOINTMENT PREP - Checklists and questions to ask
+15. LAB ANALYZER - When a user uploads lab results, the system automatically analyzes every value against reference ranges, flags abnormals, identifies critical values, and connects lab findings to medications and symptoms. For example: high cholesterol + serum tears = inflammatory tears on the eyes. Low TSH + weight gain = possible thyroid undertreatment. High SHBG + low estradiol = hormone depletion affecting dry eye. Always explain what flagged values mean in plain English and how they connect to the patient's conditions.
+16. SYMPTOM-MEDICATION CORRELATOR - Track when medications change and when symptoms change. Automatically identify patterns like "eye symptoms worsened 14 days after Synthroid was reduced" or "burning improved 3 days after stopping serum tears." When users report symptoms, always ask about recent medication changes. When users report medication changes, warn about symptoms to watch for.
+17. LIVING MEDICAL SUMMARY - A complete, always-updated medical summary that includes all medications, conditions, allergies, lab flags, symptom patterns, medication changes, and open tasks. Ready to print for any new doctor visit. Updated automatically with every scan, chat, and lab upload.
 14. INSURANCE MATCHER - For uninsured users, match them to the right insurance program based on age, income, state, and family size. Programs include Medicare, Medicaid, ACA Marketplace (Obamacare), CHIP for children, and VA for veterans. Guide users through enrollment step by step. The system provides direct links to apply.
 13. RX REFILL & PRICE COMPARISON - When a prescription bottle is scanned, the system automatically checks:
     - Is the Rx expired? How many refills remain? Is it running low?
@@ -1260,6 +1263,79 @@ app.post("/api/auth/biometric-register", (req, res) => {
   }
 });
 
+
+// ─── Lab Analyzer ────────────────────────────────────────
+const labAnalyzer = require("./tools/lab-analyzer");
+app.post("/api/labs/analyze", (req, res) => {
+  try {
+    const { labData, patientId, labDate } = req.body;
+    const analysis = labAnalyzer.analyzeLabResults(labData);
+    const pid = patientId || getCurrentPatientId();
+    if (labData) labAnalyzer.saveLabToHistory(pid, labDate, labData, analysis);
+    res.json(analysis);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/labs/trends", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const trends = labAnalyzer.compareLabTrends(pid);
+    res.json(trends);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Symptom-Med Correlator ──────────────────────────────
+const symptomTracker = require("./tools/symptom-tracker");
+app.post("/api/symptoms/log", (req, res) => {
+  try {
+    const { symptom, severity, notes, patientId } = req.body;
+    const entry = symptomTracker.logSymptom(patientId || getCurrentPatientId(), symptom, severity, notes);
+    res.json({ success: true, entry });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/meds/log-change", (req, res) => {
+  try {
+    const { medication, changeType, oldDose, newDose, reason, prescriber, patientId } = req.body;
+    const entry = symptomTracker.logMedChange(patientId || getCurrentPatientId(), medication, changeType, oldDose, newDose, reason, prescriber);
+    res.json({ success: true, entry });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/correlations", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const report = symptomTracker.generateCorrelationReport(pid);
+    res.json(report);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/symptoms/timeline", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const days = parseInt(req.query.days) || 90;
+    const timeline = symptomTracker.getSymptomTimeline(pid, days);
+    res.json({ timeline });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Living Medical Summary ──────────────────────────────
+const medSummary = require("./tools/medical-summary");
+app.get("/api/summary/full", (req, res) => {
+  try {
+    const patients = getAllPatients();
+    const patient = patients.find(p => p.id === getCurrentPatientId()) || patients[0] || {};
+    const summary = medSummary.buildMedicalSummary(patient);
+    res.json(summary);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/summary/text", (req, res) => {
+  try {
+    const patients = getAllPatients();
+    const patient = patients.find(p => p.id === getCurrentPatientId()) || patients[0] || {};
+    const summary = medSummary.buildMedicalSummary(patient);
+    const text = medSummary.formatSummaryAsText(summary);
+    res.setHeader("Content-Type", "text/plain");
+    res.send(text);
+  } catch (e) { res.status(500).send("Error: " + e.message); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (_req, res) => {
   // Auto-redirect to onboarding if no patients exist
@@ -1296,4 +1372,15 @@ app.listen(PORT, () => {
   console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
   console.log(`🔔 Notifications: ${NOTIFICATIONS_FILE}`);
   console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
+});
+// === Lead Pipeline & Verification Routes ===
+const leadsRouter = require("./routes/leads");
+const verifyRouter = require("./routes/verify");
+
+app.use("/api/leads", leadsRouter);
+app.use("/api/verify", verifyRouter);
+
+// Serve pipeline dashboard
+app.get("/pipeline", (req, res) => {
+  res.sendFile(require("path").join(__dirname, "public", "pipeline", "index.html"));
 });
