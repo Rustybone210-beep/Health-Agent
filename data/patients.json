@@ -22,10 +22,26 @@
         "Sulfa drugs"
       ],
       "medications": [
-        { "name": "Lisinopril", "dose": "10mg", "frequency": "daily" },
-        { "name": "Metformin", "dose": "500mg", "frequency": "twice daily" },
-        { "name": "Vitamin D3", "dose": "2000IU", "frequency": "daily" },
-        { "name": "Lamotrigine", "dose": "100mg", "frequency": "twice daily" }
+        {
+          "name": "Lisinopril",
+          "dose": "10mg",
+          "frequency": "daily"
+        },
+        {
+          "name": "Metformin",
+          "dose": "500mg",
+          "frequency": "twice daily"
+        },
+        {
+          "name": "Vitamin D3",
+          "dose": "2000IU",
+          "frequency": "daily"
+        },
+        {
+          "name": "Lamotrigine",
+          "dose": "100mg",
+          "frequency": "twice daily"
+        }
       ],
       "primaryDoctor": "Dr. Martinez",
       "clinic": "Alamo Heights Family Medicine",
@@ -34,7 +50,8 @@
         "name": "Walgreens Stone Oak",
         "address": "Stone Oak Parkway",
         "phone": "(210) 403-0002"
-      }
+      },
+      "ownerId": "4a49d470-4b13-4ae5-b315-61474744b1e0"
     }
   ]
 }

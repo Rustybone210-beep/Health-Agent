@@ -11,5 +11,18 @@
     "lastLogin": 1774279098293,
     "tier": "free",
     "patientsAllowed": 1
+  },
+  {
+    "id": "4a49d470-4b13-4ae5-b315-61474744b1e0",
+    "email": "jf1986@me.com",
+    "password": "$2b$12$dstst8z9DBiJT5wsWFVo8.Zc7e6uIv9IPkwDDwECYhT3KrKZyulo6",
+    "name": "J Fields",
+    "role": "caregiver",
+    "biometricEnabled": false,
+    "biometricCredentialId": null,
+    "createdAt": 1774386415857,
+    "lastLogin": null,
+    "tier": "free",
+    "patientsAllowed": 1
   }
 ]
