@@ -23,6 +23,8 @@ const medicationsTools = require('./tools/medications');
 const tasksTools = require('./tools/tasks');
 const concernsTools = require('./tools/concerns');
 const rxRefillTools = require('./tools/rx-refill');
+const { ensureDataFiles } = require("./init-data");
+ensureDataFiles();
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
@@ -368,7 +370,7 @@ app.get('/api/patients', (_req, res) => {
 });
 app.get('/api/patients/current', (_req, res) => {
   const id = getCurrentPatientId();
-  const patients = getAllPatients();
+  const patients = getAllPatients(session.userId);
   const patient = patients.find((p) => p.id === id) || patients[0] || null;
   res.json({ patient, currentId: id });
 });
@@ -1251,7 +1253,7 @@ app.post("/api/auth/forgot-password", async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email required" });
     const reset = auth.createPasswordReset(email);
-    const resetUrl = (process.env.APP_URL || "http://localhost:3000") + "/reset-password?token=" + reset.token;
+    const resetUrl = (process.env.APP_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + (process.env.PORT || 3000))) + "/reset-password?token=" + reset.token;
     try {
       if (process.env.RESEND_API_KEY) {
         const { Resend } = require("resend");
@@ -1554,7 +1556,7 @@ app.post("/api/sharing/invite", (req, res) => {
     if (!session) return res.status(401).json({ error: "Not authenticated" });
     const { patientId, patientName, permission } = req.body;
     const invite = sharing.createInvite(session.userId, session.email, patientId, patientName, permission);
-    const inviteUrl = (process.env.APP_URL || "http://localhost:3000") + "/invite/" + invite.code;
+    const inviteUrl = (process.env.APP_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + (process.env.PORT || 3000))) + "/invite/" + invite.code;
     res.json({ success: true, invite, inviteUrl });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -2240,6 +2242,8 @@ app.get('/playbooks', (_req, res) => {
 });
 // ─── START ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
+const APP_URL = process.env.APP_URL || process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + PORT;
+console.log("APP_URL:", APP_URL);
 app.listen(PORT, () => {
   console.log(`\n🏥 Health Agent running on http://localhost:${PORT}`);
   console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
