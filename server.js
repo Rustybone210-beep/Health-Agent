@@ -2010,6 +2010,144 @@ app.post("/api/ehr/connect", (req, res) => {
 });
 
 
+
+// ─── Priority Network ───────────────────────────────────
+const priorityNetwork = require("./tools/priority-network");
+
+// Provider registration & management
+app.post("/api/network/register-provider", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const provider = priorityNetwork.registerProvider({ userId: session.userId, ...req.body });
+    res.json({ success: true, provider });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get("/api/network/provider", (req, res) => {
+  try {
+    const session = req.userSession;
+    const provider = priorityNetwork.getProviderByUserId(session?.userId);
+    res.json({ provider });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/network/provider/:id", (req, res) => {
+  try {
+    const provider = priorityNetwork.updateProvider(req.params.id, req.body);
+    res.json({ success: true, provider });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/network/search-providers", (req, res) => {
+  try {
+    const providers = priorityNetwork.searchProviders({
+      specialty: req.query.specialty,
+      insurance: req.query.insurance,
+      type: req.query.type,
+      verified: req.query.verified === "true"
+    });
+    res.json({ providers, count: providers.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/network/verify-provider/:id", (req, res) => {
+  try {
+    const provider = priorityNetwork.verifyProvider(req.params.id);
+    res.json({ success: true, provider });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Patient-Provider connections
+app.post("/api/network/connect", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const { patientId, providerId } = req.body;
+    const result = priorityNetwork.connectPatientToProvider(
+      patientId || getCurrentPatientId(), session.userId, providerId
+    );
+    res.json(result);
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get("/api/network/my-providers", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const connections = priorityNetwork.getPatientConnections(pid);
+    res.json({ connections });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/network/my-patients", (req, res) => {
+  try {
+    const session = req.userSession;
+    const provider = priorityNetwork.getProviderByUserId(session?.userId);
+    if (!provider) return res.json({ connections: [] });
+    const connections = priorityNetwork.getProviderConnections(provider.id);
+    res.json({ connections });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete("/api/network/disconnect/:connectionId", (req, res) => {
+  try {
+    const result = priorityNetwork.disconnectPatientFromProvider(req.params.connectionId);
+    res.json({ success: true, connection: result });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// Priority Queue
+app.post("/api/network/request", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const request = priorityNetwork.submitPriorityRequest({
+      patientUserId: session.userId,
+      ...req.body,
+      patientId: req.body.patientId || getCurrentPatientId()
+    });
+    const statusMsg = request.networkConnected
+      ? "Priority request submitted — estimated response: " + request.estimatedResponse
+      : "Request submitted — estimated response: " + request.estimatedResponse + ". Connect with this provider for priority access.";
+    res.json({ success: true, request, message: statusMsg });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/network/patient-queue", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const queue = priorityNetwork.getPatientQueue(pid);
+    res.json({ queue });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/network/provider-queue", (req, res) => {
+  try {
+    const session = req.userSession;
+    const provider = priorityNetwork.getProviderByUserId(session?.userId);
+    if (!provider) return res.json({ queue: [] });
+    const queue = priorityNetwork.getProviderQueue(provider.id);
+    res.json({ queue });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/network/respond/:requestId", (req, res) => {
+  try {
+    const result = priorityNetwork.respondToRequest(req.params.requestId, req.body.response, req.body.status);
+    res.json({ success: true, request: result });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Provider Dashboard
+app.get("/api/network/dashboard", (req, res) => {
+  try {
+    const session = req.userSession;
+    const provider = priorityNetwork.getProviderByUserId(session?.userId);
+    if (!provider) return res.json({ error: "Not a registered provider" });
+    const dashboard = priorityNetwork.getProviderDashboard(provider.id);
+    res.json(dashboard);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Network Analytics
+app.get("/api/network/stats", (_req, res) => {
+  try {
+    const stats = priorityNetwork.getNetworkStats();
+    res.json(stats);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
