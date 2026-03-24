@@ -248,3 +248,40 @@ module.exports = {
   authMiddleware,
   cleanSessions
 };
+
+// ─── Password Reset ──────────────────────────────────────
+const crypto = require("crypto");
+const RESETS_FILE = path.join(__dirname, "..", "data", "password_resets.json");
+
+function loadResets() {
+  try { if (!fs.existsSync(RESETS_FILE)) return []; return JSON.parse(fs.readFileSync(RESETS_FILE, "utf8")); } catch(e) { return []; }
+}
+
+function createPasswordReset(email) {
+  const users = loadUsers();
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) return { token: "fake", userId: null, name: null };
+  const token = crypto.randomBytes(32).toString("hex");
+  let resets = loadResets();
+  resets = resets.filter(r => r.email !== email.toLowerCase());
+  resets.push({ email: email.toLowerCase(), token, userId: user.id, createdAt: Date.now(), expires: Date.now() + 3600000 });
+  fs.writeFileSync(RESETS_FILE, JSON.stringify(resets, null, 2));
+  return { token, userId: user.id, name: user.name };
+}
+
+function resetPassword(token, newPassword) {
+  let resets = loadResets();
+  const reset = resets.find(r => r.token === token && r.expires > Date.now());
+  if (!reset) throw new Error("Invalid or expired reset link. Request a new one.");
+  const users = loadUsers();
+  const user = users.find(u => u.id === reset.userId);
+  if (!user) throw new Error("User not found");
+  user.password = bcrypt.hashSync(newPassword, 12);
+  saveUsers(users);
+  resets = resets.filter(r => r.token !== token);
+  fs.writeFileSync(RESETS_FILE, JSON.stringify(resets, null, 2));
+  return true;
+}
+
+module.exports.createPasswordReset = createPasswordReset;
+module.exports.resetPassword = resetPassword;

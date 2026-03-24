@@ -14,5 +14,13 @@
     "role": "caregiver",
     "tier": "free",
     "createdAt": 1774387626794
+  },
+  "87f84a78-a20c-4ace-9732-e3264566f881": {
+    "userId": "4a49d470-4b13-4ae5-b315-61474744b1e0",
+    "email": "jf1986@me.com",
+    "name": "J Fields",
+    "role": "caregiver",
+    "tier": "free",
+    "createdAt": 1774388515981
   }
 }

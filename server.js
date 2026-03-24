@@ -1244,6 +1244,62 @@ app.get("/api/insurance/match-current", (_req, res) => {
 
 // ─── Auth System ─────────────────────────────────────────
 const auth = require("./tools/auth");
+
+// ─── Forgot Password ────────────────────────────────────
+app.post("/api/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email required" });
+    const reset = auth.createPasswordReset(email);
+    const resetUrl = (process.env.APP_URL || "http://localhost:3000") + "/reset-password?token=" + reset.token;
+    try {
+      if (process.env.RESEND_API_KEY) {
+        const { Resend } = require("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: process.env.FROM_EMAIL || "Health Agent <onboarding@resend.dev>",
+          to: email,
+          subject: "Reset Your Health Agent Password",
+          html: "<h2>Password Reset</h2><p>Click below to reset your password (expires in 1 hour):</p><p><a href='" + resetUrl + "' style='display:inline-block;padding:12px 24px;background:#2dd4bf;color:#0f172a;border-radius:12px;text-decoration:none;font-weight:bold'>Reset Password</a></p>"
+        });
+      }
+    } catch(emailErr) { console.log("Reset email error:", emailErr.message); }
+    res.json({ success: true, message: "If that email exists, a reset link has been sent.", resetUrl: process.env.NODE_ENV !== "production" ? resetUrl : undefined });
+  } catch (e) {
+    res.json({ success: true, message: "If that email exists, a reset link has been sent." });
+  }
+});
+app.post("/api/auth/reset-password", (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ error: "Token and password required" });
+    if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+    auth.resetPassword(token, password);
+    res.json({ success: true, message: "Password reset. You can now sign in." });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+app.get("/reset-password", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "reset-password.html"));
+});
+app.post("/api/auth/welcome-email", async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    if (process.env.RESEND_API_KEY) {
+      const { Resend } = require("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.FROM_EMAIL || "Health Agent <onboarding@resend.dev>",
+        to: email,
+        subject: "Welcome to Health Agent",
+        html: "<h2 style='color:#2dd4bf'>Welcome to Health Agent!</h2><p>Hi " + (name || "there") + ",</p><p>Your account is ready. Start by scanning your first document or asking the AI a question.</p>"
+      });
+    }
+    res.json({ success: true });
+  } catch (e) { res.json({ success: true }); }
+});
+
 app.get("/login", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
