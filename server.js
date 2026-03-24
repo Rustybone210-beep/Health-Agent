@@ -266,6 +266,27 @@ if (google && process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) 
 }
 // ─── ROUTES ────────────────────────────────────────────────
 // Chat history
+
+// ─── API Auth Protection ─────────────────────────────────
+function apiAuth(req, res, next) {
+  // Skip auth for auth routes themselves and static files
+  if (req.path.startsWith('/api/auth/')) return next();
+  const token = req.headers.authorization?.replace("Bearer ", "") ||
+    req.query.token ||
+    (req.headers.cookie || "").split(";").map(c => c.trim()).find(c => c.startsWith("ha_token="))?.split("=")[1];
+  const session = auth.validateSession(token);
+  if (!session) {
+    return res.status(401).json({ error: "Not authenticated", redirect: "/login" });
+  }
+  req.userId = session.userId;
+  req.userSession = session;
+  next();
+}
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth/')) return next();
+  apiAuth(req, res, next);
+});
+
 app.get('/api/chat-history', (_req, res) => {
   res.json({ sessions: loadChatHistory() });
 });
@@ -1337,7 +1358,12 @@ app.get("/api/summary/text", (req, res) => {
 });
 
 // ─── Static pages ──────────────────────────────────────────
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
+  const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
+  const session = token ? auth.validateSession(token.split('=')[1]) : null;
+  if (!session) {
+    return res.redirect('/login');
+  }
   // Auto-redirect to onboarding if no patients exist
   const patients = getAllPatients();
   if (!patients || patients.length === 0) {

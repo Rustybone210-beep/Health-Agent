@@ -646,7 +646,7 @@ a{color:inherit;text-decoration:none}
   <button class="ms-item" onclick="closeMenuSheet();mobileGoChat();qa('Find me a doctor who takes Medicare in San Antonio')"><span class="ms-icon">🔍</span><span class="ms-label">Find Doctor</span></button>
   <button class="ms-item" onclick="closeMenuSheet();mobileGoChat();qa('I want to switch doctors')"><span class="ms-icon">🔄</span><span class="ms-label">Switch Doc</span></button>
   <button class="ms-item" onclick="closeMenuSheet();triggerUpload()"><span class="ms-icon">📷</span><span class="ms-label">Scan Doc</span></button>
-  <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">⚙️</span><span class="ms-label">Settings</span></button>
+  <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">🚪</span><span class="ms-label">Sign Out</span></button>
 </div></div></div>
 
 <!-- MODALS -->
@@ -710,6 +710,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 /* ═══ API ═══ */
 async function api(url,options={}){
+  const token=localStorage.getItem('ha_token');
+  if(token){if(!options.headers)options.headers={};if(typeof options.headers==='object'&&!(options.headers instanceof Headers))options.headers['Authorization']='Bearer '+token}
   const res=await fetch(url,options);const ct=res.headers.get('content-type')||'';let data=null;
   try{data=ct.includes('application/json')?await res.json():{raw:await res.text()}}catch(_){data={}}
   if(!res.ok)throw new Error(data?.error||data?.message||`Request failed (${res.status})`);
@@ -737,7 +739,15 @@ function buildCalendarEventFromForm(){const title=document.getElementById('calTi
 function seedCalendarDefaults(){const t=document.getElementById('calTitle'),d=document.getElementById('calDate'),ti=document.getElementById('calTime');if(!t||!d||!ti)return;if(!d.value){const tm=new Date(Date.now()+86400000);d.value=tm.toISOString().split('T')[0]}if(!ti.value)ti.value='09:00';if(!t.value)t.value='Medical appointment'}
 function isMobileView(){return window.innerWidth<=900}
 function toggleExpand(id){document.getElementById(id)?.classList.toggle('open')}
-function openSettingsPlaceholder(){closeMenuSheet();addMsg('ai','⚙️ Settings coming soon.',true,false)}
+async function doLogout(){
+  const token = localStorage.getItem('ha_token');
+  if(token){try{await fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+token}})}catch(e){}}
+  localStorage.removeItem('ha_token');
+  localStorage.removeItem('ha_user');
+  document.cookie='ha_token=;path=/;max-age=0';
+  window.location.href='/login';
+}
+function openSettingsPlaceholder(){closeMenuSheet();if(confirm('Sign out of Health Agent?')){doLogout()}}
 
 /* ═══ DASHBOARD CARD TAP ═══ */
 function goToDashboardCard(type){if(type==='tasks'){openTaskPanel();return}if(type==='records'){addMsg('ai','Scan a document to start building records.',true,false);return}if(type==='upcoming'){qa('What are her upcoming appointments?');return}if(type==='today')qa('What needs attention today?')}
@@ -917,7 +927,7 @@ async function sendDraftEmail(){try{let data;try{data=await api('/api/send-email
 
 /* ═══ FILE UPLOAD ═══ */
 function triggerUpload(){document.getElementById('fileInput')?.click()}
-async function handleFileUpload(input){const file=input.files?.[0];if(!file)return;const pending=document.getElementById('uploadPending');document.getElementById('uploadFileName').textContent=`Processing: ${file.name}`;pending.classList.add('show');const formData=new FormData();formData.append('file',file);formData.append('model',MODEL_NAME);try{const res=await fetch('/api/upload',{method:'POST',body:formData});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||`Upload failed (${res.status})`);pending.classList.remove('show');if(data.pending){renderScanCard(data.extracted||{},file.name);if(data.rxStatus&&data.rxStatus.warnings.length>0){renderRxStatusCard(data.rxStatus,data.rxPlan,data.extracted)}if(data.priceLinks&&data.priceLinks.length>0){renderPriceCompareCard(data.extracted?.medication_name||file.name,data.priceLinks,data.extracted?.dosage)}}else{saveRecentUpload({name:file.name,title:file.name,type:'upload',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`📄 ${esc(data.message||'Upload complete.')}`,true,false)}}catch(e){pending.classList.remove('show');addMsg('ai',`❌ Upload error: ${esc(e.message)}`,true,false)}finally{input.value=''}}
+async function handleFileUpload(input){const file=input.files?.[0];if(!file)return;const pending=document.getElementById('uploadPending');document.getElementById('uploadFileName').textContent=`Processing: ${file.name}`;pending.classList.add('show');const formData=new FormData();formData.append('file',file);formData.append('model',MODEL_NAME);try{const token=localStorage.getItem('ha_token');const res=await fetch('/api/upload',{method:'POST',headers:token?{'Authorization':'Bearer '+token}:{},body:formData});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||`Upload failed (${res.status})`);pending.classList.remove('show');if(data.pending){renderScanCard(data.extracted||{},file.name);if(data.rxStatus&&data.rxStatus.warnings.length>0){renderRxStatusCard(data.rxStatus,data.rxPlan,data.extracted)}if(data.priceLinks&&data.priceLinks.length>0){renderPriceCompareCard(data.extracted?.medication_name||file.name,data.priceLinks,data.extracted?.dosage)}}else{saveRecentUpload({name:file.name,title:file.name,type:'upload',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`📄 ${esc(data.message||'Upload complete.')}`,true,false)}}catch(e){pending.classList.remove('show');addMsg('ai',`❌ Upload error: ${esc(e.message)}`,true,false)}finally{input.value=''}}
 
 /* ═══ VOICE / EMAIL ═══ */
 async function startVoiceCall(){const patient=getPatientById(currentPatientId);let phone=patient?.phone||prompt('Enter phone number to call:');if(!phone)return;phone=normalizeUSPhone(phone);try{const data=await api('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,reason:'Health check call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai',`📞 Call initiated! ID: ${esc(data.id||'started')}`,true,false)}catch(e){addMsg('ai',`❌ Call failed: ${esc(e.message)}`,true,false)}}

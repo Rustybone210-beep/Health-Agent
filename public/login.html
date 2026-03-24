@@ -127,6 +127,7 @@ async function doLogin() {
     if (!res.ok) throw new Error(data.error || 'Login failed');
 
     localStorage.setItem('ha_token', data.token);
+    document.cookie = 'ha_token=' + data.token + ';path=/;max-age=' + (30*24*60*60) + ';SameSite=Lax';
     localStorage.setItem('ha_user', JSON.stringify(data.user));
     window.location.href = '/';
   } catch (e) {
@@ -221,6 +222,7 @@ async function doBiometricLogin() {
     if (!res.ok) throw new Error(data.error || 'Biometric login failed');
 
     localStorage.setItem('ha_token', data.token);
+    document.cookie = 'ha_token=' + data.token + ';path=/;max-age=' + (30*24*60*60) + ';SameSite=Lax';
     localStorage.setItem('ha_user', JSON.stringify(data.user));
     window.location.href = '/';
   } catch (e) {
