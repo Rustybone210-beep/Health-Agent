@@ -1754,6 +1754,262 @@ app.put("/api/pharmacy/refill/:id", (req, res) => {
 });
 
 
+
+// ─── Clinical Trial Matching ─────────────────────────────
+const clinicalTrials = require("./tools/clinical-trials");
+app.get("/api/trials/search", async (req, res) => {
+  try {
+    const results = await clinicalTrials.searchTrials({
+      condition: req.query.condition,
+      location: req.query.location || "San Antonio, TX",
+      age: req.query.age,
+      gender: req.query.gender,
+      limit: parseInt(req.query.limit) || 10
+    });
+    res.json(results);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/trials/match", async (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const results = await clinicalTrials.matchTrialsForPatient(patient);
+    res.json(results);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/trials/save", (req, res) => {
+  try {
+    const { patientId, trial, notes } = req.body;
+    const result = clinicalTrials.saveTrial(patientId || getCurrentPatientId(), trial, notes);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/trials/saved", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const saved = clinicalTrials.getSavedTrials(pid);
+    res.json({ trials: saved });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Predictive Health Alerts ────────────────────────────
+const predictive = require("./tools/predictive-alerts");
+app.get("/api/alerts/predictive", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    const symptomTracker = require("./tools/symptom-tracker");
+    const labAnalyzer = require("./tools/lab-analyzer");
+    const medReminders = require("./tools/med-reminders");
+    let labHistory = [];
+    try { labHistory = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "lab_history.json"), "utf8")).filter(l => l.patientId === pid); } catch(e){}
+    let symptoms = [];
+    try { symptoms = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "symptom_log.json"), "utf8")).filter(s => s.patientId === pid); } catch(e){}
+    let medChanges = [];
+    try { medChanges = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "med_changes.json"), "utf8")).filter(m => m.patientId === pid); } catch(e){}
+    const correlations = symptomTracker.findCorrelations(pid, 60);
+    const adherence = medReminders.getAdherenceStats(pid, 14);
+    const patientData = {
+      symptoms,
+      medChanges,
+      labs: labHistory,
+      medications: patient?.medications || [],
+      correlations,
+      adherence,
+      vitals: {},
+      appointments: []
+    };
+    const alerts = predictive.runPredictiveAnalysis(patientData);
+    predictive.saveAlerts(pid, alerts);
+    res.json({ alerts, count: alerts.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/alerts/active", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const alerts = predictive.getAlerts(pid);
+    res.json({ alerts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/alerts/:alertId/dismiss", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    predictive.dismissAlert(pid, req.params.alertId);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Mental Health Screening ─────────────────────────────
+const mentalHealth = require("./tools/mental-health");
+app.get("/api/screening/available", (_req, res) => {
+  try {
+    const screenings = mentalHealth.getAvailableScreenings();
+    res.json({ screenings });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/screening/:type", (req, res) => {
+  try {
+    const screening = mentalHealth.getScreening(req.params.type);
+    if (!screening) return res.status(404).json({ error: "Screening not found" });
+    res.json({ name: screening.name, description: screening.description, questions: screening.questions, options: screening.options });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/screening/:type/score", (req, res) => {
+  try {
+    const { answers, patientId } = req.body;
+    const result = mentalHealth.scoreScreening(req.params.type, answers);
+    const pid = patientId || getCurrentPatientId();
+    mentalHealth.saveScreeningResult(pid, req.userSession?.userId, result);
+    if (result.severity === "severe" || result.severity === "high") {
+      addNotification("medication", "⚠️ " + result.name, result.severity + " — " + result.recommendation, pid, null);
+    }
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/screening/history/:patientId", (req, res) => {
+  try {
+    const history = mentalHealth.getScreeningHistory(req.params.patientId, req.query.type);
+    res.json({ history });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Advance Directives ─────────────────────────────────
+const directives = require("./tools/advance-directives");
+app.get("/api/directives/types", (_req, res) => {
+  try {
+    const types = directives.getDocumentTypes();
+    res.json({ types });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/directives/create", (req, res) => {
+  try {
+    const { patientId, type, data } = req.body;
+    const directive = directives.createDirective(patientId || getCurrentPatientId(), type, data);
+    res.json({ success: true, directive });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/directives/:id", (req, res) => {
+  try {
+    const directive = directives.updateDirective(req.params.id, req.body);
+    res.json({ success: true, directive });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/directives", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const docs = directives.getDirectives(pid);
+    res.json({ directives: docs });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/directives/:id/text", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const docs = directives.getDirectives(pid);
+    const doc = docs.find(d => d.id === req.params.id);
+    if (!doc) return res.status(404).json({ error: "Document not found" });
+    const text = directives.generateDirectiveText(doc);
+    res.setHeader("Content-Type", "text/plain");
+    res.send(text);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Second Opinion Coordination ─────────────────────────
+const secondOpinion = require("./tools/second-opinion");
+app.post("/api/second-opinion/request", (req, res) => {
+  try {
+    const request = secondOpinion.createRequest(req.body);
+    addNotification("appointment", "Second Opinion Request", "Started for " + (req.body.condition || "condition"), req.body.patientId || getCurrentPatientId(), null);
+    res.json({ success: true, request });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/second-opinion", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const requests = secondOpinion.getRequests(pid);
+    res.json({ requests });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/second-opinion/:id", (req, res) => {
+  try {
+    const request = secondOpinion.updateRequest(req.params.id, req.body);
+    res.json({ success: true, request });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/second-opinion/:id/doc", (req, res) => {
+  try {
+    const request = secondOpinion.updateDocumentStatus(req.params.id, req.body.docName, req.body.gathered);
+    res.json({ success: true, request });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/second-opinion/:id/step", (req, res) => {
+  try {
+    const request = secondOpinion.updateStepStatus(req.params.id, req.body.step, req.body.status);
+    res.json({ success: true, request });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Insurance Claims ────────────────────────────────────
+const insuranceClaims = require("./tools/insurance-claims");
+app.post("/api/claims/create", (req, res) => {
+  try {
+    const claim = insuranceClaims.createClaim(req.body);
+    res.json({ success: true, claim });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/claims", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const claims = insuranceClaims.getClaims(pid, req.query.status);
+    const summary = insuranceClaims.getClaimsSummary(pid);
+    res.json({ claims, summary });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/claims/:id/status", (req, res) => {
+  try {
+    const claim = insuranceClaims.updateClaimStatus(req.params.id, req.body.status, req.body.details);
+    res.json({ success: true, claim });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/claims/:id/appeal", (req, res) => {
+  try {
+    const claim = insuranceClaims.createAppeal(req.params.id, req.body.reason, req.body.docs);
+    const patient = getAllPatients().find(p => p.id === (req.body.patientId || getCurrentPatientId()));
+    const letter = insuranceClaims.generateAppealLetter(claim, patient);
+    res.json({ success: true, claim, appealLetter: letter });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/claims/summary", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const summary = insuranceClaims.getClaimsSummary(pid);
+    res.json(summary);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── EHR Integration ─────────────────────────────────────
+const ehrIntegration = require("./tools/ehr-integration");
+app.get("/api/ehr/status", (_req, res) => {
+  try {
+    const status = ehrIntegration.getConnectionStatus();
+    res.json(status);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/ehr/supported", (_req, res) => {
+  try {
+    const ehrs = ehrIntegration.getSupportedEHRs();
+    res.json({ ehrs });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/ehr/connect", (req, res) => {
+  try {
+    const { ehrType, clientId, redirectUri } = req.body;
+    const result = ehrIntegration.initiateConnection(ehrType, clientId, redirectUri);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
