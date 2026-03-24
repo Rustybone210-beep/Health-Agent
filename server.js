@@ -1562,6 +1562,198 @@ app.get("/api/backup/list", (_req, res) => {
 });
 
 
+
+// ─── Lab Trends & Charts ────────────────────────────────
+const labTrends = require("./tools/lab-trends");
+app.get("/api/labs/chart", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const tests = req.query.tests ? req.query.tests.split(",") : ["Total Cholesterol", "LDL", "HDL"];
+    const data = labTrends.getChartData(pid, tests);
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/labs/all-trends", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const trends = labTrends.getAllTrends(pid);
+    res.json({ trends });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Health Device Data ──────────────────────────────────
+const healthData = require("./tools/health-data");
+app.post("/api/health/record", (req, res) => {
+  try {
+    const { metric, value, source, timestamp, patientId } = req.body;
+    const entry = healthData.recordReading(patientId || getCurrentPatientId(), metric, value, source, timestamp);
+    const alerts = healthData.checkAlerts(patientId || getCurrentPatientId());
+    if (alerts.length > 0) {
+      alerts.forEach(a => addNotification("medication", "⚠️ " + a.metric, a.message, patientId || getCurrentPatientId(), null));
+    }
+    res.json({ success: true, entry, alerts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/health/import", (req, res) => {
+  try {
+    const { readings, source, patientId } = req.body;
+    const imported = healthData.bulkImport(patientId || getCurrentPatientId(), readings, source);
+    res.json({ success: true, imported: imported.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/health/vitals", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const latest = healthData.getLatestVitals(pid);
+    const alerts = healthData.checkAlerts(pid);
+    res.json({ vitals: latest, alerts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/health/chart", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const metric = req.query.metric || "blood_pressure_systolic";
+    const days = parseInt(req.query.days) || 30;
+    const chart = healthData.getVitalsChartData(pid, metric, days);
+    res.json(chart);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/health/metrics", (_req, res) => {
+  res.json({ metrics: healthData.SUPPORTED_METRICS });
+});
+
+// ─── Appointment Booking ─────────────────────────────────
+const apptBooking = require("./tools/appointments-booking");
+app.post("/api/appointments/create", (req, res) => {
+  try {
+    const appt = apptBooking.createAppointment(req.body);
+    const patient = getAllPatients().find(p => p.id === (req.body.patientId || getCurrentPatientId()));
+    const checklist = apptBooking.generatePrepChecklist(appt, patient);
+    checklist.forEach(item => apptBooking.addPrepItem(appt.id, item));
+    addNotification("appointment", "Appointment: " + appt.doctorName, appt.date + " at " + appt.time, appt.patientId, appt.date);
+    res.json({ success: true, appointment: appt, checklist });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/appointments/upcoming", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const appts = apptBooking.getUpcoming(pid, parseInt(req.query.days) || 90);
+    res.json({ appointments: appts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/appointments/past", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const appts = apptBooking.getPast(pid, parseInt(req.query.days) || 365);
+    res.json({ appointments: appts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/appointments/:id", (req, res) => {
+  try {
+    const appt = apptBooking.updateAppointment(req.params.id, req.body);
+    res.json({ success: true, appointment: appt });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/appointments/:id/cancel", (req, res) => {
+  try {
+    const appt = apptBooking.cancelAppointment(req.params.id, req.body.reason);
+    res.json({ success: true, appointment: appt });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/appointments/:id/question", (req, res) => {
+  try {
+    const appt = apptBooking.addQuestion(req.params.id, req.body.question);
+    res.json({ success: true, appointment: appt });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/appointments/today", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const appts = apptBooking.getTodaysAppointments(pid);
+    res.json({ appointments: appts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Medical Translation ────────────────────────────────
+const translator = require("./tools/medical-translator");
+app.post("/api/translate", (req, res) => {
+  try {
+    const { text, term } = req.body;
+    if (term) {
+      const result = translator.translateTerm(term);
+      res.json({ term, translation: result });
+    } else if (text) {
+      const result = translator.translateText(text);
+      res.json(result);
+    } else {
+      res.status(400).json({ error: "Provide text or term" });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/translate/dictionary", (_req, res) => {
+  try {
+    const dict = translator.getFullDictionary();
+    res.json({ terms: dict, count: dict.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Transportation ──────────────────────────────────────
+const transport = require("./tools/transportation");
+app.post("/api/transport/request", (req, res) => {
+  try {
+    const ride = transport.requestRide(req.body);
+    res.json({ success: true, ride });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/transport/links", (req, res) => {
+  try {
+    const links = transport.buildRideLinks(req.query.pickup, req.query.destination);
+    res.json({ links });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/transport/for-appointment/:apptId", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    const appts = apptBooking.getUpcoming(pid, 365);
+    const appt = appts.find(a => a.id === req.params.apptId);
+    if (!appt) return res.status(404).json({ error: "Appointment not found" });
+    const result = transport.buildTransportForAppointment(appt, patient?.address);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Pharmacy Refills ────────────────────────────────────
+const pharmacy = require("./tools/pharmacy");
+app.post("/api/pharmacy/refill", (req, res) => {
+  try {
+    const request = pharmacy.createRefillRequest(req.body);
+    addNotification("medication", "Refill Requested: " + request.medication, "Status: " + request.status, request.patientId, null);
+    res.json({ success: true, refill: request });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/pharmacy/pending", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const pending = pharmacy.getPendingRefills(pid);
+    res.json({ refills: pending });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/pharmacy/history", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const history = pharmacy.getRefillHistory(pid);
+    res.json({ refills: history });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.put("/api/pharmacy/refill/:id", (req, res) => {
+  try {
+    const refill = pharmacy.updateRefillStatus(req.params.id, req.body.status, req.body.notes);
+    res.json({ success: true, refill });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
