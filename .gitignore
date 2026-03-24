@@ -6,3 +6,4 @@ data/patients.json
 node_modules/
 .encryption-key
 *.backup
+data/backups/

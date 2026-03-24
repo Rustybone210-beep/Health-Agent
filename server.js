@@ -96,6 +96,16 @@ function extractJsonAfterMarker(text, marker = 'EXTRACTED_DATA:') {
     return null;
   }
 }
+
+function processMultiDocExtraction(extracted, text) {
+  // If the extraction contains a "documents" array, return all of them
+  if (extracted && extracted.documents && Array.isArray(extracted.documents)) {
+    return extracted.documents;
+  }
+  // Otherwise return as single document in an array
+  return [extracted];
+}
+
 // ─── Chat history helpers ──────────────────────────────────
 function loadChatHistory() {
   const data = safeReadJson(CHAT_HISTORY_FILE, { sessions: [] });
@@ -154,7 +164,7 @@ function getCurrentPatientId() {
 function setCurrentPatientId(id) {
   safeWriteJson(CURRENT_PATIENT_FILE, { patientId: id });
 }
-function getAllPatients() {
+function getAllPatientsRaw() {
   try {
     const data = safeReadJson(PATIENTS_FILE, []);
     if (Array.isArray(data)) return data;
@@ -164,6 +174,12 @@ function getAllPatients() {
   } catch (e) {
     return [];
   }
+}
+
+function getAllPatients(userId) {
+  const all = getAllPatientsRaw();
+  if (!userId) return all;
+  return all.filter(p => !p.ownerId || p.ownerId === userId);
 }
 function saveAllPatients(patients) {
   try {
@@ -369,6 +385,7 @@ app.post('/api/patients/add', (req, res) => {
       newPatient.id = `${newPatient.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
     }
     const patients = getAllPatients();
+    if (req.userSession) newPatient.ownerId = req.userSession.userId;
     patients.push(newPatient);
     saveAllPatients(patients);
     res.json({ success: true, patient: newPatient });
@@ -568,7 +585,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           {
             type: 'text',
             text:
-              'Analyze this medical document image carefully. Read EVERY word, number, and detail visible.\n\n' +
+              'Analyze this image carefully. There may be MULTIPLE documents in this image (e.g. front and back of a card, or two different cards side by side). Read EVERY word, number, and detail visible on ALL documents. If you see multiple documents, return ALL of them in your response. For example, if you see a Medicare card AND an Aetna card, extract data from BOTH and include them as separate objects in your response.\n\n' +
               'DOCUMENT TYPE DETECTION — Identify what this is:\n' +
               '- Insurance card: Extract insurance_company, plan_name, member_name, member_id, group_number, rx_bin, rx_pcn, rx_group, copay_amounts, effective_date, phone_numbers (member services, claims, pharmacy)\n' +
               '- Prescription bottle/label: Extract medication_name, dosage, frequency, quantity, refills_remaining, prescriber, pharmacy_name, pharmacy_phone, rx_number, date_filled, expiration_date, warnings\n' +
@@ -579,6 +596,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
               'For patient: ' + (patient?.name || 'PATIENT_NAME_HERE') + '\n\n' +
               'Return a JSON object with ALL extracted fields. Format as: EXTRACTED_DATA:{json}\n\n' +
               'Include a "document_type" field (insurance_card, prescription, lab_result, medical_bill, referral, other).\n' +
+              'If you see MULTIPLE documents in the image (e.g. two insurance cards, or front and back), return them as:\n' +
+              'EXTRACTED_DATA:{"documents":[{...first document...},{...second document...}]}\n' +
+              'Each document should have its own document_type, summary, confidence, and all relevant fields.\n' +
+              'If there is only one document, still return it as: EXTRACTED_DATA:{...single document fields...}\n' +
               'Include a "summary" field explaining what this document is and what actions the caregiver should take.\n' +
               'Include a "confidence" field (high, medium, low) based on image clarity.\n\n' +
               'Be PRECISE with numbers — member IDs, phone numbers, dates, dosages. Do not guess. If you cannot read something clearly, mark it as "unclear" rather than omitting it.'
@@ -1356,6 +1377,190 @@ app.get("/api/summary/text", (req, res) => {
     res.send(text);
   } catch (e) { res.status(500).send("Error: " + e.message); }
 });
+
+
+// ─── Medication Reminders ────────────────────────────────
+const medReminders = require("./tools/med-reminders");
+const cron = require("node-cron");
+
+app.get("/api/reminders", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const reminders = medReminders.getReminders(pid);
+    const stats = medReminders.getAdherenceStats(pid, 30);
+    res.json({ reminders, stats });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/reminders/create", (req, res) => {
+  try {
+    const r = medReminders.createReminder(req.body);
+    res.json({ success: true, reminder: r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/reminders/auto-create", (req, res) => {
+  try {
+    const patients = getAllPatients();
+    const patient = patients.find(p => p.id === (req.body.patientId || getCurrentPatientId()));
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const created = medReminders.autoCreateFromPatient(patient);
+    res.json({ success: true, created: created.length, reminders: created });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/reminders/:id/taken", (req, res) => {
+  try {
+    const r = medReminders.confirmTaken(req.params.id);
+    res.json({ success: true, reminder: r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/reminders/:id/skipped", (req, res) => {
+  try {
+    const r = medReminders.confirmSkipped(req.params.id, req.body.reason);
+    res.json({ success: true, reminder: r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete("/api/reminders/:id", (req, res) => {
+  try {
+    medReminders.deleteReminder(req.params.id);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/reminders/due", (_req, res) => {
+  try {
+    const due = medReminders.getDueReminders();
+    res.json({ due });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Check reminders every minute
+cron.schedule("* * * * *", () => {
+  try {
+    const due = medReminders.getDueReminders();
+    due.forEach(r => {
+      addNotification("medication", "Time for " + r.medication, r.dose + " — tap to confirm taken", r.patientId, null);
+      medReminders.markTriggered(r.id);
+    });
+  } catch (e) { console.log("Reminder cron error:", e.message); }
+});
+
+// ─── HIPAA Audit Logging ─────────────────────────────────
+const auditLog = require("./tools/audit-log");
+app.use(auditLog.auditMiddleware);
+
+app.get("/api/audit-log", (req, res) => {
+  try {
+    const filters = {
+      userId: req.query.userId,
+      patientId: req.query.patientId,
+      action: req.query.action,
+      since: req.query.since,
+      limit: parseInt(req.query.limit) || 100,
+      phi_only: req.query.phi === "true"
+    };
+    const logs = auditLog.getAuditLog(filters);
+    res.json({ logs, count: logs.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Payments ────────────────────────────────────────────
+const payments = require("./tools/payments");
+
+app.get("/pricing", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "pricing.html"));
+});
+app.post("/api/payments/checkout", async (req, res) => {
+  try {
+    const { tier, interval } = req.body;
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    if (!payments.stripe) return res.json({ error: "Stripe not configured. Add STRIPE_SECRET_KEY to .env" });
+    const checkout = await payments.createCheckoutSession(session.userId, session.email, tier, interval);
+    res.json({ url: checkout.url });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  try {
+    const sig = req.headers["stripe-signature"];
+    const result = await payments.handleWebhook(req.body, sig);
+    if (result.action === "upgrade" && result.userId) {
+      const authMod = require("./tools/auth");
+      authMod.updateUserTier(result.userId, result.tier);
+    }
+    res.json({ received: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// ─── Caregiver Sharing ───────────────────────────────────
+const sharing = require("./tools/sharing");
+
+app.post("/api/sharing/invite", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const { patientId, patientName, permission } = req.body;
+    const invite = sharing.createInvite(session.userId, session.email, patientId, patientName, permission);
+    const inviteUrl = (process.env.APP_URL || "http://localhost:3000") + "/invite/" + invite.code;
+    res.json({ success: true, invite, inviteUrl });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/sharing/accept", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const { code } = req.body;
+    const share = sharing.acceptInvite(code, session.userId, session.email);
+    res.json({ success: true, share });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get("/api/sharing/my-shares", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const shared = sharing.getSharedPatients(session.userId);
+    res.json({ shares: shared });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/sharing/patient/:patientId", (req, res) => {
+  try {
+    const shares = sharing.getSharesForPatient(req.params.patientId);
+    res.json({ shares });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete("/api/sharing/:shareId", (req, res) => {
+  try {
+    const session = req.userSession;
+    if (!session) return res.status(401).json({ error: "Not authenticated" });
+    const share = sharing.revokeShare(req.params.shareId, session.userId);
+    res.json({ success: true, share });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get("/invite/:code", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// ─── Database Backup ─────────────────────────────────────
+const dbBackup = require("./tools/db-backup");
+
+// Auto-backup every 6 hours
+cron.schedule("0 */6 * * *", () => {
+  try {
+    const result = dbBackup.createBackup();
+    console.log("Auto-backup created:", result.files, "files");
+  } catch (e) { console.log("Backup error:", e.message); }
+});
+
+app.post("/api/backup/create", (_req, res) => {
+  try {
+    const result = dbBackup.createBackup();
+    res.json({ success: true, ...result });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/backup/list", (_req, res) => {
+  try {
+    const backups = dbBackup.listBackups();
+    res.json({ backups });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
