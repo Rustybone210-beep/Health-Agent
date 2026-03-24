@@ -1400,13 +1400,5 @@ app.listen(PORT, () => {
   console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
 });
 // === Lead Pipeline & Verification Routes ===
-const leadsRouter = require("./routes/leads");
-const verifyRouter = require("./routes/verify");
 
-app.use("/api/leads", leadsRouter);
-app.use("/api/verify", verifyRouter);
 
-// Serve pipeline dashboard
-app.get("/pipeline", (req, res) => {
-  res.sendFile(require("path").join(__dirname, "public", "pipeline", "index.html"));
-});
