@@ -2238,6 +2238,70 @@ app.get("/api/network/stats", (_req, res) => {
 });
 
 
+
+// --- Patient Packet and QR Code ---
+const patientPacket = require("./tools/patient-packet");
+app.get("/api/packet/generate", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const packet = patientPacket.generatePatientPacket(patient);
+    res.json(packet);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/packet/text", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const packet = patientPacket.generatePatientPacket(patient);
+    const text = patientPacket.formatPacketAsText(packet);
+    res.setHeader("Content-Type", "text/plain");
+    res.send(text);
+  } catch (e) { res.status(500).send("Error: " + e.message); }
+});
+app.get("/api/packet/html", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const packet = patientPacket.generatePatientPacket(patient);
+    const html = patientPacket.formatPacketAsHTML(packet);
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (e) { res.status(500).send("Error: " + e.message); }
+});
+app.post("/api/packet/share", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + (process.env.PORT || 3000);
+    const packet = patientPacket.generatePatientPacket(patient);
+    const result = patientPacket.createShareLink(pid, packet, req.body.expiresHours || 24);
+    const shareUrl = baseUrl + "/shared/" + result.token;
+    res.json({ success: true, shareUrl, expiresIn: (req.body.expiresHours || 24) + " hours" });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/packet/qr", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid);
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + (process.env.PORT || 3000);
+    const qr = patientPacket.generateQRData(patient, baseUrl);
+    res.json(qr);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/shared/:token", (req, res) => {
+  try {
+    const html = patientPacket.getSharedPacket(req.params.token);
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (e) { res.status(404).send("Link expired or invalid. Request a new one from Health Agent."); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
