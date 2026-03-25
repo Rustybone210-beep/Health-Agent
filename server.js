@@ -2226,7 +2226,7 @@ app.get('/', (req, res) => {
   }
   // Auto-redirect to onboarding if no patients exist
   const patients = getAllPatients();
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 app.get('/onboarding', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));
