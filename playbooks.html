@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Health Agent -- Emergency Playbooks</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#0f172a;
+  --bg-mid:#1e293b;
+  --glass:rgba(30,41,59,0.45);
+  --glass-heavy:rgba(30,41,59,0.65);
+  --glass-border:rgba(148,163,184,0.12);
+  --glass-border-hover:rgba(148,163,184,0.24);
+  --teal:#14b8a6;--teal-light:#2dd4bf;--teal-dark:#0d9488;
+  --teal-glow:rgba(20,184,166,0.15);
+  --teal-gradient:linear-gradient(135deg,#14b8a6,#0d9488);
+  --red:#ef4444;--red-soft:rgba(239,68,68,0.12);--red-glow:rgba(239,68,68,0.15);
+  --green:#22c55e;--green-soft:rgba(34,197,94,0.12);
+  --gold:#f59e0b;--gold-soft:rgba(245,158,11,0.12);
+  --blue:#3b82f6;--blue-soft:rgba(59,130,246,0.12);
+  --purple:#a855f7;--purple-soft:rgba(168,85,247,0.12);
+  --orange:#f97316;--orange-soft:rgba(249,115,22,0.12);
+  --text-primary:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-tertiary:#64748b;
+  --text-inverse:#0f172a;
+  --radius-sm:16px;--radius-md:20px;--radius-lg:24px;--radius-xl:28px;--radius-pill:100px;
+  --shadow-card:0 4px 24px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.15);
+  --shadow-float:0 8px 40px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2);
+  --shadow-teal-glow:0 0 20px rgba(20,184,166,0.15);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:linear-gradient(145deg,var(--bg-deep) 0%,var(--bg-mid) 50%,var(--bg-deep) 100%);
+  background-attachment:fixed;
+  color:var(--text-primary);
+  min-height:100%;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.01em;
+}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;outline:none;background:none;color:inherit}
+::selection{background:rgba(20,184,166,0.3)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:10px}
+
+/* Ambient */
+.ambient{position:fixed;pointer-events:none;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0}
+.amb-1{top:-8%;left:-5%;width:450px;height:450px;background:radial-gradient(circle,rgba(239,68,68,0.08),transparent 70%);animation:af1 9s ease-in-out infinite}
+.amb-2{bottom:-10%;right:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(20,184,166,0.1),transparent 70%);animation:af2 11s ease-in-out infinite}
+@keyframes af1{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,15px)}}
+@keyframes af2{0%,100%{transform:translate(0,0)}50%{transform:translate(-15px,-20px)}}
+
+/* Nav */
+.pb-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-top) + 16px) 20px 16px;
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,23,42,0.88);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-border);
+}
+.nav-left{display:flex;align-items:center;gap:14px}
+.nav-back{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--glass);border:1px solid var(--glass-border);
+  color:var(--text-secondary);font-size:15px;
+  transition:var(--transition);
+}
+.nav-back:hover{color:var(--text-primary);border-color:var(--glass-border-hover)}
+.nav-title{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+
+/* Emergency banner */
+.emergency-banner{
+  margin:16px 20px;
+  background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.06));
+  border:1px solid rgba(239,68,68,0.2);
+  border-radius:var(--radius-lg);
+  padding:18px 20px;
+  display:flex;align-items:center;gap:14px;
+}
+.emergency-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:var(--red-soft);border:1px solid rgba(239,68,68,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:var(--red);flex-shrink:0;
+  animation:emergencyPulse 2s ease-in-out infinite;
+}
+@keyframes emergencyPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.2)}50%{box-shadow:0 0 16px 4px rgba(239,68,68,0.1)}}
+.emergency-text strong{font-size:15px;font-weight:700;color:var(--red);display:block;margin-bottom:2px}
+.emergency-text span{font-size:13px;color:var(--text-secondary)}
+.call-911{
+  padding:10px 20px;border-radius:var(--radius-pill);
+  background:var(--red);color:#fff;
+  font-size:13px;font-weight:700;
+  flex-shrink:0;transition:var(--transition);
+  display:flex;align-items:center;gap:6px;
+}
+.call-911:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(239,68,68,0.3)}
+
+/* Search */
+.search-wrap{
+  margin:0 20px 16px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);
+  display:flex;align-items:center;
+  transition:all var(--transition);
+}
+.search-wrap:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,184,166,0.1)}
+.search-wrap i{padding:0 0 0 16px;font-size:15px;color:var(--text-tertiary)}
+.search-wrap input{
+  flex:1;padding:13px 16px;
+  background:none;border:none;
+  font-size:14px;color:var(--text-primary);
+  font-family:inherit;outline:none;
+}
+.search-wrap input::placeholder{color:var(--text-tertiary)}
+
+/* Playbook grid */
+.pb-section-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--text-tertiary);
+  padding:8px 20px 12px;
+}
+.pb-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;padding:0 20px 12px;
+}
+.pb-card{
+  background:var(--glass-heavy);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:22px 18px;
+  cursor:pointer;transition:var(--transition);
+  position:relative;overflow:hidden;
+}
+.pb-card:hover{border-color:var(--glass-border-hover);transform:translateY(-2px);box-shadow:var(--shadow-card)}
+.pb-card:active{transform:scale(0.98)}
+.pb-card-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:14px;
+}
+.pb-card-icon.red{background:var(--red-soft);color:var(--red);border:1px solid rgba(239,68,68,0.15)}
+.pb-card-icon.gold{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(245,158,11,0.15)}
+.pb-card-icon.blue{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(59,130,246,0.15)}
+.pb-card-icon.purple{background:var(--purple-soft);color:var(--purple);border:1px solid rgba(168,85,247,0.15)}
+.pb-card-icon.orange{background:var(--orange-soft);color:var(--orange);border:1px solid rgba(249,115,22,0.15)}
+.pb-card-icon.teal{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(20,184,166,0.15)}
+.pb-card-icon.green{background:var(--green-soft);color:var(--green);border:1px solid rgba(34,197,94,0.15)}
+.pb-card-name{font-size:14px;font-weight:700;line-height:1.3;margin-bottom:4px}
+.pb-card-sub{font-size:11px;color:var(--text-tertiary);line-height:1.35}
+.pb-card-severity{
+  position:absolute;top:12px;right:12px;
+  padding:3px 10px;border-radius:var(--radius-pill);
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+}
+.pb-card-severity.critical{background:var(--red-soft);color:var(--red)}
+.pb-card-severity.urgent{background:var(--gold-soft);color:var(--gold)}
+.pb-card-severity.moderate{background:var(--blue-soft);color:var(--blue)}
+
+/* Full-width playbook cards */
+.pb-list{padding:0 20px 24px;display:flex;flex-direction:column;gap:10px}
+.pb-list-card{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:18px 20px;
+  display:flex;align-items:center;gap:16px;
+  cursor:pointer;transition:var(--transition);
+}
+.pb-list-card:hover{border-color:var(--glass-border-hover);transform:translateY(-1px)}
+.pb-list-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.pb-list-info{flex:1}
+.pb-list-name{font-size:14px;font-weight:700}
+.pb-list-sub{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.pb-list-chevron{font-size:13px;color:var(--text-tertiary)}
+
+/* ===== PLAYBOOK DETAIL OVERLAY ===== */
+.pb-overlay{
+  display:none;position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,var(--bg-deep),var(--bg-mid));
+  z-index:100;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.pb-overlay.open{display:block;animation:slideUp 0.35s cubic-bezier(0.32,0.72,0,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.pb-detail-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-top) + 16px) 20px 16px;
+  position:sticky;top:0;z-index:5;
+  background:rgba(15,23,42,0.92);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-border);
+}
+.pb-detail-title{font-size:17px;font-weight:800;letter-spacing:-0.2px;flex:1;text-align:center}
+.pb-close{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--glass);border:1px solid var(--glass-border);
+  color:var(--text-secondary);font-size:15px;
+  transition:var(--transition);
+}
+.pb-close:hover{color:var(--text-primary)}
+
+/* Detail content */
+.pb-detail-body{padding:20px;max-width:640px;margin:0 auto}
+
+.pb-hero-banner{
+  border-radius:var(--radius-xl);
+  padding:28px 24px;
+  margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.pb-hero-banner.critical{background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04));border:1px solid rgba(239,68,68,0.15)}
+.pb-hero-banner.urgent{background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.04));border:1px solid rgba(245,158,11,0.15)}
+.pb-hero-banner.moderate{background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(59,130,246,0.04));border:1px solid rgba(59,130,246,0.15)}
+.pb-hero-icon{
+  width:56px;height:56px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:16px;
+}
+.pb-hero-title{font-size:22px;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px}
+.pb-hero-desc{font-size:14px;color:var(--text-secondary);line-height:1.5}
+
+/* Checklist */
+.pb-section{margin-bottom:24px}
+.pb-section-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--text-tertiary);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.pb-section-label i{color:var(--teal);font-size:13px}
+
+.check-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 16px;margin-bottom:8px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-sm);
+  cursor:pointer;transition:var(--transition);
+  user-select:none;
+}
+.check-item:hover{border-color:var(--glass-border-hover)}
+.check-item.checked{border-color:rgba(20,184,166,0.2);background:var(--teal-glow)}
+.check-box{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--text-tertiary);
+  display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);margin-top:1px;
+}
+.check-item.checked .check-box{
+  border-color:var(--teal);background:var(--teal);
+}
+.check-item.checked .check-box::after{
+  content:'\f00c';font-family:'Font Awesome 6 Free';
+  font-weight:900;font-size:11px;color:#fff;
+}
+.check-text{flex:1}
+.check-text-main{font-size:14px;font-weight:600;line-height:1.4}
+.check-text-sub{font-size:12px;color:var(--text-secondary);margin-top:3px;line-height:1.4}
+.check-item.checked .check-text-main{text-decoration:line-through;color:var(--text-tertiary)}
+
+/* Step numbers */
+.step-num{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:var(--teal-gradient);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;
+  margin-top:1px;
+}
+.check-item.checked .step-num{background:var(--glass);color:var(--text-tertiary)}
+
+/* Warning box */
+.warning-box{
+  padding:16px 18px;
+  border-radius:var(--radius-sm);
+  margin-bottom:16px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.warning-box.red{background:var(--red-soft);border:1px solid rgba(239,68,68,0.15)}
+.warning-box.gold{background:var(--gold-soft);border:1px solid rgba(245,158,11,0.15)}
+.warning-box.green{background:var(--green-soft);border:1px solid rgba(34,197,94,0.15)}
+.warning-box i{font-size:17px;flex-shrink:0;margin-top:2px}
+.warning-box.red i{color:var(--red)}
+.warning-box.gold i{color:var(--gold)}
+.warning-box.green i{color:var(--green)}
+.warning-box-text{font-size:13px;line-height:1.5;color:var(--text-secondary)}
+.warning-box-text strong{color:var(--text-primary)}
+
+/* Action buttons */
+.pb-actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:20px;padding-bottom:calc(var(--safe-bottom) + 20px);
+}
+.pb-action{
+  padding:14px;border-radius:var(--radius-sm);
+  text-align:center;font-size:13px;font-weight:600;
+  transition:var(--transition);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.pb-action.primary{background:var(--red);color:#fff}
+.pb-action.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(239,68,68,0.3)}
+.pb-action.secondary{background:var(--glass);border:1px solid var(--glass-border);color:var(--text-primary)}
+.pb-action.secondary:hover{border-color:var(--glass-border-hover);transform:translateY(-1px)}
+.pb-action.teal{background:var(--teal-gradient);color:#fff}
+.pb-action.teal:hover{transform:translateY(-1px);box-shadow:var(--shadow-teal-glow)}
+
+/* Responsive */
+@media(min-width:768px){
+  .pb-grid{grid-template-columns:repeat(3,1fr);max-width:780px;margin:0 auto;padding:0 20px 12px}
+  .pb-list{max-width:640px;margin:0 auto}
+  .emergency-banner{max-width:640px;margin:16px auto}
+  .search-wrap{max-width:640px;margin:0 auto 16px}
+}
+@media(max-width:400px){
+  .pb-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient -->
+<div class="ambient amb-1"></div>
+<div class="ambient amb-2"></div>
+
+<!-- Nav -->
+<nav class="pb-nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="window.close();window.location.href='/'"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="nav-title">Emergency Playbooks</div>
+  </div>
+</nav>
+
+<!-- Emergency Banner -->
+<div class="emergency-banner">
+  <div class="emergency-icon"><i class="fa-solid fa-truck-medical"></i></div>
+  <div class="emergency-text">
+    <strong>If this is a medical emergency</strong>
+    <span>Call 911 immediately. These guides do not replace emergency care.</span>
+  </div>
+  <a class="call-911" href="tel:911"><i class="fa-solid fa-phone"></i> 911</a>
+</div>
+
+<!-- Search -->
+<div class="search-wrap">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="text" id="searchInput" placeholder="Search playbooks..." oninput="searchPlaybooks(this.value)">
+</div>
+
+<!-- Critical Emergencies -->
+<div class="pb-section-title" id="criticalTitle"><i class="fa-solid fa-circle-exclamation" style="color:var(--red);margin-right:4px"></i> Critical Emergencies</div>
+<div class="pb-grid" id="criticalGrid">
+  <div class="pb-card" onclick="openPlaybook('stroke')">
+    <div class="pb-card-severity critical">Critical</div>
+    <div class="pb-card-icon red"><i class="fa-solid fa-brain"></i></div>
+    <div class="pb-card-name">Stroke FAST Check</div>
+    <div class="pb-card-sub">Face, Arms, Speech, Time</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('heartattack')">
+    <div class="pb-card-severity critical">Critical</div>
+    <div class="pb-card-icon red"><i class="fa-solid fa-heart-crack"></i></div>
+    <div class="pb-card-name">Chest Pain / Heart Attack</div>
+    <div class="pb-card-sub">Signs and response steps</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('anaphylaxis')">
+    <div class="pb-card-severity critical">Critical</div>
+    <div class="pb-card-icon red"><i class="fa-solid fa-syringe"></i></div>
+    <div class="pb-card-name">Anaphylaxis</div>
+    <div class="pb-card-sub">Severe allergic reaction</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('seizure')">
+    <div class="pb-card-severity critical">Critical</div>
+    <div class="pb-card-icon orange"><i class="fa-solid fa-bolt"></i></div>
+    <div class="pb-card-name">Seizure Response</div>
+    <div class="pb-card-sub">Keep safe during a seizure</div>
+  </div>
+</div>
+
+<!-- Urgent -->
+<div class="pb-section-title" id="urgentTitle"><i class="fa-solid fa-triangle-exclamation" style="color:var(--gold);margin-right:4px"></i> Urgent Situations</div>
+<div class="pb-grid" id="urgentGrid">
+  <div class="pb-card" onclick="openPlaybook('bloodsugar')">
+    <div class="pb-card-severity urgent">Urgent</div>
+    <div class="pb-card-icon gold"><i class="fa-solid fa-droplet"></i></div>
+    <div class="pb-card-name">Blood Sugar Emergency</div>
+    <div class="pb-card-sub">Hypo & hyperglycemia</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('fall')">
+    <div class="pb-card-severity urgent">Urgent</div>
+    <div class="pb-card-icon gold"><i class="fa-solid fa-person-falling"></i></div>
+    <div class="pb-card-name">Fall Response</div>
+    <div class="pb-card-sub">Assess and respond safely</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('breathing')">
+    <div class="pb-card-severity urgent">Urgent</div>
+    <div class="pb-card-icon blue"><i class="fa-solid fa-lungs"></i></div>
+    <div class="pb-card-name">Breathing Difficulty</div>
+    <div class="pb-card-sub">Shortness of breath steps</div>
+  </div>
+  <div class="pb-card" onclick="openPlaybook('allergic')">
+    <div class="pb-card-severity moderate">Moderate</div>
+    <div class="pb-card-icon purple"><i class="fa-solid fa-hand-dots"></i></div>
+    <div class="pb-card-name">Allergic Reaction</div>
+    <div class="pb-card-sub">Mild to moderate response</div>
+  </div>
+</div>
+
+<!-- Quick Reference -->
+<div class="pb-section-title" id="refTitle"><i class="fa-solid fa-book-medical" style="color:var(--teal);margin-right:4px"></i> Quick Reference</div>
+<div class="pb-list" id="refList">
+  <div class="pb-list-card" onclick="openPlaybook('medications')">
+    <div class="pb-list-icon" style="background:var(--teal-glow);color:var(--teal);border:1px solid rgba(20,184,166,0.15)"><i class="fa-solid fa-pills"></i></div>
+    <div class="pb-list-info">
+      <div class="pb-list-name">Medication Emergencies</div>
+      <div class="pb-list-sub">Missed dose, double dose, adverse reactions</div>
+    </div>
+    <i class="fa-solid fa-chevron-right pb-list-chevron"></i>
+  </div>
+  <div class="pb-list-card" onclick="openPlaybook('vitals')">
+    <div class="pb-list-icon" style="background:var(--green-soft);color:var(--green);border:1px solid rgba(34,197,94,0.15)"><i class="fa-solid fa-heart-pulse"></i></div>
+    <div class="pb-list-info">
+      <div class="pb-list-name">When to Call the Doctor</div>
+      <div class="pb-list-sub">Vital signs and symptom thresholds</div>
+    </div>
+    <i class="fa-solid fa-chevron-right pb-list-chevron"></i>
+  </div>
+  <div class="pb-list-card" onclick="openPlaybook('hospital')">
+    <div class="pb-list-icon" style="background:var(--blue-soft);color:var(--blue);border:1px solid rgba(59,130,246,0.15)"><i class="fa-solid fa-hospital"></i></div>
+    <div class="pb-list-info">
+      <div class="pb-list-name">Hospital Bag Checklist</div>
+      <div class="pb-list-sub">What to bring for ER or hospital stay</div>
+    </div>
+    <i class="fa-solid fa-chevron-right pb-list-chevron"></i>
+  </div>
+</div>
+
+<!-- Playbook Detail Overlay -->
+<div class="pb-overlay" id="pbOverlay">
+  <nav class="pb-detail-nav">
+    <button class="pb-close" onclick="closePlaybook()"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="pb-detail-title" id="pbDetailTitle">Playbook</div>
+    <button class="pb-close" onclick="closePlaybook()"><i class="fa-solid fa-xmark"></i></button>
+  </nav>
+  <div class="pb-detail-body" id="pbDetailBody"></div>
+</div>
+
+<script>
+// =============================================
+// HEALTH AGENT -- EMERGENCY PLAYBOOKS
+// =============================================
+
+const playbooks = {
+  stroke: {
+    title: 'Stroke FAST Check',
+    severity: 'critical',
+    icon: 'fa-solid fa-brain',
+    color: 'red',
+    desc: 'Use the FAST method to identify stroke symptoms. Every minute counts -- brain cells die rapidly during a stroke.',
+    warning: { type: 'red', icon: 'fa-solid fa-clock', text: '<strong>Time is critical.</strong> Note the exact time symptoms started. Clot-busting treatment must be given within 3-4.5 hours.' },
+    sections: [
+      {
+        label: 'FAST Assessment',
+        icon: 'fa-solid fa-clipboard-check',
+        type: 'steps',
+        items: [
+          { main: 'F -- Face drooping', sub: 'Ask them to smile. Does one side droop or feel numb?' },
+          { main: 'A -- Arm weakness', sub: 'Ask them to raise both arms. Does one drift downward?' },
+          { main: 'S -- Speech difficulty', sub: 'Ask them to repeat a simple sentence. Is speech slurred or strange?' },
+          { main: 'T -- Time to call 911', sub: 'If ANY of these signs are present, call 911 immediately.' }
+        ]
+      },
+      {
+        label: 'While Waiting for EMS',
+        icon: 'fa-solid fa-hand-holding-medical',
+        type: 'checks',
+        items: [
+          { main: 'Note the exact time symptoms started' },
+          { main: 'Keep them calm and lying down with head slightly elevated' },
+          { main: 'Do NOT give them food, water, or medication' },
+          { main: 'Do NOT let them fall asleep' },
+          { main: 'Loosen any restrictive clothing' },
+          { main: 'If vomiting, turn them on their side' },
+          { main: 'Begin CPR if they become unresponsive and stop breathing' }
+        ]
+      }
+    ],
+    infoBox: { type: 'gold', icon: 'fa-solid fa-lightbulb', text: '<strong>Additional stroke signs:</strong> Sudden severe headache, sudden vision problems, sudden confusion, sudden trouble walking or dizziness, sudden numbness on one side.' }
+  },
+
+  heartattack: {
+    title: 'Chest Pain / Heart Attack',
+    severity: 'critical',
+    icon: 'fa-solid fa-heart-crack',
+    color: 'red',
+    desc: 'Recognize heart attack signs and take immediate action. Symptoms can be different in women.',
+    warning: { type: 'red', icon: 'fa-solid fa-phone', text: '<strong>Call 911 immediately</strong> if chest pain lasts more than 5 minutes, comes with shortness of breath, or spreads to jaw, arms, or back.' },
+    sections: [
+      {
+        label: 'Common Signs',
+        icon: 'fa-solid fa-stethoscope',
+        type: 'checks',
+        items: [
+          { main: 'Chest pressure, squeezing, or pain lasting more than a few minutes' },
+          { main: 'Pain spreading to shoulders, neck, jaw, arms, or back' },
+          { main: 'Shortness of breath (with or without chest pain)' },
+          { main: 'Cold sweat, nausea, lightheadedness' },
+          { main: 'Women may have atypical signs: fatigue, indigestion, anxiety' }
+        ]
+      },
+      {
+        label: 'Immediate Steps',
+        icon: 'fa-solid fa-list-ol',
+        type: 'steps',
+        items: [
+          { main: 'Call 911', sub: 'Do not drive yourself or the patient to the hospital.' },
+          { main: 'Chew one aspirin (325mg)', sub: 'Only if not allergic. Chew -- do not swallow whole.' },
+          { main: 'Sit or lie in a comfortable position', sub: 'Semi-upright is usually best for breathing.' },
+          { main: 'Loosen tight clothing', sub: 'Remove tie, unbutton collar, loosen belt.' },
+          { main: 'Stay calm and wait for EMS', sub: 'Begin CPR if person becomes unresponsive.' }
+        ]
+      }
+    ]
+  },
+
+  anaphylaxis: {
+    title: 'Anaphylaxis',
+    severity: 'critical',
+    icon: 'fa-solid fa-syringe',
+    color: 'red',
+    desc: 'Severe allergic reaction that can be life-threatening within minutes. Common triggers include food, medications, and insect stings.',
+    warning: { type: 'red', icon: 'fa-solid fa-exclamation-triangle', text: '<strong>This is a life-threatening emergency.</strong> Administer epinephrine immediately and call 911.' },
+    sections: [
+      {
+        label: 'Immediate Response',
+        icon: 'fa-solid fa-list-ol',
+        type: 'steps',
+        items: [
+          { main: 'Use EpiPen if available', sub: 'Inject into outer thigh. Can inject through clothing. Hold for 10 seconds.' },
+          { main: 'Call 911', sub: 'Even if EpiPen is used -- a second reaction can occur.' },
+          { main: 'Lay person flat with legs elevated', sub: 'Unless having breathing difficulty -- then let them sit up.' },
+          { main: 'Give a second EpiPen after 5-15 minutes', sub: 'Only if symptoms have not improved and EMS has not arrived.' },
+          { main: 'Begin CPR if person stops breathing', sub: 'Continue until EMS arrives.' }
+        ]
+      },
+      {
+        label: 'Signs of Anaphylaxis',
+        icon: 'fa-solid fa-magnifying-glass',
+        type: 'checks',
+        items: [
+          { main: 'Swelling of throat, tongue, or lips' },
+          { main: 'Difficulty breathing, wheezing, or tightness' },
+          { main: 'Rapid or weak pulse' },
+          { main: 'Skin reactions: hives, flushing, pale skin' },
+          { main: 'Dizziness, fainting, or sudden drop in blood pressure' },
+          { main: 'Nausea, vomiting, or diarrhea' }
+        ]
+      }
+    ]
+  },
+
+  seizure: {
+    title: 'Seizure Response',
+    severity: 'critical',
+    icon: 'fa-solid fa-bolt',
+    color: 'orange',
+    desc: 'Keep the person safe during a seizure. Most seizures stop on their own within 1-3 minutes.',
+    sections: [
+      {
+        label: 'During the Seizure',
+        icon: 'fa-solid fa-shield',
+        type: 'steps',
+        items: [
+          { main: 'Stay calm and time the seizure', sub: 'Note the start time. Call 911 if it lasts more than 5 minutes.' },
+          { main: 'Clear the area of hard or sharp objects', sub: 'Move furniture away. Place something soft under their head.' },
+          { main: 'Turn them on their side', sub: 'This helps keep the airway clear.' },
+          { main: 'Do NOT hold them down', sub: 'Do not restrain their movements.' },
+          { main: 'Do NOT put anything in their mouth', sub: 'They cannot swallow their tongue. This is a myth.' }
+        ]
+      },
+      {
+        label: 'After the Seizure',
+        icon: 'fa-solid fa-hand-holding-medical',
+        type: 'checks',
+        items: [
+          { main: 'Keep them on their side until fully conscious' },
+          { main: 'Speak calmly and reassure them' },
+          { main: 'Check for injuries' },
+          { main: 'Do not offer food or water until fully alert' },
+          { main: 'Stay with them until they are fully recovered' }
+        ]
+      }
+    ],
+    infoBox: { type: 'red', icon: 'fa-solid fa-phone', text: '<strong>Call 911 if:</strong> Seizure lasts more than 5 minutes, person does not regain consciousness, a second seizure follows, person is injured, person has never had a seizure before, or person has difficulty breathing.' }
+  },
+
+  bloodsugar: {
+    title: 'Blood Sugar Emergency',
+    severity: 'urgent',
+    icon: 'fa-solid fa-droplet',
+    color: 'gold',
+    desc: 'Both very low (hypoglycemia) and very high (hyperglycemia) blood sugar can be dangerous and require immediate action.',
+    sections: [
+      {
+        label: 'Low Blood Sugar (Below 70 mg/dL)',
+        icon: 'fa-solid fa-arrow-down',
+        type: 'steps',
+        items: [
+          { main: 'Give 15g of fast-acting sugar', sub: '4 glucose tablets, 4 oz juice, 1 tbsp honey, or 5 hard candies.' },
+          { main: 'Wait 15 minutes and recheck', sub: 'If still below 70, repeat step 1.' },
+          { main: 'Once above 70, eat a small snack', sub: 'Crackers with peanut butter or cheese.' },
+          { main: 'Call 911 if unconscious', sub: 'Do NOT try to give food/drink to an unconscious person. Use glucagon if available.' }
+        ]
+      },
+      {
+        label: 'High Blood Sugar (Above 300 mg/dL)',
+        icon: 'fa-solid fa-arrow-up',
+        type: 'checks',
+        items: [
+          { main: 'Encourage water intake to prevent dehydration' },
+          { main: 'Check for ketones if Type 1 diabetic' },
+          { main: 'Contact doctor or nurse hotline' },
+          { main: 'Watch for signs of DKA: fruity breath, nausea, confusion' },
+          { main: 'Call 911 if vomiting, confusion, or rapid breathing develops' }
+        ]
+      }
+    ],
+    infoBox: { type: 'gold', icon: 'fa-solid fa-lightbulb', text: '<strong>Signs of low blood sugar:</strong> Shakiness, sweating, confusion, fast heartbeat, irritability, hunger, blurred vision, weakness.' }
+  },
+
+  fall: {
+    title: 'Fall Response',
+    severity: 'urgent',
+    icon: 'fa-solid fa-person-falling',
+    color: 'gold',
+    desc: 'Falls are the leading cause of injury in older adults. Proper assessment after a fall is critical.',
+    sections: [
+      {
+        label: 'Immediate Assessment',
+        icon: 'fa-solid fa-magnifying-glass',
+        type: 'steps',
+        items: [
+          { main: 'Stay calm and assess the situation', sub: 'Ask them to stay still. Do not rush to move them.' },
+          { main: 'Check for obvious injuries', sub: 'Look for bleeding, deformity, swelling. Ask where it hurts.' },
+          { main: 'Ask if they can move all limbs', sub: 'If they cannot, or have severe pain, call 911.' },
+          { main: 'Check for head injury signs', sub: 'Confusion, vision changes, vomiting, loss of consciousness.' },
+          { main: 'Help them up slowly if no serious injury', sub: 'Roll to side, push to sitting, rest, then stand using support.' }
+        ]
+      },
+      {
+        label: 'Call 911 If',
+        icon: 'fa-solid fa-phone',
+        type: 'checks',
+        items: [
+          { main: 'Hit their head and takes blood thinners' },
+          { main: 'Cannot move a limb or bear weight' },
+          { main: 'Hip pain (possible fracture)' },
+          { main: 'Loss of consciousness, even briefly' },
+          { main: 'Severe bleeding that will not stop' },
+          { main: 'Signs of concussion appear in the following hours' }
+        ]
+      }
+    ]
+  },
+
+  breathing: {
+    title: 'Breathing Difficulty',
+    severity: 'urgent',
+    icon: 'fa-solid fa-lungs',
+    color: 'blue',
+    desc: 'Shortness of breath can range from mild to life-threatening. Quick assessment determines the right response.',
+    sections: [
+      {
+        label: 'Quick Assessment',
+        icon: 'fa-solid fa-clipboard-check',
+        type: 'steps',
+        items: [
+          { main: 'Ask them to speak a full sentence', sub: 'If they cannot complete a sentence, call 911.' },
+          { main: 'Check lips and fingertips for blue color', sub: 'Bluish tint (cyanosis) means call 911 immediately.' },
+          { main: 'Sit them upright', sub: 'Leaning slightly forward can help. Do not lay flat.' },
+          { main: 'Use prescribed inhaler if available', sub: '2 puffs with spacer if possible. Wait 1 minute between puffs.' },
+          { main: 'Open windows for fresh air', sub: 'Remove from any smoke, fumes, or allergens.' }
+        ]
+      },
+      {
+        label: 'Call 911 If',
+        icon: 'fa-solid fa-phone',
+        type: 'checks',
+        items: [
+          { main: 'Lips or fingertips turning blue' },
+          { main: 'Cannot speak in full sentences' },
+          { main: 'Inhaler provides no relief after 15 minutes' },
+          { main: 'Breathing rate above 30 breaths per minute' },
+          { main: 'Chest pain accompanies the breathing difficulty' },
+          { main: 'Confusion or drowsiness develops' }
+        ]
+      }
+    ]
+  },
+
+  allergic: {
+    title: 'Allergic Reaction (Mild-Moderate)',
+    severity: 'moderate',
+    icon: 'fa-solid fa-hand-dots',
+    color: 'purple',
+    desc: 'Mild to moderate allergic reactions can usually be managed at home, but watch for escalation.',
+    warning: { type: 'gold', icon: 'fa-solid fa-arrow-up', text: '<strong>If symptoms worsen rapidly</strong> (throat swelling, difficulty breathing, dizziness), this is anaphylaxis. Use EpiPen and call 911.' },
+    sections: [
+      {
+        label: 'Treatment Steps',
+        icon: 'fa-solid fa-list-ol',
+        type: 'steps',
+        items: [
+          { main: 'Remove the trigger if known', sub: 'Stop eating the food, remove from the environment, etc.' },
+          { main: 'Give antihistamine (Benadryl)', sub: 'Follow dosing on package. Usually 25-50mg for adults.' },
+          { main: 'Apply cool compress to hives/swelling', sub: 'Wet cloth or ice pack wrapped in towel.' },
+          { main: 'Monitor for 2-4 hours', sub: 'Watch for worsening. Allergic reactions can escalate.' },
+          { main: 'Contact doctor for follow-up', sub: 'Discuss allergy testing and whether to carry an EpiPen.' }
+        ]
+      }
+    ]
+  },
+
+  medications: {
+    title: 'Medication Emergencies',
+    severity: 'moderate',
+    icon: 'fa-solid fa-pills',
+    color: 'teal',
+    desc: 'What to do when medications are missed, doubled, or cause unexpected reactions.',
+    sections: [
+      {
+        label: 'Missed Dose',
+        icon: 'fa-solid fa-clock',
+        type: 'checks',
+        items: [
+          { main: 'Take it as soon as you remember' },
+          { main: 'If close to next dose, skip the missed one' },
+          { main: 'Never double up to make up for a missed dose' },
+          { main: 'Check specific medication guidelines -- some have special rules' },
+          { main: 'Set up medication reminders to prevent future misses' }
+        ]
+      },
+      {
+        label: 'Accidental Double Dose',
+        icon: 'fa-solid fa-exclamation',
+        type: 'checks',
+        items: [
+          { main: 'Stay calm -- most single extra doses are not dangerous' },
+          { main: 'Call Poison Control: 1-800-222-1222' },
+          { main: 'Note the medication name, dosage, and time taken' },
+          { main: 'Watch for unusual symptoms and seek care if they develop' },
+          { main: 'For blood thinners, diabetes, or heart meds, call doctor immediately' }
+        ]
+      },
+      {
+        label: 'Adverse Reaction Signs',
+        icon: 'fa-solid fa-triangle-exclamation',
+        type: 'checks',
+        items: [
+          { main: 'New rash, hives, or itching after starting a medication' },
+          { main: 'Swelling of face, lips, or tongue' },
+          { main: 'Severe dizziness or fainting' },
+          { main: 'Difficulty breathing' },
+          { main: 'Severe stomach pain, nausea, or vomiting' }
+        ]
+      }
+    ],
+    infoBox: { type: 'green', icon: 'fa-solid fa-phone', text: '<strong>Poison Control:</strong> 1-800-222-1222 (US). Available 24/7. Free and confidential.' }
+  },
+
+  vitals: {
+    title: 'When to Call the Doctor',
+    severity: 'moderate',
+    icon: 'fa-solid fa-heart-pulse',
+    color: 'green',
+    desc: 'Know the vital sign thresholds and symptoms that require medical attention.',
+    sections: [
+      {
+        label: 'Call Doctor During Business Hours',
+        icon: 'fa-solid fa-phone',
+        type: 'checks',
+        items: [
+          { main: 'Blood pressure consistently above 150/90 or below 90/60' },
+          { main: 'Blood sugar consistently above 250 or below 70' },
+          { main: 'Temperature above 100.4F (38C) lasting more than 24 hours' },
+          { main: 'New or worsening symptoms that concern you' },
+          { main: 'Medication side effects that affect daily life' },
+          { main: 'Weight gain of 3+ pounds in one day (heart failure patients)' }
+        ]
+      },
+      {
+        label: 'Call 911 / Go to ER',
+        icon: 'fa-solid fa-truck-medical',
+        type: 'checks',
+        items: [
+          { main: 'Blood pressure above 180/120 with symptoms' },
+          { main: 'Blood sugar below 54 or above 500' },
+          { main: 'Temperature above 103F (39.4C)' },
+          { main: 'Heart rate below 40 or above 150 at rest' },
+          { main: 'Oxygen saturation (SpO2) below 90%' },
+          { main: 'Sudden severe headache, confusion, or vision changes' },
+          { main: 'Chest pain, difficulty breathing, or signs of stroke' }
+        ]
+      }
+    ]
+  },
+
+  hospital: {
+    title: 'Hospital Bag Checklist',
+    severity: 'moderate',
+    icon: 'fa-solid fa-hospital',
+    color: 'blue',
+    desc: 'Be prepared for an ER visit or hospital stay. Having these items ready saves critical time.',
+    sections: [
+      {
+        label: 'Essential Documents',
+        icon: 'fa-solid fa-file-medical',
+        type: 'checks',
+        items: [
+          { main: 'Insurance card (front and back)' },
+          { main: 'Photo ID' },
+          { main: 'Current medication list with dosages' },
+          { main: 'List of allergies' },
+          { main: 'Advance directive / healthcare POA' },
+          { main: 'Emergency contact list' },
+          { main: 'Recent lab results or doctor summaries' }
+        ]
+      },
+      {
+        label: 'Personal Items',
+        icon: 'fa-solid fa-bag-shopping',
+        type: 'checks',
+        items: [
+          { main: 'Phone and charger' },
+          { main: 'Glasses, hearing aids, dentures' },
+          { main: 'Current medications in original bottles' },
+          { main: 'Comfortable clothes and non-slip socks' },
+          { main: 'Toiletries' },
+          { main: 'Comfort items (book, blanket)' }
+        ]
+      }
+    ],
+    infoBox: { type: 'green', icon: 'fa-solid fa-lightbulb', text: '<strong>Pro tip:</strong> Use Health Agent\'s Patient Packet feature to generate a printable summary of all medical info, medications, and allergies to bring to the hospital.' }
+  }
+};
+
+function openPlaybook(id) {
+  const pb = playbooks[id];
+  if (!pb) return;
+
+  document.getElementById('pbDetailTitle').textContent = pb.title;
+
+  let html = '';
+
+  // Hero banner
+  html += `<div class="pb-hero-banner ${pb.severity}">
+    <div class="pb-hero-icon" style="background:var(--${pb.color}-soft);color:var(--${pb.color});border:1px solid rgba(0,0,0,0.1)"><i class="${pb.icon}"></i></div>
+    <div class="pb-hero-title">${pb.title}</div>
+    <div class="pb-hero-desc">${pb.desc}</div>
+  </div>`;
+
+  // Warning box
+  if (pb.warning) {
+    html += `<div class="warning-box ${pb.warning.type}"><i class="${pb.warning.icon}"></i><div class="warning-box-text">${pb.warning.text}</div></div>`;
+  }
+
+  // Sections
+  pb.sections.forEach(sec => {
+    html += `<div class="pb-section">
+      <div class="pb-section-label"><i class="${sec.icon}"></i> ${sec.label}</div>`;
+
+    sec.items.forEach((item, idx) => {
+      const numOrCheck = sec.type === 'steps'
+        ? `<div class="step-num">${idx + 1}</div>`
+        : `<div class="check-box"></div>`;
+
+      html += `<div class="check-item" onclick="this.classList.toggle('checked')">
+        ${numOrCheck}
+        <div class="check-text">
+          <div class="check-text-main">${item.main}</div>
+          ${item.sub ? `<div class="check-text-sub">${item.sub}</div>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += '</div>';
+  });
+
+  // Info box
+  if (pb.infoBox) {
+    html += `<div class="warning-box ${pb.infoBox.type}"><i class="${pb.infoBox.icon}"></i><div class="warning-box-text">${pb.infoBox.text}</div></div>`;
+  }
+
+  // Actions
+  html += `<div class="pb-actions">
+    <a class="pb-action primary" href="tel:911"><i class="fa-solid fa-phone"></i> Call 911</a>
+    <button class="pb-action secondary" onclick="sharePlaybook('${id}')"><i class="fa-solid fa-share-nodes"></i> Share</button>
+    <button class="pb-action teal" onclick="printPlaybook()"><i class="fa-solid fa-print"></i> Print</button>
+    <button class="pb-action secondary" onclick="closePlaybook()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+  </div>`;
+
+  document.getElementById('pbDetailBody').innerHTML = html;
+  document.getElementById('pbOverlay').classList.add('open');
+  document.getElementById('pbOverlay').scrollTop = 0;
+}
+
+function closePlaybook() {
+  document.getElementById('pbOverlay').classList.remove('open');
+}
+
+function sharePlaybook(id) {
+  const pb = playbooks[id];
+  if (!pb) return;
+
+  if (navigator.share) {
+    navigator.share({
+      title: 'Health Agent: ' + pb.title,
+      text: pb.title + ' - ' + pb.desc,
+      url: window.location.href
+    }).catch(() => {});
+  } else {
+    // Fallback: copy to clipboard
+    const text = pb.title + '\n' + pb.desc + '\n\n' + window.location.href;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Playbook link copied to clipboard');
+    }).catch(() => {});
+  }
+}
+
+function printPlaybook() {
+  window.print();
+}
+
+function searchPlaybooks(query) {
+  const q = query.toLowerCase().trim();
+  const allCards = document.querySelectorAll('.pb-card, .pb-list-card');
+  const sections = [
+    { title: 'criticalTitle', grid: 'criticalGrid' },
+    { title: 'urgentTitle', grid: 'urgentGrid' },
+    { title: 'refTitle', grid: 'refList' }
+  ];
+
+  if (!q) {
+    allCards.forEach(c => c.style.display = '');
+    sections.forEach(s => {
+      document.getElementById(s.title).style.display = '';
+      document.getElementById(s.grid).style.display = '';
+    });
+    return;
+  }
+
+  allCards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+
+  // Hide empty sections
+  sections.forEach(s => {
+    const grid = document.getElementById(s.grid);
+    const visible = grid.querySelectorAll('.pb-card:not([style*="display: none"]), .pb-list-card:not([style*="display: none"])');
+    const hide = visible.length === 0;
+    document.getElementById(s.title).style.display = hide ? 'none' : '';
+    grid.style.display = hide ? 'none' : '';
+  });
+}
+
+// Handle back button in overlay
+window.addEventListener('popstate', function() {
+  if (document.getElementById('pbOverlay').classList.contains('open')) {
+    closePlaybook();
+  }
+});
+</script>
+</body>
+</html>

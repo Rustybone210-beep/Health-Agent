@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Health Agent -- Medical Timeline</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#0f172a;
+  --bg-mid:#1e293b;
+  --glass:rgba(30,41,59,0.45);
+  --glass-heavy:rgba(30,41,59,0.65);
+  --glass-border:rgba(148,163,184,0.12);
+  --glass-border-hover:rgba(148,163,184,0.24);
+  --teal:#14b8a6;
+  --teal-light:#2dd4bf;
+  --teal-dark:#0d9488;
+  --teal-glow:rgba(20,184,166,0.15);
+  --teal-gradient:linear-gradient(135deg,#14b8a6,#0d9488);
+  --red:#ef4444;--red-soft:rgba(239,68,68,0.12);
+  --green:#22c55e;--green-soft:rgba(34,197,94,0.12);
+  --gold:#f59e0b;--gold-soft:rgba(245,158,11,0.12);
+  --blue:#3b82f6;--blue-soft:rgba(59,130,246,0.12);
+  --purple:#a855f7;--purple-soft:rgba(168,85,247,0.12);
+  --orange:#f97316;--orange-soft:rgba(249,115,22,0.12);
+  --text-primary:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-tertiary:#64748b;
+  --text-inverse:#0f172a;
+  --radius-sm:16px;--radius-md:20px;--radius-lg:24px;--radius-xl:28px;--radius-pill:100px;
+  --shadow-card:0 4px 24px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.15);
+  --shadow-float:0 8px 40px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2);
+  --shadow-teal-glow:0 0 20px rgba(20,184,166,0.15);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:linear-gradient(145deg,var(--bg-deep) 0%,var(--bg-mid) 50%,var(--bg-deep) 100%);
+  background-attachment:fixed;
+  color:var(--text-primary);
+  min-height:100%;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.01em;
+}
+input,button,select{font-family:inherit;font-size:inherit;color:inherit;border:none;outline:none;background:none}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+::selection{background:rgba(20,184,166,0.3)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.2);border-radius:10px}
+
+/* Ambient */
+.ambient{position:fixed;pointer-events:none;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0}
+.amb-1{top:-8%;right:-5%;width:450px;height:450px;background:radial-gradient(circle,rgba(20,184,166,0.12),transparent 70%);animation:af1 9s ease-in-out infinite}
+.amb-2{bottom:-10%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.07),transparent 70%);animation:af2 11s ease-in-out infinite}
+@keyframes af1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,15px)}}
+@keyframes af2{0%,100%{transform:translate(0,0)}50%{transform:translate(15px,-20px)}}
+
+/* Nav */
+.tl-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-top) + 16px) 20px 16px;
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,23,42,0.88);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-border);
+}
+.nav-left{display:flex;align-items:center;gap:14px}
+.nav-back{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--glass);border:1px solid var(--glass-border);
+  color:var(--text-secondary);font-size:15px;
+  transition:var(--transition);
+}
+.nav-back:hover{color:var(--text-primary);border-color:var(--glass-border-hover)}
+.nav-title{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.nav-right{display:flex;gap:8px}
+.nav-btn{
+  padding:8px 16px;border-radius:var(--radius-pill);
+  font-size:12px;font-weight:600;
+  border:1px solid var(--glass-border);
+  color:var(--text-secondary);
+  transition:var(--transition);
+  display:flex;align-items:center;gap:6px;
+}
+.nav-btn:hover{border-color:var(--glass-border-hover);color:var(--text-primary)}
+.nav-btn.active{background:var(--teal);color:var(--text-inverse);border-color:var(--teal)}
+
+/* Patient bar */
+.patient-bar{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;margin:16px 20px 0;
+  background:var(--glass-heavy);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card);
+}
+.patient-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--teal-gradient);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#fff;flex-shrink:0;
+  box-shadow:var(--shadow-teal-glow);
+}
+.patient-info{flex:1}
+.patient-name{font-size:16px;font-weight:700;letter-spacing:-0.2px}
+.patient-meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.patient-stat{
+  text-align:center;padding:0 12px;
+  border-left:1px solid var(--glass-border);
+}
+.patient-stat-num{font-size:18px;font-weight:800;color:var(--teal-light)}
+.patient-stat-label{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+
+/* Filter bar */
+.filter-bar{
+  display:flex;gap:8px;padding:16px 20px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{
+  flex-shrink:0;
+  padding:8px 16px;border-radius:var(--radius-pill);
+  font-size:12px;font-weight:600;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-secondary);
+  cursor:pointer;transition:var(--transition);
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+}
+.filter-chip:hover{border-color:var(--glass-border-hover);color:var(--text-primary)}
+.filter-chip.active{background:var(--teal);color:var(--text-inverse);border-color:var(--teal)}
+.filter-chip i{font-size:11px}
+
+/* Timeline container */
+.timeline-container{
+  padding:8px 20px calc(var(--safe-bottom) + 24px);
+  position:relative;z-index:1;
+  max-width:720px;margin:0 auto;
+}
+
+/* Timeline spine */
+.timeline{
+  position:relative;
+  padding-left:32px;
+}
+.timeline::before{
+  content:'';position:absolute;
+  top:0;bottom:0;left:11px;
+  width:2px;
+  background:linear-gradient(180deg,var(--teal),var(--glass-border) 20%,var(--glass-border) 80%,transparent);
+  border-radius:1px;
+}
+
+/* Year divider */
+.tl-year{
+  position:relative;
+  padding:20px 0 12px;
+}
+.tl-year-label{
+  position:relative;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px 6px 0;
+  font-size:20px;font-weight:800;letter-spacing:-0.4px;
+  color:var(--text-primary);
+}
+
+/* Month divider */
+.tl-month{
+  padding:14px 0 6px;
+  font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--text-tertiary);
+}
+
+/* Timeline event */
+.tl-event{
+  position:relative;
+  padding:6px 0 6px 20px;
+  animation:eventIn 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes eventIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Dot on the spine */
+.tl-dot{
+  position:absolute;left:-32px;top:14px;
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;z-index:2;
+}
+.tl-dot.appointment{background:var(--blue-soft);color:var(--blue);border:2px solid rgba(59,130,246,0.25)}
+.tl-dot.lab{background:var(--purple-soft);color:var(--purple);border:2px solid rgba(168,85,247,0.25)}
+.tl-dot.medication{background:var(--gold-soft);color:var(--gold);border:2px solid rgba(245,158,11,0.25)}
+.tl-dot.condition{background:var(--red-soft);color:var(--red);border:2px solid rgba(239,68,68,0.25)}
+.tl-dot.scan{background:var(--teal-glow);color:var(--teal);border:2px solid rgba(20,184,166,0.25)}
+.tl-dot.note{background:var(--green-soft);color:var(--green);border:2px solid rgba(34,197,94,0.25)}
+.tl-dot.vital{background:var(--orange-soft);color:var(--orange);border:2px solid rgba(249,115,22,0.25)}
+
+/* Event card */
+.tl-card{
+  background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:16px 18px;
+  transition:var(--transition);
+  cursor:pointer;
+}
+.tl-card:hover{border-color:var(--glass-border-hover);transform:translateY(-1px);box-shadow:var(--shadow-card)}
+.tl-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.tl-card-type{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.8px;margin-bottom:4px;
+}
+.tl-card-type.appointment{color:var(--blue)}
+.tl-card-type.lab{color:var(--purple)}
+.tl-card-type.medication{color:var(--gold)}
+.tl-card-type.condition{color:var(--red)}
+.tl-card-type.scan{color:var(--teal)}
+.tl-card-type.note{color:var(--green)}
+.tl-card-type.vital{color:var(--orange)}
+.tl-card-title{font-size:15px;font-weight:700;letter-spacing:-0.1px;line-height:1.35}
+.tl-card-date{font-size:11px;color:var(--text-tertiary);font-weight:500;flex-shrink:0;margin-left:12px}
+.tl-card-body{font-size:13px;color:var(--text-secondary);line-height:1.5;margin-top:4px}
+.tl-card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tl-tag{
+  padding:4px 12px;border-radius:var(--radius-pill);
+  font-size:11px;font-weight:600;
+}
+.tl-tag.blue{background:var(--blue-soft);color:var(--blue)}
+.tl-tag.purple{background:var(--purple-soft);color:var(--purple)}
+.tl-tag.gold{background:var(--gold-soft);color:var(--gold)}
+.tl-tag.red{background:var(--red-soft);color:var(--red)}
+.tl-tag.teal{background:var(--teal-glow);color:var(--teal)}
+.tl-tag.green{background:var(--green-soft);color:var(--green)}
+
+/* Expand detail */
+.tl-detail{
+  display:none;margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--glass-border);
+  font-size:13px;color:var(--text-secondary);line-height:1.6;
+}
+.tl-card.expanded .tl-detail{display:block}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:60px 20px;
+}
+.empty-icon{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--glass);border:1px solid var(--glass-border);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:28px;color:var(--text-tertiary);
+  margin-bottom:18px;
+}
+.empty-state h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.empty-state p{font-size:14px;color:var(--text-secondary);max-width:320px;margin:0 auto;line-height:1.5}
+
+/* Loading */
+.loading-state{text-align:center;padding:60px 20px}
+.loading-spinner{
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid var(--glass-border);
+  border-top-color:var(--teal);
+  animation:spin 0.7s linear infinite;
+  margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state p{font-size:14px;color:var(--text-secondary)}
+
+/* Responsive */
+@media(min-width:768px){
+  .timeline-container{padding-left:40px;padding-right:40px}
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient -->
+<div class="ambient amb-1"></div>
+<div class="ambient amb-2"></div>
+
+<!-- Nav -->
+<nav class="tl-nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="window.close();window.location.href='/'"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="nav-title">Medical Timeline</div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="exportTimeline()" title="Export"><i class="fa-solid fa-download"></i> Export</button>
+  </div>
+</nav>
+
+<!-- Patient Bar -->
+<div class="patient-bar" id="patientBar">
+  <div class="patient-avatar" id="tlAvatar">LF</div>
+  <div class="patient-info">
+    <div class="patient-name" id="tlPatName">Linda Fields</div>
+    <div class="patient-meta" id="tlPatMeta">73 yrs -- DOB: 11/03/1952</div>
+  </div>
+  <div class="patient-stat">
+    <div class="patient-stat-num" id="tlEventCount">--</div>
+    <div class="patient-stat-label">Events</div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <div class="filter-chip active" onclick="filterEvents('all',this)"><i class="fa-solid fa-layer-group"></i> All</div>
+  <div class="filter-chip" onclick="filterEvents('appointment',this)"><i class="fa-solid fa-calendar-check"></i> Appointments</div>
+  <div class="filter-chip" onclick="filterEvents('lab',this)"><i class="fa-solid fa-flask-vial"></i> Labs</div>
+  <div class="filter-chip" onclick="filterEvents('medication',this)"><i class="fa-solid fa-pills"></i> Medications</div>
+  <div class="filter-chip" onclick="filterEvents('condition',this)"><i class="fa-solid fa-heart-pulse"></i> Conditions</div>
+  <div class="filter-chip" onclick="filterEvents('scan',this)"><i class="fa-solid fa-file-medical"></i> Scans</div>
+  <div class="filter-chip" onclick="filterEvents('vital',this)"><i class="fa-solid fa-wave-square"></i> Vitals</div>
+</div>
+
+<!-- Timeline Content -->
+<div class="timeline-container">
+  <div id="timelineContent">
+    <div class="loading-state" id="loadingState">
+      <div class="loading-spinner"></div>
+      <p>Loading medical timeline...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// HEALTH AGENT -- MEDICAL TIMELINE
+// =============================================
+
+let allEvents = [];
+let currentFilter = 'all';
+
+function getToken() {
+  return localStorage.getItem('ha_token') || '';
+}
+
+function api(url) {
+  return fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + getToken() }
+  }).then(r => r.json());
+}
+
+function getPatientId() {
+  try {
+    const stored = localStorage.getItem('ha_active_patient');
+    if (stored) {
+      const p = JSON.parse(stored);
+      return p.id || p._id || '';
+    }
+  } catch(e){}
+  return '';
+}
+
+const iconMap = {
+  appointment: 'fa-solid fa-calendar-check',
+  lab: 'fa-solid fa-flask-vial',
+  medication: 'fa-solid fa-pills',
+  condition: 'fa-solid fa-heart-pulse',
+  scan: 'fa-solid fa-file-medical',
+  note: 'fa-solid fa-sticky-note',
+  vital: 'fa-solid fa-wave-square'
+};
+
+const colorMap = {
+  appointment: 'blue',
+  lab: 'purple',
+  medication: 'gold',
+  condition: 'red',
+  scan: 'teal',
+  note: 'green',
+  vital: 'orange'
+};
+
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatShortDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getYear(d) {
+  return new Date(d).getFullYear();
+}
+
+function getMonthYear(d) {
+  const date = new Date(d);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function getMonthKey(d) {
+  const date = new Date(d);
+  return date.getFullYear() + '-' + String(date.getMonth()).padStart(2, '0');
+}
+
+function filterEvents(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const container = document.getElementById('timelineContent');
+  let events = allEvents;
+
+  if (currentFilter !== 'all') {
+    events = events.filter(e => e.type === currentFilter);
+  }
+
+  if (events.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fa-solid fa-timeline"></i></div>
+        <h3>No events found</h3>
+        <p>${currentFilter === 'all' ? 'Start chatting with Health Agent to build your medical timeline.' : 'No ' + currentFilter + ' events yet.'}</p>
+      </div>`;
+    return;
+  }
+
+  // Sort by date descending
+  events.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Group by month
+  let html = '<div class="timeline">';
+  let lastYear = null;
+  let lastMonth = null;
+
+  events.forEach((event, idx) => {
+    const year = getYear(event.date);
+    const monthKey = getMonthKey(event.date);
+    const type = event.type || 'note';
+    const icon = iconMap[type] || iconMap.note;
+    const color = colorMap[type] || 'green';
+
+    if (year !== lastYear) {
+      html += `<div class="tl-year"><div class="tl-year-label">${year}</div></div>`;
+      lastYear = year;
+      lastMonth = null;
+    }
+
+    if (monthKey !== lastMonth) {
+      const monthLabel = new Date(event.date).toLocaleDateString('en-US', { month: 'long' });
+      html += `<div class="tl-month">${monthLabel}</div>`;
+      lastMonth = monthKey;
+    }
+
+    const detail = event.detail || event.notes || event.description || '';
+    const tags = event.tags || [];
+    let tagHtml = '';
+    if (tags.length) {
+      tagHtml = '<div class="tl-card-tags">' +
+        tags.map(t => `<span class="tl-tag ${color}">${t}</span>`).join('') +
+        '</div>';
+    }
+
+    html += `
+      <div class="tl-event" style="animation-delay:${Math.min(idx * 0.03, 0.3)}s" data-type="${type}">
+        <div class="tl-dot ${type}"><i class="${icon}"></i></div>
+        <div class="tl-card" onclick="this.classList.toggle('expanded')">
+          <div class="tl-card-header">
+            <div>
+              <div class="tl-card-type ${type}">${type}</div>
+              <div class="tl-card-title">${event.title || event.name || 'Event'}</div>
+            </div>
+            <div class="tl-card-date">${formatShortDate(event.date)}</div>
+          </div>
+          ${event.summary ? `<div class="tl-card-body">${event.summary}</div>` : ''}
+          ${tagHtml}
+          ${detail ? `<div class="tl-detail">${detail}</div>` : ''}
+        </div>
+      </div>`;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+  document.getElementById('tlEventCount').textContent = events.length;
+}
+
+async function loadTimeline() {
+  try {
+    const patientId = getPatientId();
+    const url = patientId
+      ? '/api/timeline?patientId=' + encodeURIComponent(patientId)
+      : '/api/timeline';
+
+    const data = await api(url);
+
+    if (data.events || data.timeline) {
+      allEvents = data.events || data.timeline || [];
+    } else if (Array.isArray(data)) {
+      allEvents = data;
+    } else {
+      allEvents = [];
+    }
+
+    // Also try to load patient info
+    try {
+      const pData = await api('/api/patients');
+      const patients = pData.patients || pData || [];
+      if (Array.isArray(patients) && patients.length > 0) {
+        const p = patients.find(x => x.id === patientId || x._id === patientId) || patients[0];
+        const initials = (p.name || 'P').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('tlAvatar').textContent = initials;
+        document.getElementById('tlPatName').textContent = p.name || 'Patient';
+        const age = p.dob ? Math.floor((Date.now() - new Date(p.dob)) / 31557600000) : '';
+        const agePart = age ? age + ' yrs' : '';
+        const dobPart = p.dob ? 'DOB: ' + formatDate(p.dob) : '';
+        document.getElementById('tlPatMeta').textContent = [agePart, dobPart].filter(Boolean).join(' -- ');
+      }
+    } catch(e){}
+
+    // If no timeline events, build from available data
+    if (allEvents.length === 0) {
+      await buildTimelineFromData();
+    }
+
+    renderTimeline();
+
+  } catch (err) {
+    document.getElementById('timelineContent').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3>Could not load timeline</h3>
+        <p>Please check your connection and try again.</p>
+      </div>`;
+  }
+}
+
+async function buildTimelineFromData() {
+  // Build timeline events from other data sources
+  const patientId = getPatientId();
+  const qs = patientId ? '?patientId=' + encodeURIComponent(patientId) : '';
+
+  try {
+    // Appointments
+    const apptData = await api('/api/appointments' + qs).catch(() => ({}));
+    const appts = apptData.appointments || apptData || [];
+    if (Array.isArray(appts)) {
+      appts.forEach(a => {
+        allEvents.push({
+          type: 'appointment',
+          title: a.title || a.doctor || a.name || 'Appointment',
+          date: a.date || a.startTime || a.createdAt,
+          summary: a.location || a.notes || '',
+          tags: a.type ? [a.type] : []
+        });
+      });
+    }
+  } catch(e){}
+
+  try {
+    // Lab history
+    const labData = await api('/api/labs' + qs).catch(() => ({}));
+    const labs = labData.labs || labData || [];
+    if (Array.isArray(labs)) {
+      labs.forEach(l => {
+        allEvents.push({
+          type: 'lab',
+          title: l.testName || l.name || 'Lab Result',
+          date: l.date || l.createdAt,
+          summary: l.value ? (l.value + (l.unit ? ' ' + l.unit : '') + (l.status ? ' - ' + l.status : '')) : '',
+          tags: l.status ? [l.status] : []
+        });
+      });
+    }
+  } catch(e){}
+
+  try {
+    // Medication changes
+    const medData = await api('/api/med-changes' + qs).catch(() => ({}));
+    const meds = medData.changes || medData || [];
+    if (Array.isArray(meds)) {
+      meds.forEach(m => {
+        allEvents.push({
+          type: 'medication',
+          title: m.medication || m.name || 'Medication Change',
+          date: m.date || m.createdAt,
+          summary: m.change || m.action || '',
+          tags: m.reason ? [m.reason] : []
+        });
+      });
+    }
+  } catch(e){}
+}
+
+function exportTimeline() {
+  if (allEvents.length === 0) return alert('No events to export');
+
+  let text = 'MEDICAL TIMELINE\n';
+  text += 'Patient: ' + document.getElementById('tlPatName').textContent + '\n';
+  text += 'Generated: ' + new Date().toLocaleDateString() + '\n';
+  text += '='.repeat(50) + '\n\n';
+
+  const sorted = [...allEvents].sort((a, b) => new Date(b.date) - new Date(a.date));
+  sorted.forEach(e => {
+    text += `[${formatDate(e.date)}] ${(e.type || '').toUpperCase()}\n`;
+    text += `${e.title || 'Event'}\n`;
+    if (e.summary) text += `${e.summary}\n`;
+    text += '\n';
+  });
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medical-timeline.txt';
+  a.click();
+}
+
+// Init
+loadTimeline();
+</script>
+</body>
+</html>

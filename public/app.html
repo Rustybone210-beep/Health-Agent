@@ -13,387 +13,496 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
 :root{
-  --bg:#0f172a;--bg2:#1e293b;
-  --glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--glass-border:rgba(255,255,255,0.08);
-  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
-  --accent:#14b8a6;--accent2:#2dd4bf;--accent-glow:rgba(45,212,191,0.15);
-  --danger:#f87171;--warn:#fbbf24;
-  --bubble-user:#334155;--bubble-ai:rgba(45,212,191,0.12);--bubble-ai-border:#2dd4bf;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);
-  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --bg:#0f172a;
+  --bg2:#1e293b;
+  --surface:rgba(30,41,59,0.85);
+  --surface-2:rgba(51,65,85,0.5);
+  --surface-3:#475569;
+  --border:rgba(45,212,191,0.1);
+  --border-2:rgba(45,212,191,0.2);
+  --glass:rgba(15,23,42,0.88);
+  --glass-border:rgba(45,212,191,0.12);
+  --bubble-ai:rgba(13,148,136,0.25);
+  --bubble-user:rgba(51,65,85,0.8);
+  --bubble-ai-text:#ccfbf1;
+  --bubble-user-text:#f1f5f9;
+  --text:#f1f5f9;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --teal:#2dd4bf;
+  --teal2:#14b8a6;
+  --accent:#2dd4bf;
+  --accent2:#14b8a6;
+  --gold:#fbbf24;
+  --danger:#f87171;
+  --warn:#fbbf24;
+  --info:#38bdf8;
+  --textInv:#0f172a;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+  --topbar-h:56px;
+  --botnav-h:56px;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --serif:'Source Serif 4',Georgia,serif;
 }
-html,body{height:100dvh;font-family:var(--sans);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* dark mode only */
+
+html,body{
+  height:100%;height:100dvh;
+  font-family:var(--sans);
+  background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);
+  color:var(--text);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
 body.modal-open{overflow:hidden}
 button,input,textarea,select{font:inherit;color:inherit}
 a{color:inherit;text-decoration:none}
-.hidden{display:none!important}
 
-/* Glass surfaces */
-.glass{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);box-shadow:0 12px 40px -8px rgba(0,0,0,0.4)}
-.glass2{background:var(--glass2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border)}
-
-/* Animations */
+/* ═══ ANIMATIONS ═══ */
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(45,212,191,0.2)}50%{transform:scale(1.03);box-shadow:0 0 30px rgba(45,212,191,0.35)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pulse-ring{0%{transform:scale(0.9);opacity:0.8}100%{transform:scale(1.4);opacity:0}}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes slideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
 @keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes cardHover{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:0.45}30%{transform:translateY(-5px);opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(0.7) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(45,212,191,0.15)}50%{box-shadow:0 0 40px rgba(45,212,191,0.3)}}
 
-/* ═══ APP LAYOUT ═══ */
-.app{display:flex;height:100dvh;overflow:hidden}
+/* ═══ MOBILE TOPBAR ═══ */
+.topbar{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:120;
+  height:calc(var(--topbar-h) + var(--safe-top));padding:var(--safe-top) 16px 0;
+  background:var(--glass);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);
+  border-bottom:1px solid var(--glass-border);align-items:center;justify-content:space-between;
+}
+.tb-title{font-weight:700;font-size:18px;letter-spacing:-0.02em}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-bell{position:relative;background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.tb-avatar{width:32px;height:32px;border-radius:12px;background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(45,212,191,0.25)}
+.notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:9px;font-weight:700;border:2px solid var(--bg)}
 
 /* ═══ DESKTOP SIDEBAR ═══ */
-.sidebar{width:320px;flex-shrink:0;display:flex;flex-direction:column;background:rgba(15,23,42,0.95);border-right:1px solid var(--glass-border);backdrop-filter:blur(24px);overflow:hidden;z-index:40}
-.sb-head{padding:20px 16px 14px;border-bottom:1px solid var(--glass-border)}
+.sidebar{width:320px;flex-shrink:0;display:flex;flex-direction:column;background:var(--glass);border-right:1px solid var(--glass-border);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);overflow:hidden;z-index:40}
+.sb-head{padding:20px 16px 14px;border-bottom:1px solid var(--glass-border);flex-shrink:0}
 .sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.sb-logo{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#14b8a6,#06b6d4);font-size:14px;font-weight:800;color:#0f172a}
+.sb-logo{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2dd4bf,#06b6d4);font-size:16px;font-weight:800;color:#0f172a;box-shadow:0 4px 12px rgba(45,212,191,0.3)}
 .sb-name{font-size:17px;font-weight:600}
-.pat-btn{width:100%;background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+.pat-btn{width:100%;background:var(--surface);border:1px solid var(--glass-border);border-radius:12px;padding:9px 11px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+.pat-btn:hover{border-color:var(--accent)}
 .pat-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pat-rel{font-size:11px;color:var(--text2);margin-top:2px}
-.pat-dd{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:rgba(15,23,42,0.95);border:1px solid var(--glass-border);border-radius:16px;overflow:hidden;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+.pat-dd{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,0.3);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .pat-dd.open{display:block}
-.pat-opt{padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px}
-.pat-opt:hover{background:var(--glass2)}
-.pat-opt.active{background:var(--accent-glow)}
+.pat-opt{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px}
+.pat-opt:hover{background:var(--surface-2)}
+.pat-opt.active{background:rgba(45,212,191,0.08)}
 .opt-n{font-weight:600}.opt-r{font-size:11px;color:var(--text2);margin-top:2px}
 .add-pat{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--accent)}
 .sb-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:none}
 .sb-scroll::-webkit-scrollbar{display:none}
 .s-lbl{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
-.sb-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:14px;margin-bottom:12px}
+.sb-card{background:var(--surface);border:1px solid var(--glass-border);border-radius:16px;padding:14px;margin-bottom:12px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .pc-row{display:flex;gap:6px;margin-bottom:5px;font-size:12px}
 .pc-l{width:62px;flex-shrink:0;color:var(--text3);font-size:11px}
 .pc-v{color:var(--text);line-height:1.4}
 .pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:500}
-.p-teal{background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.2);color:var(--accent)}
+.p-teal{background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.2);color:var(--teal)}
 .p-red{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.18);color:var(--danger)}
-.p-gold{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.18);color:var(--warn)}
+.p-gold{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.18);color:var(--gold)}
 .hist-item{padding:8px 9px;border-radius:10px;cursor:pointer;margin-bottom:2px;font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px;border:1px solid transparent;transition:all 0.15s}
-.hist-item:hover{background:var(--glass);color:var(--text);border-color:var(--glass-border)}
-.hist-item.active{background:var(--accent-glow);color:var(--text);border-color:rgba(20,184,166,0.15)}
-.hist-content{flex:1;overflow:hidden}.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item:hover{background:var(--surface);color:var(--text);border-color:var(--glass-border)}
+.hist-item.active{background:rgba(45,212,191,0.06);color:var(--text);border-color:rgba(45,212,191,0.15)}
+.hist-content{flex:1;overflow:hidden}
+.hist-preview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hist-time{font-size:10px;color:var(--text3);margin-top:2px}
-.hist-del{opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;padding:2px;font-size:11px}
+.hist-del{opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;padding:2px;font-size:11px;transition:opacity 0.15s;flex-shrink:0}
 .hist-item:hover .hist-del{opacity:1}
-.new-chat-btn{background:var(--accent-glow);border:1px solid rgba(20,184,166,0.18);color:var(--accent);font-size:11px;padding:3px 8px;border-radius:999px;cursor:pointer}
-.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.qa-btn{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:10px 8px;color:var(--text2);font-size:11px;cursor:pointer;text-align:center;transition:all 0.15s}
-.qa-btn:hover{background:var(--glass2);color:var(--text);border-color:var(--accent)}
-.qa-icon{display:block;font-size:14px;margin-bottom:3px}
+.new-chat-btn{background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.18);color:var(--accent);font-size:11px;padding:3px 8px;border-radius:999px;cursor:pointer}
 .sb-nav{display:flex;flex-direction:column;gap:3px}
 .sb-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;text-align:left;width:100%}
-.sb-link:hover{background:var(--glass);color:var(--text)}
-.gcal-s{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:999px;background:var(--accent-glow);border:1px solid rgba(20,184,166,0.15);color:var(--accent)}
+.sb-link:hover{background:var(--surface);color:var(--text)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qa-btn{background:var(--surface);border:1px solid var(--glass-border);border-radius:14px;padding:10px 8px;color:var(--text2);font-size:11px;cursor:pointer;text-align:center;backdrop-filter:blur(8px);transition:all 0.15s}
+.qa-btn:hover{background:var(--surface-2);color:var(--text);border-color:var(--accent);transform:scale(1.02)}
+.qa-icon{display:block;font-size:14px;margin-bottom:3px}
+.gcal-s{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:999px;background:rgba(45,212,191,0.06);border:1px solid rgba(45,212,191,0.15);color:var(--teal)}
 .gcal-s.nc{background:rgba(251,191,36,0.06);border-color:rgba(251,191,36,0.15);color:var(--warn)}
 
 /* ═══ DESKTOP TOPBAR ═══ */
-.desk-topbar{height:52px;background:rgba(15,23,42,0.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--glass-border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.desk-topbar{height:52px;background:var(--glass);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--glass-border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
 .desk-title{flex:1;font-weight:600;font-size:17px;letter-spacing:-0.02em}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse-dot 2.5s ease infinite}
-.notif-btn{position:relative;width:36px;height:36px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;cursor:pointer}
-.notif-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:9px;font-weight:700;border:2px solid var(--bg)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pdot 2.5s ease infinite}
+.notif-btn{position:relative;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:15px;cursor:pointer}
 
 /* ═══ MAIN ═══ */
+.app{display:flex;height:100dvh;overflow:hidden;background:transparent}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
 
-/* ═══ MOBILE TOPBAR ═══ */
-.topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:120;height:calc(56px + var(--safe-top));padding:var(--safe-top) 20px 0;background:rgba(15,23,42,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--glass-border);align-items:center;justify-content:space-between}
-.tb-title{font-weight:700;font-size:24px;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px}
-.tb-title i{color:var(--accent);font-size:16px}
-
-/* ═══ MOBILE HOME — PROACTIVE FEED ═══ */
+/* ═══ MOBILE HOME SCREEN ═══ */
 .mobile-home{display:none;flex-direction:column;flex:1;min-height:0}
-.home-scroll{flex:1;overflow-y:auto;padding:20px 20px 24px;padding-bottom:100px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.home-scroll{flex:1;overflow-y:auto;padding:20px 16px 24px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .home-scroll::-webkit-scrollbar{display:none}
 
-/* Patient selector pill */
-.patient-pill{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:24px;margin-bottom:16px;cursor:pointer}
-.patient-pill .pp-avatar{width:36px;height:36px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0f172a;flex-shrink:0}
-.patient-pill .pp-info{flex:1;min-width:0}
-.patient-pill .pp-name{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.patient-pill .pp-meta{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.patient-pill i{color:var(--text3);font-size:12px}
+/* Patient Hero Card */
+.hero-card{
+  background:linear-gradient(145deg,rgba(30,41,59,0.9),rgba(51,65,85,0.7));
+  border:1px solid var(--glass-border);border-radius:24px;padding:20px;
+  display:flex;gap:16px;align-items:center;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+.hero-avatar{
+  width:72px;height:72px;border-radius:20px;flex-shrink:0;
+  background:linear-gradient(135deg,#2dd4bf,#06b6d4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;color:#0f172a;
+  box-shadow:0 4px 16px rgba(45,212,191,0.35);
+}
+.hero-info{flex:1;min-width:0}
+.hero-name{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.hero-age{font-size:15px;font-weight:400;color:var(--text2)}
+.hero-rel{font-size:14px;color:var(--accent);font-weight:500;margin-top:2px}
+.hero-details{display:flex;gap:20px;margin-top:10px}
+.hero-detail{display:flex;flex-direction:column;font-size:13px}
+.hero-detail-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:2px}
 
-/* AI companion card */
-.ai-card{padding:32px 24px;border-radius:28px;text-align:center;margin-bottom:20px;cursor:pointer;transition:all 0.2s}
-.ai-card:active{transform:scale(0.98)}
-.ai-card .ai-icon{font-size:48px;margin-bottom:10px;animation:breathe 4s ease-in-out infinite;display:inline-block}
-.ai-card .ai-text{font-size:20px;font-weight:500;line-height:1.4}
-.ai-card .ai-sub{font-size:14px;color:var(--accent);margin-top:6px;font-weight:500}
+/* AI Avatar Companion */
+.avatar-section{display:flex;align-items:center;gap:16px;margin-top:24px;padding:0 4px}
+.ai-avatar{
+  position:relative;width:80px;height:80px;border-radius:24px;flex-shrink:0;
+  background:linear-gradient(135deg,#0f766e,#0d9488);
+  display:flex;align-items:center;justify-content:center;
+  animation:breathe 4s ease-in-out infinite;cursor:pointer;
+  overflow:hidden;
+}
+.ai-avatar-inner{font-size:36px;line-height:1}
+.ai-avatar-ring{position:absolute;inset:-4px;border-radius:28px;border:2px solid rgba(45,212,191,0.3);animation:pulse-ring 2.5s ease-out infinite;pointer-events:none}
+.ai-speech{
+  flex:1;background:var(--surface);border:1px solid var(--glass-border);
+  border-radius:18px 18px 18px 6px;padding:14px 16px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  animation:pop 0.6s ease-out;font-size:15px;line-height:1.5;color:var(--text2);
+}
+.ai-speech strong{color:var(--text);font-weight:600}
+.ai-speech .ai-teal{color:var(--accent);font-weight:500}
 
-/* Feed cards */
-.feed-section{margin-bottom:16px}
-.feed-card{display:flex;align-items:center;gap:16px;padding:20px;border-radius:24px;cursor:pointer;transition:all 0.2s}
-.feed-card:active{transform:scale(0.98)}
-.feed-icon{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.feed-icon.teal{background:rgba(20,184,166,0.12);color:var(--accent)}
-.feed-icon.amber{background:rgba(251,191,36,0.12);color:var(--warn)}
-.feed-icon.red{background:rgba(248,113,113,0.12);color:var(--danger)}
-.feed-icon.blue{background:rgba(56,189,248,0.12);color:#38bdf8}
-.feed-body{flex:1;min-width:0}
-.feed-title{font-weight:700;font-size:16px}
-.feed-sub{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.feed-action{padding:8px 16px;border-radius:12px;background:var(--accent);color:#0f172a;font-size:12px;font-weight:700;border:none;cursor:pointer;flex-shrink:0}
-.feed-action:active{transform:scale(0.95)}
-.feed-arrow{color:var(--text3);font-size:14px;flex-shrink:0}
+/* Action Grid */
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}
+.hero-action{
+  background:var(--surface);border:1px solid var(--glass-border);
+  border-radius:20px;padding:20px 16px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;
+  transition:all 0.2s;color:var(--text);font-family:var(--sans);
+}
+.hero-action:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(45,212,191,0.12)}
+.hero-action:active{transform:scale(0.97)}
+.ha-icon{font-size:28px;margin-bottom:2px}
+.ha-label{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.ha-sub{font-size:11px;color:var(--text3)}
 
-/* Quick action strip */
-.action-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;margin-bottom:8px}
-.action-strip::-webkit-scrollbar{display:none}
-.action-chip{display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:20px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all 0.15s}
-.action-chip:active{transform:scale(0.96)}
-.action-chip i{font-size:14px;color:var(--accent)}
-
-/* ═══ CHAT ═══ */
+/* ═══ CHAT AREA ═══ */
 .chat-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
-.chat-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--glass-border)}
-.chat-header-back{background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:4px}
-.chat-header-info{flex:1}
-.chat-header-name{font-weight:600;font-size:15px}
-.chat-header-status{font-size:11px;color:var(--accent);display:flex;align-items:center;gap:4px}
-.chat-header-status span{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse-dot 2s ease infinite}
-
-.chat-area{flex:1;min-height:0;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chat-area{flex:1;min-height:0;overflow-y:auto;padding:10px 12px 10px;display:flex;flex-direction:column;gap:3px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .chat-area::-webkit-scrollbar{display:none}
 
 /* Messages */
-.msg{display:flex;gap:0;max-width:80%;animation:msgIn 0.25s ease;margin-bottom:2px}
+.msg{display:flex;gap:0;max-width:78%;animation:msgIn 0.25s ease;margin-bottom:1px}
 .msg.user{margin-left:auto;justify-content:flex-end}
 .msg-avatar{display:none}
-.msg-bubble{max-width:100%;word-wrap:break-word;padding:12px 16px;font-size:15px;line-height:1.45;letter-spacing:-0.01em}
-.msg.ai .msg-bubble{background:var(--bubble-ai);color:var(--text);border-radius:24px 24px 24px 6px;border:1px solid rgba(45,212,191,0.2)}
-.msg.user .msg-bubble{background:var(--bubble-user);color:var(--text);border-radius:24px 24px 6px 24px}
+.msg-bubble{max-width:100%;word-wrap:break-word;padding:10px 14px;font-size:16px;line-height:1.4;letter-spacing:-0.01em}
+.msg.ai .msg-bubble{background:var(--bubble-ai);color:var(--bubble-ai-text);border-radius:18px 18px 18px 6px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(45,212,191,0.08)}
+.msg.user .msg-bubble{background:var(--bubble-user);color:var(--bubble-user-text);border-radius:18px 18px 6px 18px;border:1px solid rgba(255,255,255,0.04)}
 .msg-bubble strong{font-weight:600}
 .msg-bubble em{font-style:italic}
-.msg-bubble code{background:rgba(20,184,166,0.1);padding:2px 5px;border-radius:4px;font-size:13px}
-.msg-bubble pre{margin-top:8px;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.2);padding:10px;border-radius:12px;font-size:13px}
+.msg-bubble code{background:rgba(45,212,191,0.1);padding:2px 5px;border-radius:4px;font-size:14px}
+.msg-bubble pre{margin-top:8px;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.2);padding:10px;border-radius:10px;font-size:13px;line-height:1.4}
 .msg-bubble a{color:var(--accent);text-decoration:underline}
 
 /* Typing */
 .typing-indicator{display:flex;gap:4px;align-items:center}
-.typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.3s ease infinite}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:tb 1.3s ease infinite}
 .typing-indicator span:nth-child(2){animation-delay:0.18s}
 .typing-indicator span:nth-child(3){animation-delay:0.36s}
 
-/* ═══ SCAN CARDS ═══ */
-.scan-card{background:rgba(15,23,42,0.92);border:1px solid var(--glass-border);border-radius:28px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);backdrop-filter:blur(20px);max-width:100%}
-.scan-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.scan-icon{font-size:24px}
-.scan-title{font-weight:700;font-size:17px;letter-spacing:-0.01em}
-.scan-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
-.scan-badge{font-size:9px;padding:4px 10px;border-radius:999px;letter-spacing:0.04em;text-transform:uppercase;font-weight:700}
-.scan-badge.safe{color:var(--accent);background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2)}
-.scan-badge.warn{color:var(--warn);background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2)}
-.scan-badge.info{color:#38bdf8;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2)}
-.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.scan-field{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px 16px}
-.scan-field.full{grid-column:1/-1}
-.scan-label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:4px}
-.scan-value{font-size:14px;color:var(--text);line-height:1.4;font-weight:500}
-.scan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.scan-btn{padding:14px;border-radius:16px;border:1px solid var(--glass-border);background:var(--glass);font-size:13px;color:var(--text);cursor:pointer;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.12s}
-.scan-btn:active{transform:scale(0.96)}
-.scan-btn.primary{grid-column:1/-1;background:var(--accent);color:#0f172a;border:none;font-weight:700;font-size:14px}
-.scan-foot{margin-top:12px;text-align:center;font-size:11px;color:var(--text3)}
-
-/* Action cards in chat */
-.action-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;padding:16px;margin:4px 0;font-size:13px;animation:msgIn 0.25s ease;max-width:85%;backdrop-filter:blur(16px)}
+/* ═══ ACTION CARDS ═══ */
+.action-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:18px;padding:14px;margin:4px 0;font-size:13px;animation:msgIn 0.25s ease;max-width:85%;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 16px rgba(0,0,0,0.15)}
 .ac-title{font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
-.ac-body{color:var(--text2);margin-bottom:10px;line-height:1.5}
+.ac-body{color:var(--text2);margin-bottom:10px;line-height:1.5;font-size:13px}
 .ac-btns{display:flex;gap:7px;flex-wrap:wrap}
 .ac-btn{padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.12s}
 .ac-btn:active{transform:scale(0.95)}
-.ac-btn.primary,.ac-btn.success{background:var(--accent);color:#0f172a}
-.ac-btn.secondary{background:var(--glass2);border:1px solid var(--glass-border);color:var(--text2)}
-.ac-btn.warn{background:var(--warn);color:#0f172a}
+.ac-btn.primary,.ac-btn.success{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a}
+.ac-btn.secondary{background:var(--surface-2);border:1px solid var(--glass-border);color:var(--text2)}
+.ac-btn.warn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0f172a}
 
-/* Provider/Price/Interaction cards */
-.provider-card{max-width:92%}.interaction-card{max-width:94%}.rx-card{max-width:94%}.price-card{max-width:94%}
-.provider-links,.price-links,.interaction-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.provider-link,.price-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--glass2);border:1px solid var(--glass-border);color:var(--text);transition:all 0.15s;cursor:pointer}
-.provider-link:active,.price-link:active{transform:scale(0.98)}
-.provider-link-icon,.price-link-icon{font-size:22px;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--accent-glow);border-radius:10px}
-.provider-link-text,.price-link-text{flex:1;display:flex;flex-direction:column;gap:1px}
-.provider-link-text strong,.price-link-text strong{font-size:14px;font-weight:600}
-.provider-link-sub,.price-link-sub{font-size:11px;color:var(--text3)}
-.provider-link-arrow,.price-link-arrow{color:var(--accent);font-size:14px;font-weight:600;flex-shrink:0}
+/* Provider Search Card */
+.provider-card{max-width:92%}
+.provider-links{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.provider-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--glass-border);text-decoration:none;color:var(--text);transition:all 0.15s;cursor:pointer}
+.provider-link:hover{background:var(--surface-3);border-color:var(--accent);transform:translateX(2px)}
+.provider-link:active{transform:scale(0.98)}
+.provider-link-icon{font-size:22px;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:rgba(45,212,191,0.08);border-radius:10px}
+.provider-link-text{flex:1;display:flex;flex-direction:column;gap:1px}
+.provider-link-text strong{font-size:14px;font-weight:600}
+.provider-link-sub{font-size:11px;color:var(--text3)}
+.provider-link-arrow{color:var(--accent);font-size:16px;font-weight:600;flex-shrink:0}
 
-/* Interaction items */
-.ix-item{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);margin-bottom:6px}
-.ix-item.ix-high{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.15)}
-.ix-item.ix-moderate{background:rgba(251,191,36,0.06);border-color:rgba(251,191,36,0.15)}
-.ix-item.ix-low{background:var(--accent-glow);border-color:rgba(20,184,166,0.15)}
+/* Interaction Card */
+.interaction-card{max-width:94%}
+.interaction-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.ix-item{padding:12px;border-radius:12px;border:1px solid var(--border)}
+.ix-item.ix-high{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.2)}
+.ix-item.ix-moderate{background:rgba(251,191,36,0.06);border-color:rgba(251,191,36,0.2)}
+.ix-item.ix-low{background:rgba(45,212,191,0.06);border-color:rgba(45,212,191,0.2)}
 .ix-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
 .ix-sev{font-size:10px;font-weight:700;letter-spacing:0.04em}
-.ix-drugs{font-size:13px;font-weight:600}
+.ix-drugs{font-size:13px;font-weight:600;color:var(--text)}
 .ix-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.ix-footer{font-size:11px;color:var(--text3);padding:8px 0;border-top:1px solid var(--border);margin-bottom:8px}
 
-/* Rx Status */
+/* Rx Status Card */
+.rx-card{max-width:94%}
+.rx-card.rx-urgent{border-color:rgba(248,113,113,0.25)}
+.rx-card.rx-warning{border-color:rgba(251,191,36,0.25)}
+.rx-card.rx-ok{border-color:rgba(45,212,191,0.25)}
 .rx-warnings{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.rx-warn-item{font-size:13px;font-weight:600;padding:8px 12px;background:rgba(248,113,113,0.06);border-radius:10px;border-left:3px solid var(--danger)}
+.rx-warn-item{font-size:13px;font-weight:600;color:var(--text);padding:6px 10px;background:rgba(248,113,113,0.06);border-radius:8px;border-left:3px solid var(--danger)}
+.rx-card.rx-warning .rx-warn-item{background:rgba(251,191,36,0.06);border-left-color:var(--warn)}
+.rx-card.rx-ok .rx-warn-item{background:rgba(45,212,191,0.06);border-left-color:var(--teal)}
 .rx-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.rx-step{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2)}
-.rx-step-n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#0f172a;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rx-step{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2);line-height:1.5}
+.rx-step-n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#0f172a;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* Price Card */
+.price-card{max-width:94%}
+.price-links{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.price-link{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;background:var(--surface-2);border:1px solid var(--glass-border);text-decoration:none;color:var(--text);transition:all 0.15s;cursor:pointer}
+.price-link:hover{background:var(--surface-3);border-color:var(--accent);transform:translateX(2px)}
+.price-link-icon{font-size:20px;flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,0.08);border-radius:10px}
+.price-link-text{flex:1;display:flex;flex-direction:column;gap:1px}
+.price-link-text strong{font-size:13px;font-weight:600}
+.price-link-sub{font-size:11px;color:var(--text3)}
+.price-link-savings{font-size:10px;font-weight:600;color:var(--teal);background:rgba(45,212,191,0.1);padding:3px 8px;border-radius:999px;flex-shrink:0}
+.price-link-arrow{color:var(--accent);font-size:14px;font-weight:600;flex-shrink:0}
+.price-footer{font-size:11px;color:var(--text3);padding:8px 0;border-top:1px solid var(--border);margin-bottom:8px}
+
+/* Scan Card */
+.scan-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.scan-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.scan-icon{font-size:20px}.scan-title{font-weight:700;font-size:16px;letter-spacing:-0.01em}
+.scan-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.scan-badge{font-size:9px;padding:3px 7px;border-radius:999px;border:1px solid var(--border);letter-spacing:0.04em;text-transform:uppercase;font-weight:600}
+.scan-badge.safe{color:var(--teal);background:rgba(45,212,191,0.08);border-color:rgba(45,212,191,0.2)}
+.scan-badge.warn{color:var(--warn);background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.2)}
+.scan-badge.info{color:var(--info);background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.2)}
+.scan-card>p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:10px}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.scan-field{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.scan-field.full{grid-column:1/-1}
+.scan-label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:3px}
+.scan-value{font-size:13px;color:var(--text);line-height:1.4}
+.scan-actions{margin-top:0;display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
+.scan-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--surface-2);font-size:13px;color:var(--text);cursor:pointer;font-weight:500}
+.scan-btn.primary{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a;border:none;font-weight:600}
+.scan-btn:active{transform:scale(0.96)}
+.scan-foot{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
 
 /* ═══ INPUT BAR ═══ */
-.input-bar{flex-shrink:0;padding:8px 12px calc(6px + var(--safe-bot))}
-.input-glass{background:var(--glass);border:1px solid var(--glass-border);border-radius:28px;padding:10px;backdrop-filter:blur(20px)}
-.input-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:20px;padding:6px 12px}
-.chat-input{flex:1;background:transparent;border:none;color:var(--text);font-size:15px;resize:none;outline:none;max-height:120px;min-height:36px;line-height:1.4;padding:6px 4px}
+.input-bar{flex-shrink:0;background:var(--glass);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-top:1px solid var(--glass-border);padding:8px 10px calc(6px + var(--safe-bot))}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input{flex:1;background:var(--surface-2);border:1px solid var(--glass-border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:16px;resize:none;outline:none;max-height:120px;min-height:40px;line-height:1.4;appearance:none;-webkit-appearance:none;transition:border-color 0.15s}
+.chat-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,212,191,0.12)}
 .chat-input::placeholder{color:var(--text3)}
-.send-btn{width:40px;height:40px;border-radius:14px;flex-shrink:0;background:var(--accent);border:none;color:#0f172a;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.12s}
+.send-btn{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#2dd4bf,#06b6d4);border:none;color:#0f172a;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.12s;box-shadow:0 2px 8px rgba(45,212,191,0.3)}
 .send-btn:active{transform:scale(0.9)}
-.tool-row{display:flex;justify-content:center;gap:20px;margin-top:8px;padding:4px 0}
-.tool-btn{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:6px;transition:color 0.15s}
-.tool-btn:hover{color:var(--accent)}
+.tool-row{display:flex;justify-content:center;gap:14px;margin-top:6px}
+.tool-btn{background:var(--surface-2);border:1px solid var(--glass-border);color:var(--text2);font-size:20px;cursor:pointer;padding:8px;transition:all 0.15s;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.tool-btn:hover{color:var(--accent);border-color:var(--accent)}
 .tool-btn:active{transform:scale(0.9)}
-.tool-btn-cam{color:var(--accent)}
-.upload-pending{display:none;margin-top:8px;padding:5px 12px;border-radius:999px;background:var(--accent-glow);border:1px solid rgba(20,184,166,0.15);color:var(--accent);font-size:12px;align-items:center;gap:6px}
+.tool-btn-cam{background:rgba(45,212,191,0.1);border-color:rgba(45,212,191,0.25);color:var(--accent);font-size:22px;width:44px;height:44px;border-radius:14px;box-shadow:0 2px 10px rgba(45,212,191,0.15)}
+.upload-pending{display:none;margin-top:8px;padding:5px 12px;border-radius:999px;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);color:var(--accent);font-size:12px;align-items:center;gap:6px}
 .upload-pending.show{display:flex}
 
 /* ═══ BOTTOM NAV ═══ */
-.bot-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;height:calc(64px + var(--safe-bot));padding-bottom:var(--safe-bot);background:rgba(15,23,42,0.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--glass-border);align-items:stretch;box-shadow:0 -4px 20px -4px rgba(0,0,0,0.3)}
-.bn-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);font-size:10px;font-weight:500;cursor:pointer}
+.bot-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;height:calc(var(--botnav-h) + var(--safe-bot));padding-bottom:var(--safe-bot);background:var(--glass);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-top:1px solid var(--glass-border);align-items:stretch}
+.bn-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);font-size:10px;font-weight:500;cursor:pointer;transition:color 0.15s}
 .bn-tab:active{opacity:0.6}
-.bn-tab i{font-size:22px}
+.bn-icon{font-size:22px;line-height:1}
 .bn-tab.active{color:var(--accent)}
 
 /* ═══ NOTIFICATION PANEL ═══ */
-.notif-panel{display:none;position:absolute;top:52px;right:12px;z-index:300;width:min(360px,calc(100vw - 24px));max-height:420px;overflow-y:auto;background:rgba(15,23,42,0.95);border:1px solid var(--glass-border);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,0.4);backdrop-filter:blur(20px)}
+.notif-panel{display:none;position:absolute;top:52px;right:12px;z-index:300;width:min(360px,calc(100vw - 24px));max-height:420px;overflow-y:auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.3);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .notif-panel.open{display:block;animation:modalIn 0.2s ease}
-.np-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.np-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
 .np-title{font-weight:700;font-size:15px}
 .np-mark{background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer}
 .notif-list{padding:6px}
-.ni{padding:10px 12px;border-radius:12px;cursor:pointer;margin-bottom:2px}
-.ni:hover{background:var(--glass)}
-.ni.unread{background:var(--accent-glow)}
+.ni{padding:10px 12px;border-radius:12px;cursor:pointer;margin-bottom:2px;transition:background 0.12s}
+.ni:hover{background:var(--surface-2)}
+.ni.unread{background:rgba(45,212,191,0.04)}
+.ni.unread::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
+.ni-head{display:flex;align-items:center;gap:6px;margin-bottom:3px}
 .ni-title{font-size:13px;font-weight:600}
-.ni-msg{font-size:12px;color:var(--text2)}
+.ni-msg{font-size:12px;color:var(--text2);line-height:1.4}
 .ni-time{font-size:10px;color:var(--text3);margin-top:3px}
 .ni-empty{padding:28px;text-align:center;color:var(--text3);font-size:13px}
+
+/* ═══ PULL DASHBOARD ═══ */
+.pull-dashboard{display:none;position:fixed;top:0;left:0;right:0;z-index:200;transform:translateY(-100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1)}
+.pull-dashboard.open{transform:translateY(0)}
+.pull-dashboard-backdrop{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0.5);opacity:0;transition:opacity 0.3s ease;pointer-events:none}
+.pull-dashboard-backdrop.open{opacity:1;pointer-events:auto}
+.pd-card{background:var(--glass);border-bottom-left-radius:24px;border-bottom-right-radius:24px;padding:calc(var(--safe-top) + 12px) 16px 20px;box-shadow:0 12px 40px rgba(0,0,0,0.3);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.pd-handle{width:36px;height:4px;background:var(--text3);border-radius:99px;margin:0 auto 16px;opacity:0.4}
+.pd-title{font-weight:700;font-size:15px;margin-bottom:14px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dash-card{background:var(--surface-2);border:1px solid var(--glass-border);border-radius:16px;padding:14px;cursor:pointer;transition:transform 0.12s}
+.dash-card:active{transform:scale(0.97)}
+.dash-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:6px}
+.dash-value{font-size:26px;line-height:1;margin-bottom:4px;font-weight:700}
+.dash-sub{font-size:12px;color:var(--text2);line-height:1.35}
+.activity-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.activity-item{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.activity-title{font-size:13px;font-weight:600}
+.activity-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pd-close{display:block;width:100%;margin-top:14px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;text-align:center}
 
 /* ═══ SHEETS / MODALS ═══ */
 .profile-sheet{display:none;position:fixed;inset:0;z-index:400}
 .profile-sheet.open{display:block}
-.ps-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
-.ps-card{position:absolute;top:0;left:0;right:0;background:rgba(15,23,42,0.97);border-bottom-left-radius:24px;border-bottom-right-radius:24px;padding:calc(var(--safe-top) + 16px) 20px 24px;box-shadow:0 16px 48px rgba(0,0,0,0.4);animation:slideDown 0.3s ease;max-height:88dvh;overflow-y:auto;backdrop-filter:blur(20px)}
+.ps-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ps-card{position:absolute;top:0;left:0;right:0;background:var(--glass);border-bottom-left-radius:24px;border-bottom-right-radius:24px;padding:calc(var(--safe-top) + 16px) 20px 24px;box-shadow:0 16px 48px rgba(0,0,0,0.3);animation:slideDown 0.3s cubic-bezier(0.32,0.72,0,1);max-height:88dvh;overflow-y:auto;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .ps-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .ps-pat-info{display:flex;align-items:center;gap:12px}
-.ps-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#14b8a6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0f172a}
-.ps-name{font-weight:700;font-size:24px;letter-spacing:-0.02em}
+.ps-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2dd4bf,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0f172a;box-shadow:0 4px 12px rgba(45,212,191,0.3)}
+.ps-name{font-weight:700;font-size:22px;letter-spacing:-0.02em}
 .ps-sub{font-size:13px;color:var(--accent);margin-top:2px;font-weight:500}
-.ps-close{width:30px;height:30px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ps-close{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ps-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
-.ps-stat{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:12px 10px;text-align:center}
+.ps-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 10px;text-align:center}
 .ps-stat-n{font-size:24px;font-weight:700}.ps-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
-.ps-expand{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;overflow:hidden;margin-bottom:8px}
-.ps-expand-btn{width:100%;background:none;border:none;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:500}
+.ps-section{margin-bottom:12px}
+.ps-section-title{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.ps-row{display:flex;gap:6px;margin-bottom:6px;font-size:13px}
+.ps-rl{width:72px;flex-shrink:0;color:var(--text3);font-size:12px;padding-top:1px}
+.ps-rv{flex:1;color:var(--text2);line-height:1.4}
+.ps-expand{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.ps-expand-btn{width:100%;background:none;border:none;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left;font-weight:500}
 .ps-expand-body{display:none;padding:0 14px 14px}
 .ps-expand.open .ps-expand-body{display:block}
 .menu-sheet{display:none;position:fixed;inset:0;z-index:400}
 .menu-sheet.open{display:block}
-.ms-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
-.ms-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(15,23,42,0.95);border-top-left-radius:24px;border-top-right-radius:24px;padding:10px 20px calc(20px + var(--safe-bot));animation:slideUp 0.3s ease;backdrop-filter:blur(20px)}
+.ms-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ms-panel{position:absolute;left:0;right:0;bottom:0;background:var(--glass);border-top-left-radius:24px;border-top-right-radius:24px;padding:10px 20px calc(20px + var(--safe-bot));box-shadow:0 -12px 40px rgba(0,0,0,0.3);animation:slideUp 0.3s cubic-bezier(0.32,0.72,0,1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .ms-handle{width:36px;height:4px;background:var(--text3);border-radius:999px;margin:8px auto 16px;opacity:0.4}
 .ms-title{font-weight:700;font-size:18px;margin-bottom:14px}
 .ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.ms-item{background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.ms-item{background:var(--surface-2);border:1px solid var(--glass-border);border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
 .ms-item:active{transform:scale(0.96)}
 .ms-icon{font-size:24px}.ms-label{font-size:11px;font-weight:600;color:var(--text2)}
 
 /* Task Panel */
-#taskPanel{display:none;position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:rgba(15,23,42,0.95);backdrop-filter:blur(24px);border-left:1px solid var(--glass-border);z-index:500;flex-direction:column;overflow:hidden;box-shadow:-12px 0 40px rgba(0,0,0,0.3)}
+#taskPanel{display:none;position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-left:1px solid var(--glass-border);z-index:500;flex-direction:column;overflow:hidden;box-shadow:-12px 0 40px rgba(0,0,0,0.2)}
 #taskPanel.open{display:flex;animation:slideR 0.3s ease}
-.task-tab{padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;border:1px solid var(--glass-border);background:transparent;color:var(--text2)}
-.task-tab.active{background:var(--accent-glow);border-color:rgba(20,184,166,0.2);color:var(--accent)}
-.task-item{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:12px 13px;margin-bottom:6px}
+.task-tab{padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2)}
+.task-tab.active{background:rgba(45,212,191,0.08);border-color:rgba(45,212,191,0.2);color:var(--accent)}
+.task-item{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:6px;animation:msgIn 0.2s ease}
 .task-item.done{opacity:0.5}
 .ti-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
-.task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--accent)}
-.t-title{font-size:13px;font-weight:600;flex:1}.t-title.done{text-decoration:line-through;color:var(--text3)}
-.t-desc{font-size:12px;color:var(--text2);margin:3px 0 7px 24px}
+.task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.t-title{font-size:13px;font-weight:600;flex:1;line-height:1.3}
+.t-title.done{text-decoration:line-through;color:var(--text3)}
+.t-desc{font-size:12px;color:var(--text2);margin:3px 0 7px 24px;line-height:1.5}
 .t-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:24px}
 .t-due{font-size:11px;color:var(--text3)}.t-due.ov{color:var(--danger);font-weight:600}
 .t-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
 .pri-high{background:rgba(248,113,113,0.1);color:var(--danger)}
 .pri-medium{background:rgba(251,191,36,0.08);color:var(--warn)}
-.pri-low{background:var(--accent-glow);color:var(--accent)}
+.pri-low{background:rgba(45,212,191,0.08);color:var(--teal)}
 .t-acts{display:flex;gap:5px;margin-top:7px;margin-left:24px}
-.t-act{padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--glass-border);background:var(--glass);color:var(--text2)}
+.t-act{padding:3px 9px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2)}
+.t-act.del{color:var(--danger)}
 
 /* Modals */
-.modal{display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.7)}
+.modal{display:none;position:fixed;inset:0;z-index:600;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .modal.open{display:flex}
-.modal-box{position:relative;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;background:rgba(15,23,42,0.97);border:1px solid var(--glass-border);border-radius:28px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.4);animation:modalIn 0.22s ease;backdrop-filter:blur(20px)}
-.m-title{font-weight:700;font-size:20px;margin-bottom:20px}
+.modal-box{position:relative;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalIn 0.22s ease;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.m-title{font-weight:700;font-size:20px;margin-bottom:20px;letter-spacing:-0.02em}
 .f-field{margin-bottom:13px}
 .f-lbl{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:5px}
-.f-inp{width:100%;background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:12px 14px;font-size:14px;outline:none}
+.f-inp{width:100%;background:var(--surface-2);border:1px solid var(--glass-border);border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
 .f-inp:focus{border-color:var(--accent)}
 .f-row{display:flex;gap:10px}.f-row .f-field{flex:1}
 .m-acts{display:flex;gap:9px;margin-top:20px}
-.m-btn{flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;border:none}
-.m-btn.cancel{background:var(--glass);color:var(--text2)}
-.m-btn.save{background:var(--accent);color:#0f172a}
-
-/* Pull dashboard */
-.pull-dashboard{display:none;position:fixed;top:0;left:0;right:0;z-index:200;transform:translateY(-100%);transition:transform 0.35s ease}
-.pull-dashboard.open{transform:translateY(0)}
-.pull-dashboard-backdrop{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0.5);opacity:0;transition:opacity 0.3s;pointer-events:none}
-.pull-dashboard-backdrop.open{opacity:1;pointer-events:auto}
-.pd-card{background:rgba(15,23,42,0.95);border-bottom-left-radius:24px;border-bottom-right-radius:24px;padding:calc(var(--safe-top) + 12px) 16px 20px;backdrop-filter:blur(20px)}
-.pd-handle{width:36px;height:4px;background:var(--text3);border-radius:99px;margin:0 auto 16px;opacity:0.4}
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.dash-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:14px;cursor:pointer}
-.dash-card:active{transform:scale(0.97)}
-.dash-label{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
-.dash-value{font-size:26px;font-weight:700;margin-bottom:4px}
-.dash-sub{font-size:12px;color:var(--text2)}
-.activity-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
-.activity-item{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:10px 12px}
-.activity-title{font-size:13px;font-weight:600}.activity-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.pd-close{display:block;width:100%;margin-top:14px;padding:10px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;text-align:center}
+.m-btn{flex:1;padding:11px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent}
+.m-btn.cancel{background:var(--surface-2);border-color:var(--border);color:var(--text2)}
+.m-btn.save{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a}
+.hidden{display:none!important}
 
 /* ═══ RESPONSIVE ═══ */
 @media(min-width:901px){
-  .topbar,.bot-nav,.pull-dashboard,.pull-dashboard-backdrop,.mobile-home,.mobile-chat{display:none!important}
-  .sidebar{display:flex}.desk-topbar{display:flex}
+  .topbar,.bot-nav,.pull-dashboard,.pull-dashboard-backdrop,.mobile-home{display:none!important}
+  .mobile-chat{display:none!important}
+  .sidebar{display:flex}
+  .desk-topbar{display:flex}
   .desktop-chat{display:flex;flex-direction:column;flex:1;min-height:0}
 }
 @media(max-width:900px){
   .sidebar,.desk-topbar,.desktop-chat{display:none!important}
-  .topbar{display:flex}.bot-nav{display:flex}
-  .pull-dashboard{display:block}.mobile-home{display:flex}
+  .topbar{display:flex}
+  .bot-nav{display:flex}
+  .pull-dashboard{display:block}
+  .mobile-home{display:flex}
   .mobile-chat{flex-direction:column;flex:1;min-height:0}
-  .main{padding-top:calc(56px + var(--safe-top));padding-bottom:calc(60px + var(--safe-bot))}
-  .notif-panel{top:calc(56px + var(--safe-top) + 4px);right:8px;left:8px;width:auto}
+  .main{padding-top:calc(var(--topbar-h) + var(--safe-top));padding-bottom:calc(var(--botnav-h) + var(--safe-bot))}
+  .msg{max-width:82%}
+  .msg-bubble{font-size:15px;padding:10px 14px}
+  .action-card{max-width:90%}
+  .scan-grid{grid-template-columns:1fr}
+  .notif-panel{top:calc(var(--topbar-h) + var(--safe-top) + 4px);right:8px;left:8px;width:auto}
 }
 </style>
 </head>
 <body>
 
 <!-- MOBILE TOPBAR -->
-<header class="topbar">
-  <span class="tb-title"><i class="fa-solid fa-dna"></i> Health Agent</span>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button class="notif-btn" id="notifBtnMobileWrap" onclick="toggleNotifications()"><i class="fa-solid fa-bell"></i><span class="notif-badge" id="notifBadgeMobile" style="display:none"></span></button>
-    <div class="pp-avatar" id="mobilePatAvatar" onclick="openProfileSheet()" style="width:32px;height:32px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0f172a;cursor:pointer">LF</div>
+<header class="topbar" id="mobileTopbar">
+  <span class="tb-title">Health Agent</span>
+  <div class="tb-right">
+    <button class="tb-bell" id="notifBtnMobileWrap" onclick="toggleNotifications()" aria-label="Notifications">🔔<span class="notif-badge" id="notifBadgeMobile" style="display:none"></span></button>
+    <div class="tb-avatar" id="mobilePatAvatar" onclick="openProfileSheet()">LF</div>
   </div>
 </header>
 
 <!-- PULL DASHBOARD -->
 <div class="pull-dashboard-backdrop" id="pdBackdrop" onclick="closePullDashboard()"></div>
-<div class="pull-dashboard" id="pullDashboard"><div class="pd-card"><div class="pd-handle"></div><div style="font-weight:700;font-size:15px;margin-bottom:14px">Dashboard</div><div class="dash-grid"><button class="dash-card" onclick="closePullDashboard();goToDashboardCard('today')"><div class="dash-label">Today</div><div class="dash-value" id="todayPrimary">All clear</div><div class="dash-sub" id="todaySecondary">No urgent items</div></button><button class="dash-card" onclick="closePullDashboard();goToDashboardCard('upcoming')"><div class="dash-label">Upcoming</div><div class="dash-value" id="upcomingPrimary">0</div><div class="dash-sub" id="upcomingSecondary">Appointments</div></button><button class="dash-card" onclick="closePullDashboard();goToDashboardCard('tasks')"><div class="dash-label">Tasks</div><div class="dash-value" id="tasksPrimary">0</div><div class="dash-sub" id="tasksSecondary">Nothing pending</div></button><button class="dash-card" onclick="closePullDashboard();goToDashboardCard('records')"><div class="dash-label">Records</div><div class="dash-value" id="recordsPrimary">0</div><div class="dash-sub" id="recordsSecondary">No uploads</div></button></div><div class="activity-list" id="recentActivityList"></div><button class="pd-close" onclick="closePullDashboard()">Done</button></div></div>
+<div class="pull-dashboard" id="pullDashboard">
+  <div class="pd-card">
+    <div class="pd-handle"></div>
+    <div class="pd-title">Dashboard</div>
+    <div class="dash-grid">
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('today')"><div class="dash-label">Today</div><div class="dash-value" id="todayPrimary">All clear</div><div class="dash-sub" id="todaySecondary">No urgent items</div></button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('upcoming')"><div class="dash-label">Upcoming</div><div class="dash-value" id="upcomingPrimary">0</div><div class="dash-sub" id="upcomingSecondary">Appointments</div></button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('tasks')"><div class="dash-label">Tasks</div><div class="dash-value" id="tasksPrimary">0</div><div class="dash-sub" id="tasksSecondary">Nothing pending</div></button>
+      <button class="dash-card" onclick="closePullDashboard();goToDashboardCard('records')"><div class="dash-label">Records</div><div class="dash-value" id="recordsPrimary">0</div><div class="dash-sub" id="recordsSecondary">No uploads</div></button>
+    </div>
+    <div class="activity-list" id="recentActivityList"></div>
+    <button class="pd-close" onclick="closePullDashboard()">Done</button>
+  </div>
+</div>
 
 <div class="app">
   <!-- DESKTOP SIDEBAR -->
@@ -407,17 +516,19 @@ a{color:inherit;text-decoration:none}
     </div>
     <div class="sb-scroll">
       <div class="sb-card"><div class="s-lbl" style="margin-bottom:9px">Patient Profile</div><div id="cardContent" style="color:var(--text3);font-size:12px">Loading...</div></div>
-      <div style="margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span class="s-lbl" style="margin-bottom:0">💬 History</span><button class="new-chat-btn" onclick="newChat()">+ New</button></div><div id="chatHistoryList"><div style="font-size:12px;color:var(--text3)">No history yet</div></div></div>
-      <div style="margin-bottom:12px"><div class="s-lbl" style="margin-bottom:7px">Quick Actions</div><div class="qa-grid">
-        <button class="qa-btn" onclick="qa('What are her current medications?')"><span class="qa-icon">💊</span>Meds</button>
-        <button class="qa-btn" onclick="qa('What are her upcoming appointments?')"><span class="qa-icon">📅</span>Appts</button>
-        <button class="qa-btn" onclick="qa('Find me a doctor who takes Medicare in San Antonio')"><span class="qa-icon">🔍</span>Find Doc</button>
-        <button class="qa-btn" onclick="qa('I want to switch to a new primary care doctor who takes my insurance')"><span class="qa-icon">🔄</span>Switch Doc</button>
-        <button class="qa-btn" onclick="qa('Draft a prior authorization appeal letter for Medicare')"><span class="qa-icon">✉️</span>Letter</button>
-        <button class="qa-btn" onclick="checkInteractions()"><span class="qa-icon">⚠️</span>Interactions</button>
-        <button class="qa-btn" onclick="qa('What is her current insurance coverage?')"><span class="qa-icon">🛡️</span>Insurance</button>
-        <button class="qa-btn" onclick="qa('Call Dr. Martinez at Alamo Heights Family Medicine')"><span class="qa-icon">📞</span>Call Doc</button>
-      </div></div>
+      <div style="margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span class="s-lbl" style="margin-bottom:0">💬 History</span><button class="new-chat-btn" onclick="newChat()">+ New</button></div><div id="chatHistoryList"><div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div></div></div>
+      <div style="margin-bottom:12px"><div class="s-lbl" style="margin-bottom:7px">Quick Actions</div>
+        <div class="qa-grid">
+          <button class="qa-btn" onclick="qa('What are her current medications?')"><span class="qa-icon">💊</span>Meds</button>
+          <button class="qa-btn" onclick="qa('What are her upcoming appointments?')"><span class="qa-icon">📅</span>Appts</button>
+          <button class="qa-btn" onclick="qa('Find me a doctor who takes Medicare in San Antonio')"><span class="qa-icon">🔍</span>Find Doc</button>
+          <button class="qa-btn" onclick="qa('I want to switch to a new primary care doctor who takes my insurance')"><span class="qa-icon">🔄</span>Switch Doc</button>
+          <button class="qa-btn" onclick="qa('Draft a prior authorization appeal letter for Medicare')"><span class="qa-icon">✉️</span>Letter</button>
+          <button class="qa-btn" onclick="checkInteractions()"><span class="qa-icon">⚠️</span>Interactions</button>
+          <button class="qa-btn" onclick="qa('What is her current insurance coverage?')"><span class="qa-icon">🛡️</span>Insurance</button>
+          <button class="qa-btn" onclick="qa('Call Dr. Martinez at Alamo Heights Family Medicine')"><span class="qa-icon">📞</span>Call Doc</button>
+        </div>
+      </div>
       <div style="margin-bottom:12px"><div class="s-lbl" style="margin-bottom:7px">Pages</div><div class="sb-nav">
         <a href="/timeline" class="sb-link">🕐 Medical Timeline</a>
         <a href="/playbooks" class="sb-link">🆘 Emergency Playbooks</a>
@@ -429,83 +540,41 @@ a{color:inherit;text-decoration:none}
     </div>
   </aside>
 
-  <div id="taskPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200" onclick="closeTaskPanel()"></div>
+  <div id="taskPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px)" onclick="closeTaskPanel()"></div>
   <div id="taskPanel">
-    <div style="padding:16px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:calc(16px + var(--safe-top))"><span style="font-weight:700;font-size:18px">✅ Tasks</span><span style="flex:1"></span><button onclick="openAddTask()" style="background:var(--accent);border:none;color:#0f172a;padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button><button onclick="closeTaskPanel()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer">×</button></div>
-    <div style="display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--glass-border);flex-wrap:wrap"><button class="task-tab active" onclick="setTaskFilter('all',this)">All</button><button class="task-tab" onclick="setTaskFilter('pending',this)">Pending</button><button class="task-tab" onclick="setTaskFilter('in-progress',this)">In Progress</button><button class="task-tab" onclick="setTaskFilter('done',this)">Done</button></div>
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:calc(16px + var(--safe-top))"><span style="font-weight:700;font-size:18px">✅ Tasks</span><span style="flex:1"></span><button onclick="openAddTask()" style="background:linear-gradient(135deg,#2dd4bf,#06b6d4);border:none;color:#0f172a;padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600">+ Add</button><button onclick="closeTaskPanel()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px;line-height:1">×</button></div>
+    <div style="display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap"><button class="task-tab active" onclick="setTaskFilter('all',this)">All</button><button class="task-tab" onclick="setTaskFilter('pending',this)">Pending</button><button class="task-tab" onclick="setTaskFilter('in-progress',this)">In Progress</button><button class="task-tab" onclick="setTaskFilter('done',this)">Done</button></div>
     <div id="taskList" style="flex:1;overflow-y:auto;padding:10px"></div>
   </div>
 
   <main class="main">
-    <!-- MOBILE HOME — PROACTIVE FEED -->
+    <!-- MOBILE HOME SCREEN -->
     <section class="mobile-home" id="mobileHome">
       <div class="home-scroll">
-        <!-- Patient Selector Pill -->
-        <div class="patient-pill glass" onclick="openProfileSheet()" id="mobileHeroCard">
-          <div class="pp-avatar" id="mobileHeroAvatar">LF</div>
-          <div class="pp-info">
-            <div class="pp-name" id="mobileHeroName">Linda Fields <span style="font-weight:400;color:var(--text2)" id="mobileHeroAge">73</span></div>
-            <div class="pp-meta"><span id="mobileHeroRel">Mother</span> · <span id="mobileHeroDoc">Dr. Martinez</span> · <span id="mobileHeroIns">Medicare</span></div>
-          </div>
-          <i class="fa-solid fa-chevron-down" style="color:var(--text3);font-size:12px"></i>
-        </div>
-
-        <!-- AI Companion Card -->
-        <div class="ai-card glass" onclick="mobileGoChat()">
-          <div class="ai-icon">🤖</div>
-          <div class="ai-text">What's on your mind about <strong id="mobileHeroFn">Linda</strong>'s care today?</div>
-          <div class="ai-sub">Tap to chat with Health Agent →</div>
-        </div>
-
-        <!-- Quick Action Strip -->
-        <div class="action-strip">
-          <button class="action-chip glass" onclick="triggerUpload()"><i class="fa-solid fa-camera"></i> Scan</button>
-          <button class="action-chip glass" onclick="mobileGoChat();qa('What are her current medications?')"><i class="fa-solid fa-pills"></i> Meds</button>
-          <button class="action-chip glass" onclick="mobileGoChat();qa('Find me a doctor')"><i class="fa-solid fa-user-doctor"></i> Find Doc</button>
-          <button class="action-chip glass" onclick="mobileGoChat();checkInteractions()"><i class="fa-solid fa-triangle-exclamation"></i> Interactions</button>
-          <button class="action-chip glass" onclick="mobileGoChat();comparePrices()"><i class="fa-solid fa-tag"></i> Prices</button>
-          <button class="action-chip glass" onclick="mobileGoChat();qa('Draft appeal letter')"><i class="fa-solid fa-envelope"></i> Appeal</button>
-        </div>
-
-        <!-- Feed Cards -->
-        <div class="feed-section">
-          <div class="feed-card glass" onclick="openTaskPanel()">
-            <div class="feed-icon teal"><i class="fa-solid fa-list-check"></i></div>
-            <div class="feed-body"><div class="feed-title">Today's Tasks</div><div class="feed-sub">Check for pending items</div></div>
-            <i class="fa-solid fa-chevron-right feed-arrow"></i>
+        <div class="hero-card" id="mobileHeroCard">
+          <div class="hero-avatar" id="mobileHeroAvatar">LF</div>
+          <div class="hero-info">
+            <div class="hero-name" id="mobileHeroName">Linda Fields <span class="hero-age" id="mobileHeroAge">73</span></div>
+            <div class="hero-rel" id="mobileHeroRel">Mother</div>
+            <div class="hero-details">
+              <div class="hero-detail"><span class="hero-detail-label">Doctor</span><span id="mobileHeroDoc">Dr. Martinez</span></div>
+              <div class="hero-detail"><span class="hero-detail-label">Insurance</span><span id="mobileHeroIns">Medicare</span></div>
+            </div>
           </div>
         </div>
-
-        <div class="feed-section">
-          <div class="feed-card glass" onclick="mobileGoChat();qa('What medications are due today?')">
-            <div class="feed-icon amber"><i class="fa-solid fa-pills"></i></div>
-            <div class="feed-body"><div class="feed-title">Medication Reminders</div><div class="feed-sub">Check today's schedule</div></div>
-            <button class="feed-action" onclick="event.stopPropagation();mobileGoChat();comparePrices()">Refill</button>
-          </div>
+        <div class="avatar-section">
+          <div class="ai-avatar" onclick="mobileGoChat()"><div class="ai-avatar-ring"></div><div class="ai-avatar-inner">🤖</div></div>
+          <div class="ai-speech">Hi J. I'm here for <strong id="mobileHeroFn">Linda</strong>.<br><span class="ai-teal">What do you need today?</span></div>
         </div>
-
-        <div class="feed-section">
-          <div class="feed-card glass" onclick="triggerUpload()">
-            <div class="feed-icon blue"><i class="fa-solid fa-file-medical"></i></div>
-            <div class="feed-body"><div class="feed-title">Scan a Document</div><div class="feed-sub">Rx · Insurance · Labs · Bills</div></div>
-            <i class="fa-solid fa-chevron-right feed-arrow"></i>
-          </div>
-        </div>
-
-        <div class="feed-section">
-          <div class="feed-card glass" onclick="mobileGoChat();qa('What appointments are coming up?')">
-            <div class="feed-icon teal"><i class="fa-solid fa-calendar"></i></div>
-            <div class="feed-body"><div class="feed-title">Upcoming Appointments</div><div class="feed-sub">View schedule</div></div>
-            <i class="fa-solid fa-chevron-right feed-arrow"></i>
-          </div>
-        </div>
-
-        <div class="feed-section">
-          <div class="feed-card glass" onclick="window.location.href='/api/checkin/html'">
-            <div class="feed-icon teal"><i class="fa-solid fa-clipboard-list"></i></div>
-            <div class="feed-body"><div class="feed-title">Check-In Cheat Sheet</div><div class="feed-sub">Pre-filled for clinic forms</div></div>
-            <i class="fa-solid fa-chevron-right feed-arrow"></i>
-          </div>
+        <div class="hero-grid">
+          <button class="hero-action" onclick="mobileGoChat();qa('What are her current medications?')"><span class="ha-icon">💊</span><span class="ha-label">Medications</span><span class="ha-sub">Refills · Interactions</span></button>
+          <button class="hero-action" onclick="mobileGoChat();qa('What appointments are coming up?')"><span class="ha-icon">📅</span><span class="ha-label">Calendar</span><span class="ha-sub">Schedule · Reminders</span></button>
+          <button class="hero-action" onclick="triggerUpload()"><span class="ha-icon">📷</span><span class="ha-label">Scan Document</span><span class="ha-sub">Rx · Insurance · Labs</span></button>
+          <button class="hero-action" onclick="mobileGoChat();qa('Find me a doctor who takes Medicare in San Antonio')"><span class="ha-icon">🔍</span><span class="ha-label">Find Doctor</span><span class="ha-sub">In-network search</span></button>
+          <button class="hero-action" onclick="mobileGoChat();qa('Draft a prior authorization appeal letter')"><span class="ha-icon">✉️</span><span class="ha-label">Appeal Letter</span><span class="ha-sub">Insurance denials</span></button>
+          <button class="hero-action" onclick="mobileGoChat();checkInteractions()"><span class="ha-icon">⚠️</span><span class="ha-label">Interactions</span><span class="ha-sub">Drug safety check</span></button>
+          <button class="hero-action" onclick="mobileGoChat();qa('I want to switch to a new primary care doctor')"><span class="ha-icon">🔄</span><span class="ha-label">Switch Doctor</span><span class="ha-sub">Transfer records</span></button>
+          <button class="hero-action" onclick="mobileGoChat();comparePrices()"><span class="ha-icon">💰</span><span class="ha-label">Compare Prices</span><span class="ha-sub">GoodRx · CostPlus</span></button>
         </div>
       </div>
     </section>
@@ -513,27 +582,17 @@ a{color:inherit;text-decoration:none}
     <!-- MOBILE CHAT -->
     <section class="mobile-chat" id="mobileChat" style="display:none">
       <div class="chat-wrap">
-        <div class="chat-header glass">
-          <button class="chat-header-back" onclick="mobileGoHome()"><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="chat-header-info">
-            <div class="chat-header-name" id="chatPatientName">Linda Fields</div>
-            <div class="chat-header-status"><span></span> Private · Encrypted</div>
-          </div>
-          <button class="notif-btn" style="width:28px;height:28px;font-size:12px" onclick="openProfileSheet()"><i class="fa-solid fa-circle-info"></i></button>
-        </div>
         <div class="chat-area" id="chatArea"></div>
         <div class="input-bar">
-          <div class="input-glass">
-            <div class="input-row">
-              <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-              <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-            <div class="tool-row">
-              <button class="tool-btn tool-btn-cam" onclick="triggerUpload()"><i class="fa-solid fa-camera"></i></button>
-              <button class="tool-btn" onclick="startVoiceCall()"><i class="fa-solid fa-phone"></i></button>
-              <button class="tool-btn" onclick="startEmailSend()"><i class="fa-solid fa-envelope"></i></button>
-              <button class="tool-btn" onclick="openCalendarModal()"><i class="fa-solid fa-calendar-plus"></i></button>
-            </div>
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Message Health Agent..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendMessage()" aria-label="Send">➤</button>
+          </div>
+          <div class="tool-row">
+            <button class="tool-btn" onclick="startVoiceCall()" aria-label="Call">📞</button>
+            <button class="tool-btn" onclick="startEmailSend()" aria-label="Email">✉️</button>
+            <button class="tool-btn tool-btn-cam" onclick="triggerUpload()" aria-label="Scan">📷</button>
+            <button class="tool-btn" onclick="openCalendarModal()" aria-label="Calendar">📅</button>
           </div>
           <div class="upload-pending" id="uploadPending"><span>📎</span><span id="uploadFileName">Uploading...</span></div>
         </div>
@@ -542,53 +601,50 @@ a{color:inherit;text-decoration:none}
 
     <!-- DESKTOP CHAT -->
     <section class="desktop-chat">
-      <div class="desk-topbar"><div class="status-dot"></div><span class="desk-title" id="desktopTitle">Health Dashboard</span><span style="flex:1"></span><button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop"><i class="fa-solid fa-bell"></i><span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button></div>
+      <div class="desk-topbar"><div class="status-dot"></div><span class="desk-title" id="desktopTitle">Health Dashboard</span><span style="flex:1"></span><button class="notif-btn" onclick="toggleNotifications()" id="notifBtnDesktop">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none"></span></button></div>
       <div class="chat-wrap">
         <div class="chat-area" id="chatAreaDesktop"></div>
         <div class="input-bar">
-          <div class="input-glass">
-            <div class="input-row"><textarea class="chat-input" id="chatInputDesktop" placeholder="Message Health Agent..." rows="1"></textarea><button class="send-btn" onclick="sendMessageFromDesktop()"><i class="fa-solid fa-paper-plane"></i></button></div>
-            <div class="tool-row" style="justify-content:flex-start"><button class="tool-btn tool-btn-cam" onclick="triggerUpload()"><i class="fa-solid fa-camera"></i></button><button class="tool-btn" onclick="startVoiceCall()"><i class="fa-solid fa-phone"></i></button><button class="tool-btn" onclick="startEmailSend()"><i class="fa-solid fa-envelope"></i></button><button class="tool-btn" onclick="openCalendarModal()"><i class="fa-solid fa-calendar-plus"></i></button></div>
-          </div>
+          <div class="input-row"><textarea class="chat-input" id="chatInputDesktop" placeholder="Message Health Agent..." rows="1"></textarea><button class="send-btn" onclick="sendMessageFromDesktop()" aria-label="Send">➤</button></div>
+          <div class="tool-row" style="justify-content:flex-start"><button class="tool-btn" onclick="startVoiceCall()">📞</button><button class="tool-btn" onclick="startEmailSend()">✉️</button><button class="tool-btn tool-btn-cam" onclick="triggerUpload()">📷</button><button class="tool-btn" onclick="openCalendarModal()">📅</button></div>
         </div>
       </div>
     </section>
 
-    <div class="notif-panel" id="notifPanel"><div class="np-head"><span class="np-title">Notifications</span><button class="np-mark" onclick="markAllRead()">Mark all read</button></div><div class="notif-list" id="notifList"><div class="ni-empty">No notifications</div></div></div>
+    <div class="notif-panel" id="notifPanel"><div class="np-head"><span class="np-title">🔔 Notifications</span><button class="np-mark" onclick="markAllRead()">Mark all read</button></div><div class="notif-list" id="notifList"><div class="ni-empty">No notifications</div></div></div>
   </main>
 </div>
 
 <!-- BOTTOM NAV -->
 <nav class="bot-nav" id="botNav">
-  <button class="bn-tab active" id="navHome" onclick="mobileGoHome()"><i class="fa-solid fa-house"></i>Home</button>
-  <button class="bn-tab" id="navChat" onclick="mobileGoChat()"><i class="fa-solid fa-comments"></i>Chat</button>
-  <button class="bn-tab" id="navScan" onclick="triggerUpload()"><i class="fa-solid fa-camera"></i>Scan</button>
-  <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><i class="fa-solid fa-check-circle"></i>Tasks</button>
-  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><i class="fa-solid fa-bars"></i>More</button>
+  <button class="bn-tab active" id="navHome" onclick="mobileGoHome()"><span class="bn-icon">🏠</span>Home</button>
+  <button class="bn-tab" id="navChat" onclick="mobileGoChat()"><span class="bn-icon">💬</span>Chat</button>
+  <button class="bn-tab" id="navTasks" onclick="openTaskPanel()"><span class="bn-icon">✅</span>Tasks</button>
+  <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><span class="bn-icon">•••</span>More</button>
 </nav>
 
 <!-- PROFILE SHEET -->
-<div class="profile-sheet" id="profileSheet"><div class="ps-backdrop" onclick="closeProfileSheet()"></div><div class="ps-card"><div class="ps-top"><div class="ps-pat-info"><div class="ps-avatar" id="psAvatar">LF</div><div><div class="ps-name" id="psName">Patient</div><div class="ps-sub" id="psSub">Family Member</div></div></div><button class="ps-close" onclick="closeProfileSheet()">✕</button></div><div class="ps-stats"><div class="ps-stat"><div class="ps-stat-n" id="psCondN">0</div><div class="ps-stat-l">Conditions</div></div><div class="ps-stat"><div class="ps-stat-n" id="psMedN">0</div><div class="ps-stat-l">Meds</div></div><div class="ps-stat"><div class="ps-stat-n" id="psAlgN">0</div><div class="ps-stat-l">Allergies</div></div></div><div class="ps-expand open" id="expDetails"><button class="ps-expand-btn" onclick="toggleExpand('expDetails')"><span>Details</span><span>▾</span></button><div class="ps-expand-body"><div class="pc-row"><span class="pc-l">DOB</span><span class="pc-v" id="psDob">—</span></div><div class="pc-row"><span class="pc-l">Doctor</span><span class="pc-v" id="psDoctor">—</span></div><div class="pc-row"><span class="pc-l">Insurance</span><span class="pc-v" id="psInsurance">—</span></div><div class="pc-row"><span class="pc-l">Pharmacy</span><span class="pc-v" id="psPharmacy">—</span></div></div></div><div class="ps-expand" id="expConditions"><button class="ps-expand-btn" onclick="toggleExpand('expConditions')"><span>Conditions</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psCondPills"></div></div></div><div class="ps-expand" id="expMeds"><button class="ps-expand-btn" onclick="toggleExpand('expMeds')"><span>Medications</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psMedPills"></div></div></div><div class="ps-expand" id="expAllergies"><button class="ps-expand-btn" onclick="toggleExpand('expAllergies')"><span>Allergies</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psAlgPills"></div></div></div><div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px">Switch Patient</div><div id="psPatientList" style="display:flex;flex-direction:column;gap:6px"></div><button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;color:var(--accent);font-size:13px;cursor:pointer">＋ Add Family Member</button></div></div></div>
+<div class="profile-sheet" id="profileSheet"><div class="ps-backdrop" onclick="closeProfileSheet()"></div><div class="ps-card"><div class="ps-top"><div class="ps-pat-info"><div class="ps-avatar" id="psAvatar">LF</div><div><div class="ps-name" id="psName">Patient</div><div class="ps-sub" id="psSub">Family Member</div></div></div><button class="ps-close" onclick="closeProfileSheet()">✕</button></div><div class="ps-stats"><div class="ps-stat"><div class="ps-stat-n" id="psCondN">0</div><div class="ps-stat-l">Conditions</div></div><div class="ps-stat"><div class="ps-stat-n" id="psMedN">0</div><div class="ps-stat-l">Meds</div></div><div class="ps-stat"><div class="ps-stat-n" id="psAlgN">0</div><div class="ps-stat-l">Allergies</div></div></div><div class="ps-expand open" id="expDetails"><button class="ps-expand-btn" onclick="toggleExpand('expDetails')"><span>Details</span><span>▾</span></button><div class="ps-expand-body"><div class="ps-row"><span class="ps-rl">DOB</span><span class="ps-rv" id="psDob">—</span></div><div class="ps-row"><span class="ps-rl">Doctor</span><span class="ps-rv" id="psDoctor">—</span></div><div class="ps-row"><span class="ps-rl">Insurance</span><span class="ps-rv" id="psInsurance">—</span></div><div class="ps-row"><span class="ps-rl">Pharmacy</span><span class="ps-rv" id="psPharmacy">—</span></div></div></div><div class="ps-expand" id="expConditions"><button class="ps-expand-btn" onclick="toggleExpand('expConditions')"><span>Conditions</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psCondPills"></div></div></div><div class="ps-expand" id="expMeds"><button class="ps-expand-btn" onclick="toggleExpand('expMeds')"><span>Medications</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psMedPills"></div></div></div><div class="ps-expand" id="expAllergies"><button class="ps-expand-btn" onclick="toggleExpand('expAllergies')"><span>Allergies</span><span>▾</span></button><div class="ps-expand-body"><div class="pill-row" id="psAlgPills"></div></div></div><div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)"><div class="ps-section-title">Switch Patient</div><div id="psPatientList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div><button onclick="closeProfileSheet();openAddPatient()" style="width:100%;margin-top:8px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;color:var(--accent);font-size:13px;cursor:pointer">＋ Add Family Member</button></div></div></div>
 
 <!-- MENU SHEET -->
 <div class="menu-sheet" id="menuSheet"><div class="ms-backdrop" onclick="closeMenuSheet()"></div><div class="ms-panel"><div class="ms-handle"></div><div class="ms-title">More</div><div class="ms-grid">
-  <a href="/timeline" class="ms-item"><span class="ms-icon">🕐</span><span class="ms-label">Timeline</span></a>
-  <a href="/playbooks" class="ms-item"><span class="ms-icon">🆘</span><span class="ms-label">Playbooks</span></a>
-  <a href="/brief" class="ms-item"><span class="ms-icon">📋</span><span class="ms-label">Dr Brief</span></a>
+  <a href="/timeline" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🕐</span><span class="ms-label">Timeline</span></a>
+  <a href="/playbooks" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">🆘</span><span class="ms-label">Playbooks</span></a>
+  <a href="/brief" class="ms-item" onclick="closeMenuSheet()"><span class="ms-icon">📋</span><span class="ms-label">Dr Brief</span></a>
   <button class="ms-item" onclick="closeMenuSheet();openTaskPanel()"><span class="ms-icon">✅</span><span class="ms-label">Tasks</span></button>
   <button class="ms-item" onclick="closeMenuSheet();openCalendarModal()"><span class="ms-icon">📅</span><span class="ms-label">Calendar</span></button>
-  <a href="/api/checkin/html" class="ms-item"><span class="ms-icon">📝</span><span class="ms-label">Check-In</span></a>
-  <a href="/pricing" class="ms-item"><span class="ms-icon">💳</span><span class="ms-label">Upgrade</span></a>
+  <button class="ms-item" onclick="closeMenuSheet();mobileGoChat();qa('Find me a doctor who takes Medicare in San Antonio')"><span class="ms-icon">🔍</span><span class="ms-label">Find Doctor</span></button>
+  <button class="ms-item" onclick="closeMenuSheet();mobileGoChat();qa('I want to switch doctors')"><span class="ms-icon">🔄</span><span class="ms-label">Switch Doc</span></button>
   <button class="ms-item" onclick="closeMenuSheet();triggerUpload()"><span class="ms-icon">📷</span><span class="ms-label">Scan Doc</span></button>
-  <button class="ms-item" onclick="closeMenuSheet();if(confirm('Sign out?')){doLogout()}"><span class="ms-icon">🚪</span><span class="ms-label">Sign Out</span></button>
+  <button class="ms-item" onclick="closeMenuSheet();openSettingsPlaceholder()"><span class="ms-icon">🚪</span><span class="ms-label">Sign Out</span></button>
 </div></div></div>
 
 <!-- MODALS -->
-<div class="modal" id="addPatientModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" onclick="closeAddPatient()"></div><div class="modal-box"><div class="m-title">Add Family Member</div><div class="f-row"><div class="f-field"><label class="f-lbl">Full Name *</label><input class="f-inp" id="newName" placeholder="Jane Fields" /></div><div class="f-field"><label class="f-lbl">Relationship</label><input class="f-inp" id="newRelation" placeholder="Mother, Father..." /></div></div><div class="f-row"><div class="f-field"><label class="f-lbl">Date of Birth</label><input class="f-inp" id="newDob" placeholder="MM/DD/YYYY" /></div><div class="f-field"><label class="f-lbl">Primary Doctor</label><input class="f-inp" id="newDoctor" placeholder="Dr. Smith" /></div></div><div class="f-field"><label class="f-lbl">Address</label><input class="f-inp" id="newAddress" placeholder="Street, City, State ZIP" /></div><div class="f-row"><div class="f-field"><label class="f-lbl">Primary Insurance</label><input class="f-inp" id="newInsurance" placeholder="Medicare..." /></div><div class="f-field"><label class="f-lbl">Pharmacy</label><input class="f-inp" id="newPharmacy" placeholder="Walgreens..." /></div></div><div class="f-field"><label class="f-lbl">Conditions (comma separated)</label><input class="f-inp" id="newConditions" placeholder="Hypertension, Diabetes..." /></div><div class="f-field"><label class="f-lbl">Allergies (comma separated)</label><input class="f-inp" id="newAllergies" placeholder="Penicillin, Sulfa..." /></div><div class="m-acts"><button class="m-btn cancel" onclick="closeAddPatient()">Cancel</button><button class="m-btn save" onclick="saveNewPatient()">Add Patient</button></div></div></div>
+<div class="modal" id="addPatientModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeAddPatient()"></div><div class="modal-box"><div class="m-title">Add Family Member</div><div class="f-row"><div class="f-field"><label class="f-lbl">Full Name *</label><input class="f-inp" id="newName" placeholder="Jane Fields" /></div><div class="f-field"><label class="f-lbl">Relationship</label><input class="f-inp" id="newRelation" placeholder="Mother, Father..." /></div></div><div class="f-row"><div class="f-field"><label class="f-lbl">Date of Birth</label><input class="f-inp" id="newDob" placeholder="MM/DD/YYYY" /></div><div class="f-field"><label class="f-lbl">Primary Doctor</label><input class="f-inp" id="newDoctor" placeholder="Dr. Smith" /></div></div><div class="f-field"><label class="f-lbl">Address</label><input class="f-inp" id="newAddress" placeholder="Street, City, State ZIP" /></div><div class="f-row"><div class="f-field"><label class="f-lbl">Primary Insurance</label><input class="f-inp" id="newInsurance" placeholder="Medicare..." /></div><div class="f-field"><label class="f-lbl">Pharmacy</label><input class="f-inp" id="newPharmacy" placeholder="Walgreens..." /></div></div><div class="f-field"><label class="f-lbl">Conditions (comma separated)</label><input class="f-inp" id="newConditions" placeholder="Hypertension, Diabetes..." /></div><div class="f-field"><label class="f-lbl">Allergies (comma separated)</label><input class="f-inp" id="newAllergies" placeholder="Penicillin, Sulfa..." /></div><div class="m-acts"><button class="m-btn cancel" onclick="closeAddPatient()">Cancel</button><button class="m-btn save" onclick="saveNewPatient()">Add Patient</button></div></div></div>
 
-<div class="modal" id="addTaskModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" onclick="closeAddTask()"></div><div class="modal-box"><div class="m-title">Add Task</div><div class="f-field"><label class="f-lbl">Title *</label><input class="f-inp" id="taskTitle" /></div><div class="f-field"><label class="f-lbl">Description</label><textarea class="f-inp" id="taskDesc" style="resize:vertical;min-height:60px"></textarea></div><div class="f-row"><div class="f-field"><label class="f-lbl">Due Date</label><input class="f-inp" id="taskDue" type="date" /></div><div class="f-field"><label class="f-lbl">Priority</label><select class="f-inp" id="taskPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div><div class="f-field"><label class="f-lbl">Category</label><select class="f-inp" id="taskCategory"><option value="appointment">Appointment</option><option value="medication">Medication</option><option value="insurance">Insurance</option><option value="general" selected>General</option></select></div><div class="m-acts"><button class="m-btn cancel" onclick="closeAddTask()">Cancel</button><button class="m-btn save" onclick="saveTask()">Save Task</button></div></div></div>
+<div class="modal" id="addTaskModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeAddTask()"></div><div class="modal-box"><div class="m-title">Add Task</div><div class="f-field"><label class="f-lbl">Title *</label><input class="f-inp" id="taskTitle" placeholder="Task title..." /></div><div class="f-field"><label class="f-lbl">Description</label><textarea class="f-inp" id="taskDesc" style="resize:vertical;min-height:60px"></textarea></div><div class="f-row"><div class="f-field"><label class="f-lbl">Due Date</label><input class="f-inp" id="taskDue" type="date" /></div><div class="f-field"><label class="f-lbl">Priority</label><select class="f-inp" id="taskPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div><div class="f-field"><label class="f-lbl">Category</label><select class="f-inp" id="taskCategory"><option value="appointment">Appointment</option><option value="medication">Medication</option><option value="insurance">Insurance</option><option value="general" selected>General</option></select></div><div class="m-acts"><button class="m-btn cancel" onclick="closeAddTask()">Cancel</button><button class="m-btn save" onclick="saveTask()">Save Task</button></div></div></div>
 
-<div class="modal" id="calendarModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" onclick="closeCalendarModal()"></div><div class="modal-box"><div class="m-title">Add To Calendar</div><div class="f-field"><label class="f-lbl">Title</label><input class="f-inp" id="calTitle" /></div><div class="f-row"><div class="f-field"><label class="f-lbl">Date</label><input class="f-inp" id="calDate" type="date" /></div><div class="f-field"><label class="f-lbl">Time</label><input class="f-inp" id="calTime" type="time" /></div></div><div class="f-row"><div class="f-field"><label class="f-lbl">Duration (min)</label><input class="f-inp" id="calDuration" type="number" min="5" step="5" value="60" /></div><div class="f-field"><label class="f-lbl">Location</label><input class="f-inp" id="calLocation" /></div></div><div class="f-field"><label class="f-lbl">Notes</label><textarea class="f-inp" id="calDescription" style="min-height:70px;resize:vertical"></textarea></div><div style="display:grid;gap:8px;margin-top:12px"><button class="sb-link" style="background:var(--glass);border:1px solid var(--glass-border);padding:12px;border-radius:14px" onclick="addEventToAppleCalendar()">🍎 iPhone / Apple Calendar</button><button class="sb-link" style="background:var(--glass);border:1px solid var(--glass-border);padding:12px;border-radius:14px" onclick="addEventToGoogleCalendar()">📅 Google Calendar</button><button class="sb-link" style="background:var(--glass);border:1px solid var(--glass-border);padding:12px;border-radius:14px" onclick="addEventToOutlookCalendar()">📧 Outlook Calendar</button></div><div class="m-acts"><button class="m-btn cancel" onclick="closeCalendarModal()">Close</button></div></div></div>
+<div class="modal" id="calendarModal"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" onclick="closeCalendarModal()"></div><div class="modal-box"><div class="m-title">Add To Calendar</div><div class="f-field"><label class="f-lbl">Title</label><input class="f-inp" id="calTitle" placeholder="Appointment title" /></div><div class="f-row"><div class="f-field"><label class="f-lbl">Date</label><input class="f-inp" id="calDate" type="date" /></div><div class="f-field"><label class="f-lbl">Time</label><input class="f-inp" id="calTime" type="time" /></div></div><div class="f-row"><div class="f-field"><label class="f-lbl">Duration (min)</label><input class="f-inp" id="calDuration" type="number" min="5" step="5" value="60" /></div><div class="f-field"><label class="f-lbl">Location</label><input class="f-inp" id="calLocation" placeholder="Clinic, office" /></div></div><div class="f-field"><label class="f-lbl">Notes</label><textarea class="f-inp" id="calDescription" style="min-height:70px;resize:vertical" placeholder="Reason, provider, questions"></textarea></div><div class="s-lbl" style="margin-bottom:10px">Choose Calendar</div><div style="display:grid;gap:8px"><button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToAppleCalendar()"> iPhone / Apple Calendar</button><button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToGoogleCalendar()">Google Calendar</button><button class="sb-link" style="background:var(--surface-2);border:1px solid var(--border);padding:12px;border-radius:14px" onclick="addEventToOutlookCalendar()">Outlook Calendar</button></div><div class="m-acts"><button class="m-btn cancel" onclick="closeCalendarModal()">Close</button></div></div></div>
 
 <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileUpload(this)" />
 
@@ -744,7 +800,124 @@ async function addEventToGoogleCalendar(){try{const event=buildCalendarEventFrom
 function addEventToOutlookCalendar(){try{const event=buildCalendarEventFromForm();const url=new URL('https://outlook.live.com/calendar/0/deeplink/compose');url.searchParams.set('subject',event.title);url.searchParams.set('startdt',event.start.toISOString());url.searchParams.set('enddt',event.end.toISOString());if(event.description)url.searchParams.set('body',event.description);if(event.location)url.searchParams.set('location',event.location);window.open(url.toString(),'_blank','noopener,noreferrer');closeCalendarModal();addMsg('ai',`📅 Opened Outlook for <strong>${esc(event.title)}</strong>.`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
 
 /* ═══ CHAT ═══ */
-function clearChat(addWelcome=true){const ma=document.getElementById('chatArea'),da=document.getElementById('chatAreaDesktop');if(ma)ma.innerHTML='';if(da)da.innerHTML='';if(addWelcome){const p=getPatientById(currentPatientId),fn=esc((p?.name||'Linda').split(' ')[0]),age=calcAge(p?.dob),rel=p?.relationship||p?.relation||'Family Member',initials=(p?.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();const greeting='Hi! I\'m here for <strong>'+esc(fn)+'</strong>. What do you need today?';addMsg('ai',greeting,true,false)pending.classList.remove('show');if(data.pending){renderScanCard(data.extracted||{},file.name);if(data.rxStatus&&data.rxStatus.warnings.length>0){renderRxStatusCard(data.rxStatus,data.rxPlan,data.extracted)}if(data.priceLinks&&data.priceLinks.length>0){renderPriceCompareCard(data.extracted?.medication_name||file.name,data.priceLinks,data.extracted?.dosage)}}else{saveRecentUpload({name:file.name,title:file.name,type:'upload',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`📄 ${esc(data.message||'Upload complete.')}`,true,false)}}catch(e){pending.classList.remove('show');addMsg('ai',`❌ Upload error: ${esc(e.message)}`,true,false)}finally{input.value=''}}
+function clearChat(addWelcome=true){const ma=document.getElementById('chatArea'),da=document.getElementById('chatAreaDesktop');if(ma)ma.innerHTML='';if(da)da.innerHTML='';if(addWelcome){const p=getPatientById(currentPatientId),fn=esc((p?.name||'Linda').split(' ')[0]),age=calcAge(p?.dob),rel=p?.relationship||p?.relation||'Family Member',initials=(p?.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();const html=`<div class="welcome-hero">
+<div class="hero-card">
+  <div class="hero-avatar">${initials}</div>
+  <div class="hero-info">
+    <div class="hero-name">${esc(p?.name||'Patient')} <span class="hero-age">${age||''}</span></div>
+    <div class="hero-rel">${esc(rel)}</div>
+    <div class="hero-details">
+      <div class="hero-detail"><span class="hero-detail-label">Doctor</span><span>${esc(p?.primaryDoctor||'—')}</span></div>
+      <div class="hero-detail"><span class="hero-detail-label">Insurance</span><span>${esc(p?.insurance?.primary||'—')}</span></div>
+    </div>
+  </div>
+</div>
+<div class="hero-greeting">Hi J. I'm here for <strong>${fn}</strong>.<br><span class="hero-teal">What do you need today?</span></div>
+<div class="hero-grid">
+  <button class="hero-action" onclick="qa('What are her current medications?')"><span class="ha-icon">💊</span><span class="ha-label">Medications</span><span class="ha-sub">Refills · Interactions</span></button>
+  <button class="hero-action" onclick="qa('What appointments are coming up?')"><span class="ha-icon">📅</span><span class="ha-label">Calendar</span><span class="ha-sub">Schedule · Reminders</span></button>
+  <button class="hero-action" onclick="triggerUpload()"><span class="ha-icon">📷</span><span class="ha-label">Scan Document</span><span class="ha-sub">Rx · Insurance · Labs</span></button>
+  <button class="hero-action" onclick="qa('Find me a doctor who takes ${esc(p?.insurance?.primary||'Medicare')} in San Antonio')"><span class="ha-icon">🔍</span><span class="ha-label">Find Doctor</span><span class="ha-sub">In-network search</span></button>
+  <button class="hero-action" onclick="qa('Draft a prior authorization appeal letter')"><span class="ha-icon">✉️</span><span class="ha-label">Appeal Letter</span><span class="ha-sub">Insurance denials</span></button>
+  <button class="hero-action" onclick="checkInteractions()"><span class="ha-icon">⚠️</span><span class="ha-label">Interactions</span><span class="ha-sub">Drug safety check</span></button>
+</div>
+</div>`;if(ma)ma.innerHTML=html;if(da)da.innerHTML=html}}
+function addMsg(role,content,scroll=true,allowHtml=false){const html=`<div class="msg ${role==='user'?'user':'ai'}"><div class="msg-bubble">${allowHtml?content:esc(String(content||''))}</div></div>`;['chatArea','chatAreaDesktop'].forEach(id=>{const area=document.getElementById(id);if(area)area.insertAdjacentHTML('beforeend',html)});if(scroll)requestAnimationFrame(()=>{['chatArea','chatAreaDesktop'].forEach(id=>{const area=document.getElementById(id);if(area)area.scrollTop=area.scrollHeight})})}
+function addTypingBubble(id){const html=`<div class="msg ai" id="${id}"><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>`;['chatArea','chatAreaDesktop'].forEach(areaId=>{const area=document.getElementById(areaId);if(area){area.insertAdjacentHTML('beforeend',html);area.scrollTop=area.scrollHeight}})}
+function removeTypingBubble(id){document.querySelectorAll(`#${CSS.escape(id)}`).forEach(el=>el.remove())}
+async function sendMessage(prefilledText=null){const input=document.getElementById('chatInput'),desktopInput=document.getElementById('chatInputDesktop'),sourceInput=isMobileView()?input:desktopInput;const raw=prefilledText??sourceInput.value,text=String(raw||'').trim();if(!text)return;input.value='';desktopInput.value='';input.style.height='auto';desktopInput.style.height='auto';addMsg('user',text,true,false);currentMessages.push({role:'user',content:text});const typingId=`typing-${Date.now()}`;addTypingBubble(typingId);try{const data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,patientId:currentPatientId,model:MODEL_NAME})});removeTypingBubble(typingId);const replyText=data.reply||data.error||'Something went wrong';addMsg('ai',formatAssistantText(replyText),true,true);currentMessages.push({role:'assistant',content:replyText});if(data.calendarEvent){pendingCalendarEvent=data.calendarEvent;addCalendarCard(data.calendarEvent)}if(data.callRequest)addCallCard(data.callRequest);if(data.providerLinks)addProviderSearchCard(data.providerLinks);if(data.hasPendingEmail)addEmailActionCard();await loadNotifications()}catch(e){removeTypingBubble(typingId);addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+function sendMessageFromDesktop(){if(!isMobileView())sendMessage()}
+function qa(text){closeSidebar();closePullDashboard();sendMessage(text)}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
+function bindDesktopInput(){const input=document.getElementById('chatInputDesktop');if(!input)return;input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessageFromDesktop()}});input.addEventListener('input',()=>autoResize(input))}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';const mirror=el.id==='chatInput'?document.getElementById('chatInputDesktop'):document.getElementById('chatInput');if(mirror){mirror.value=el.value;mirror.style.height='auto';mirror.style.height=Math.min(el.scrollHeight,120)+'px'}}
+
+/* ═══ SCAN CARD — Document-type-specific ═══ */
+function buildScanFieldsHtml(data){const dt=String(data.document_type||'').toLowerCase();function f(label,value,full){const v=value||'';const display=v&&v!=='unclear'?esc(v):'<span style="color:var(--text3)">Not found</span>';return`<div class="scan-field${full?' full':''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`}function fArr(label,value,full){let display='';if(Array.isArray(value)&&value.length)display=value.map(v=>esc(String(v))).join(', ');else if(typeof value==='string'&&value&&value!=='unclear')display=esc(value);else display='<span style="color:var(--text3)">Not found</span>';return`<div class="scan-field${full?' full':''}"><span class="scan-label">${esc(label)}</span><span class="scan-value">${display}</span></div>`}function fPhones(phones){if(!phones||typeof phones!=='object')return'';let html='';Object.keys(phones).forEach(k=>{if(phones[k])html+=f(k.replace(/_/g,' '),phones[k],false)});return html}
+switch(dt){case'insurance_card':return f('Document Type','Insurance Card',false)+f('Insurance Company',data.insurance_company,false)+f('Plan Name',data.plan_name,false)+f('Member Name',data.member_name,false)+f('Member ID',data.member_id,false)+f('Group Number',data.group_number,false)+f('Rx BIN',data.rx_bin,false)+f('Rx PCN',data.rx_pcn,false)+f('Rx Group',data.rx_group,false)+f('Copay',data.copay_amounts,true)+f('Effective Date',data.effective_date,false)+fPhones(data.phone_numbers)+(data.summary?f('Summary',data.summary,true):'');case'prescription':return f('Document Type','Prescription',false)+f('Medication',data.medication_name,false)+f('Dosage',data.dosage,false)+f('Frequency',data.frequency,false)+f('Quantity',data.quantity,false)+f('Refills Remaining',data.refills_remaining,false)+f('Prescriber',data.prescriber,false)+f('Pharmacy',data.pharmacy_name,false)+f('Pharmacy Phone',data.pharmacy_phone,false)+f('Rx Number',data.rx_number,false)+f('Date Filled',data.date_filled,false)+f('Expiration',data.expiration_date,false)+fArr('Warnings',data.warnings,true)+(data.summary?f('Summary',data.summary,true):'');case'lab_result':return f('Document Type','Lab Result',false)+f('Patient',data.patient_name,false)+fArr('Tests',data.test_names,true)+fArr('Values',data.values,true)+fArr('Reference Ranges',data.reference_ranges,true)+fArr('Abnormal Flags',data.abnormal_flags,true)+f('Ordering Doctor',data.ordering_doctor,false)+f('Lab Name',data.lab_name,false)+f('Date of Test',data.date_of_test,false)+(data.summary?f('Summary',data.summary,true):'');case'medical_bill':return f('Document Type','Medical Bill / EOB',false)+f('Provider',data.provider_name,false)+f('Date of Service',data.date_of_service,false)+f('Total Charge',data.total_charge,false)+f('Insurance Paid',data.insurance_paid,false)+f('Patient Owes',data.patient_responsibility,false)+f('Claim Number',data.claim_number,false)+fArr('Procedure Codes',data.procedure_codes,true)+(data.summary?f('Summary',data.summary,true):'');case'referral':return f('Document Type','Referral / Authorization',false)+f('Referring Doctor',data.referring_doctor,false)+f('Specialist',data.specialist,false)+f('Auth Number',data.authorization_number,false)+f('Valid Dates',data.valid_dates,false)+f('Approved Visits',data.approved_visits,false)+(data.summary?f('Summary',data.summary,true):'');default:{const skip=new Set(['document_type','confidence','summary','patient_context']);let html=f('Document Type',data.document_type||'Unknown',false);Object.keys(data).forEach(key=>{if(skip.has(key))return;const val=data[key];if(val===null||val===undefined||val==='')return;const label=key.replace(/_/g,' ');if(Array.isArray(val))html+=fArr(label,val,true);else if(typeof val==='object')Object.keys(val).forEach(sk=>{if(val[sk])html+=f(`${label} — ${sk.replace(/_/g,' ')}`,String(val[sk]),false)});else html+=f(label,String(val),false)});if(data.summary)html+=f('Summary',data.summary,true);return html}}}
+
+function renderScanCard(data,fileName='Scanned item'){latestScanData={...data,fileName,patientId:currentPatientId};const confidence=inferConfidence(data),dt=String(data.document_type||'').toLowerCase();const iconMap={insurance_card:'🛡️',prescription:'💊',lab_result:'🔬',medical_bill:'💰',referral:'📋',doctor_note:'📝',imaging_order:'🩻'};const typeNameMap={insurance_card:'Insurance Card',prescription:'Prescription',lab_result:'Lab Result',medical_bill:'Medical Bill',referral:'Referral',doctor_note:'Doctor Note',imaging_order:'Imaging Order'};const icon=iconMap[dt]||'📷',typeName=typeNameMap[dt]||'Scan Result',fieldsHtml=buildScanFieldsHtml(data);
+const html=`<div class="msg ai"><div class="msg-bubble"><div class="scan-card"><div class="scan-header"><div class="scan-icon">${icon}</div><div class="scan-title">${esc(typeName)}</div><div class="scan-badges"><span class="scan-badge ${confidence.className}">${esc(confidence.label)}</span><span class="scan-badge info">review before save</span></div></div><p>Extracted from <strong>${esc(fileName)}</strong>. Review before saving.</p><div class="scan-grid">${fieldsHtml}</div><div class="scan-actions"><button class="scan-btn primary" onclick="confirmScan()">Save to Chart</button>${dt==='prescription'?`<button class="scan-btn" style="background:var(--warn);color:#fff;border:none" onclick="comparePrices()">💰 Compare Prices</button>`:''}<button class="scan-btn" onclick="checkInteractions()">Check Interactions</button><button class="scan-btn" onclick="askDoctor()">Ask Doctor</button></div><div class="scan-foot">Scan-assisted extraction — confirm before treating as medical record data.</div></div></div></div>`;
+['chatArea','chatAreaDesktop'].forEach(areaId=>{const area=document.getElementById(areaId);if(area){area.insertAdjacentHTML('beforeend',html);area.scrollTop=area.scrollHeight}})}
+function confirmScan(){if(!latestScanData){addMsg('ai','⚠️ No scan ready to save.',true,false);return}const title=latestScanData.product_name||latestScanData.medication_name||latestScanData.insurance_company||latestScanData.fileName||'Scanned record';saveRecentUpload({name:latestScanData.fileName||title,title,type:latestScanData.document_type||'scan',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`✅ Saved <strong>${esc(title)}</strong> to records.`,true,true)}
+
+/* ═══ RX STATUS CARD ═══ */
+function renderRxStatusCard(rxStatus,rxPlan,rxData){
+  const urgencyClass=rxStatus.status==='expired'||rxStatus.status==='no_refills'?'rx-urgent':rxStatus.status==='expiring'||rxStatus.status==='low_refills'?'rx-warning':'rx-ok';
+  const urgencyIcon=rxStatus.status==='expired'||rxStatus.status==='no_refills'?'🔴':rxStatus.status==='expiring'||rxStatus.status==='low_refills'?'🟡':'🟢';
+  const medName=rxData?.medication_name||rxData?.drug_name||'Medication';
+
+  let stepsHtml='';
+  if(rxPlan&&rxPlan.steps.length){stepsHtml=`<div class="rx-steps">${rxPlan.steps.map((s,i)=>`<div class="rx-step"><span class="rx-step-n">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>`}
+
+  let btnsHtml='<div class="ac-btns">';
+  if(rxPlan?.callTargets?.length){rxPlan.callTargets.forEach(ct=>{if(ct.phone){btnsHtml+=`<button class="ac-btn warn" onclick="qa('Call ${esc(ct.name)} at ${esc(ct.phone)} about ${esc(ct.reason)}')">📞 Call ${esc(ct.name)}</button>`}else{btnsHtml+=`<button class="ac-btn warn" onclick="qa('Help me call ${esc(ct.name)} about ${esc(ct.reason)}')">📞 Call ${esc(ct.name)}</button>`}})}
+  btnsHtml+=`<button class="ac-btn primary" onclick="comparePrices('${esc(medName)}','${esc(rxData?.dosage||'')}')">💰 Compare Prices</button>`;
+  btnsHtml+=`<button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div>`;
+
+  const html=`<div class="action-card rx-card ${urgencyClass}"><div class="ac-title">${urgencyIcon} Prescription Alert — ${esc(medName)}</div><div class="rx-warnings">${rxStatus.warnings.map(w=>`<div class="rx-warn-item">${esc(w)}</div>`).join('')}</div>${stepsHtml}${btnsHtml}</div>`;
+  ['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
+}
+
+/* ═══ PRICE COMPARE CARD ═══ */
+function renderPriceCompareCard(drugName,links,dosage){
+  const html=`<div class="action-card price-card"><div class="ac-title">💰 Price Comparison — ${esc(drugName)}${dosage?' '+esc(dosage):''}</div><div class="ac-body">Compare prices to find the best deal:</div><div class="price-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-link-icon">${l.icon||'💊'}</span><span class="price-link-text"><strong>${esc(l.name)}</strong><span class="price-link-sub">${esc(l.description||'')}</span></span><span class="price-link-savings">${esc(l.savings||'')}</span><span class="price-link-arrow">→</span></a>`).join('')}</div><div class="price-footer">💡 Prices vary by pharmacy and location. Always verify with your insurance.</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Which is cheaper for ${esc(drugName)} — insurance or GoodRx?')">Ask Health Agent</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
+  ['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
+}
+
+/* ═══ STANDALONE PRICE COMPARE ═══ */
+async function comparePrices(drugName,dosage){
+  if(!drugName&&latestScanData){drugName=latestScanData.medication_name||latestScanData.drug_name;dosage=latestScanData.dosage}
+  if(!drugName){addMsg('ai','Scan a prescription bottle first, or tell me which medication to look up.',true,false);return}
+  addMsg('ai',`💰 Looking up prices for <strong>${esc(drugName)}</strong>...`,true,true);
+  try{
+    const data=await api('/api/rx/price-compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drugName,dosage,quantity:latestScanData?.quantity||'30'})});
+    if(data.links?.length){renderPriceCompareCard(data.drugName||drugName,data.links,data.dosage);if(data.insurance?.primary){addMsg('ai',`Your insurance: <strong>${esc(data.insurance.primary)}</strong> (Member ID: ${esc(data.insurance.memberId||'on file')}). Compare these prices against your copay to find the best deal.`,true,true)}}
+    else{addMsg('ai','Could not find price comparison links for this medication.',true,false)}
+  }catch(e){addMsg('ai',`❌ Price lookup error: ${esc(e.message)}`,true,false)}
+}
+
+async function checkInteractions(){
+  const patient=getPatientById(currentPatientId);
+  const meds=(patient?.medications||[]).map(m=>m.name).filter(Boolean);
+  if(meds.length<2){addMsg('ai','Need at least 2 medications to check interactions. Add medications to the patient profile first.',true,false);return}
+  addMsg('ai','🔎 Checking interactions between <strong>'+meds.map(m=>esc(m)).join(', ')+'</strong>...',true,true);
+  try{
+    // Also include scanned medication if available
+    let checkList=[...meds];
+    if(latestScanData?.medication_name&&!checkList.some(m=>m.toLowerCase().includes(latestScanData.medication_name.toLowerCase()))){
+      checkList.push(latestScanData.medication_name);
+    }
+    const data=await api('/api/medications/check-interactions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({medications:checkList})});
+    if(data.interactions&&data.interactions.length>0){
+      const html=`<div class="action-card interaction-card"><div class="ac-title">⚠️ Medication Interactions Found</div><div class="interaction-list">${data.interactions.map(ix=>{
+        const sevClass=ix.severity==='high'?'ix-high':ix.severity==='moderate'?'ix-moderate':'ix-low';
+        const sevIcon=ix.severity==='high'?'🔴':ix.severity==='moderate'?'🟡':'🟢';
+        return`<div class="ix-item ${sevClass}"><div class="ix-header"><span class="ix-sev">${sevIcon} ${esc(ix.severity).toUpperCase()}</span><span class="ix-drugs">${esc(ix.drug1)} + ${esc(ix.drug2)}</span></div><div class="ix-desc">${esc(ix.description)}</div></div>`;
+      }).join('')}</div><div class="ix-footer">⚕️ Always discuss medication changes with your healthcare provider.</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Help me talk to Dr. Martinez about these medication interactions')">📞 Discuss with Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
+      ['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
+    }else{
+      addMsg('ai','✅ <strong>No known interactions found</strong> between '+esc(checkList.join(', '))+'. Always verify with your pharmacist or doctor.',true,true);
+    }
+  }catch(e){addMsg('ai','❌ Error checking interactions: '+esc(e.message),true,false)}
+}
+function askDoctor(){if(!latestScanData){addMsg('ai','⚠️ Scan something first.',true,false);return}const product=latestScanData.medication_name||latestScanData.product_name||latestScanData.fileName||'this item';const doctor=getPatientById(currentPatientId)?.primaryDoctor||'the provider';addMsg('ai',`✉️ Drafting a question for <strong>${esc(doctor)}</strong> about <strong>${esc(product)}</strong>.`,true,true)}
+
+/* ═══ ACTION CARDS ═══ */
+function addCalendarCard(event){const payload=encodeURIComponent(JSON.stringify(event));const html=`<div class="action-card"><div class="ac-title">📅 Add to Calendar?</div><div class="ac-body"><strong>${esc(event.title)}</strong><br/>${esc(event.date)} at ${esc(event.time||'09:00')} · ${esc(String(event.duration||60))} min</div><div class="ac-btns"><button class="ac-btn success" onclick="addToCalendar(JSON.parse(decodeURIComponent('${payload}')))">Add</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
+function addCallCard(callReq){const cid=`call-card-${Date.now()}`;const html=`<div class="action-card" data-call-card="${cid}"><div class="ac-title">📞 Confirm Call</div><div class="ac-body">Call <strong>${esc(callReq.name)}</strong> at ${esc(callReq.phone||'unknown')}<br/>Reason: ${esc(callReq.reason||'Medical inquiry')}</div><div class="ac-btns"><button class="ac-btn warn" data-dyn-action="confirm-call" data-card="${cid}">📞 Confirm</button><button class="ac-btn secondary" data-dyn-action="cancel-call" data-card="${cid}">Cancel</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="confirm-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await confirmCall()});bindDynamicButton(`[data-dyn-action="cancel-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await cancelCall()})}
+function addProviderSearchCard(links){if(!links||!links.length)return;const html=`<div class="action-card provider-card"><div class="ac-title">🔍 Provider Search Results</div><div class="ac-body">Click below to find in-network providers:</div><div class="provider-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="provider-link"><span class="provider-link-icon">${l.name==='Google Search'?'🔎':l.name==='Zocdoc'?'🩺':'⭐'}</span><span class="provider-link-text"><strong>${esc(l.name)}</strong><span class="provider-link-sub">${l.name==='Google Search'?'Broad search results':l.name==='Zocdoc'?'Book appointments online':'Ratings & reviews'}</span></span><span class="provider-link-arrow">→</span></a>`).join('')}</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Help me switch to a new doctor who takes my insurance')">🔄 Switch Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
+function addEmailActionCard(){const eid=`email-card-${Date.now()}`;const html=`<div class="action-card" data-email-card="${eid}"><div class="ac-title">✉️ Email Ready</div><div class="ac-body">Your draft is ready. Send now?</div><div class="ac-btns"><button class="ac-btn primary" data-dyn-action="send-email" data-card="${eid}">📤 Send</button><button class="ac-btn secondary" data-dyn-action="save-email" data-card="${eid}">Save Draft</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="send-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);await sendDraftEmail()});bindDynamicButton(`[data-dyn-action="save-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);addMsg('ai','Draft saved.',true,false)})}
+function removeClosestCard(btn){const card=btn.closest('.action-card');if(card)card.remove()}
+function removeCardsByData(attrName,value){document.querySelectorAll(`[data-${attrName}="${value}"]`).forEach(el=>el.remove())}
+function bindDynamicButton(selector,handler){document.querySelectorAll(selector).forEach(el=>{let fired=false;const wrapped=async(e)=>{if(fired)return;fired=true;e.preventDefault();e.stopPropagation();try{await handler(e,el)}finally{setTimeout(()=>{fired=false},200)}};el.addEventListener('click',wrapped);el.addEventListener('touchend',wrapped,{passive:false})})}
+async function confirmCall(){try{const data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'confirm call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai',formatAssistantText(data.reply||'Call confirmed.'),true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function cancelCall(){try{await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'cancel call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai','Call cancelled.',true,false)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+async function sendDraftEmail(){try{let data;try{data=await api('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:currentPatientId,model:MODEL_NAME})})}catch(_){data=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'send',patientId:currentPatientId,model:MODEL_NAME})})}addMsg('ai',formatAssistantText(data.reply||data.message||'Email sent.'),true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
+
+/* ═══ FILE UPLOAD ═══ */
+function triggerUpload(){if(typeof mobileGoChat==='function')mobileGoChat();document.getElementById('fileInput').click()}
+async function handleFileUpload(input){const file=input.files?.[0];if(!file)return;const pending=document.getElementById('uploadPending');document.getElementById('uploadFileName').textContent=`Processing: ${file.name}`;pending.classList.add('show');const formData=new FormData();formData.append('file',file);formData.append('model',MODEL_NAME);try{const token=localStorage.getItem('ha_token');const res=await fetch('/api/upload',{method:'POST',headers:token?{'Authorization':'Bearer '+token}:{},body:formData});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||`Upload failed (${res.status})`);pending.classList.remove('show');if(data.pending){renderScanCard(data.extracted||{},file.name);if(data.rxStatus&&data.rxStatus.warnings.length>0){renderRxStatusCard(data.rxStatus,data.rxPlan,data.extracted)}if(data.priceLinks&&data.priceLinks.length>0){renderPriceCompareCard(data.extracted?.medication_name||file.name,data.priceLinks,data.extracted?.dosage)}}else{saveRecentUpload({name:file.name,title:file.name,type:'upload',at:new Date().toISOString(),patientId:currentPatientId});updateDashboard();addMsg('ai',`📄 ${esc(data.message||'Upload complete.')}`,true,false)}}catch(e){pending.classList.remove('show');addMsg('ai',`❌ Upload error: ${esc(e.message)}`,true,false)}finally{input.value=''}}
 
 /* ═══ VOICE / EMAIL ═══ */
 async function startVoiceCall(){const patient=getPatientById(currentPatientId);let phone=patient?.phone||prompt('Enter phone number to call:');if(!phone)return;phone=normalizeUSPhone(phone);try{const data=await api('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,reason:'Health check call',patientId:currentPatientId,model:MODEL_NAME})});addMsg('ai',`📞 Call initiated! ID: ${esc(data.id||'started')}`,true,false)}catch(e){addMsg('ai',`❌ Call failed: ${esc(e.message)}`,true,false)}}
@@ -771,3 +944,4 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catc
 </script>
 </body>
 </html>
+ 

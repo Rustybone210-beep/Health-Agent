@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Health Agent -- Pricing</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#0f172a;
+  --bg-mid:#1e293b;
+  --glass:rgba(30,41,59,0.45);
+  --glass-heavy:rgba(30,41,59,0.65);
+  --glass-border:rgba(148,163,184,0.12);
+  --glass-border-hover:rgba(148,163,184,0.24);
+  --teal:#14b8a6;
+  --teal-light:#2dd4bf;
+  --teal-dark:#0d9488;
+  --teal-glow:rgba(20,184,166,0.15);
+  --teal-glow-strong:rgba(20,184,166,0.3);
+  --teal-gradient:linear-gradient(135deg,#14b8a6,#0d9488);
+  --red:#ef4444;
+  --green:#22c55e;
+  --green-soft:rgba(34,197,94,0.12);
+  --gold:#f59e0b;
+  --gold-soft:rgba(245,158,11,0.12);
+  --blue:#3b82f6;
+  --purple:#a855f7;
+  --text-primary:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-tertiary:#64748b;
+  --text-inverse:#0f172a;
+  --radius-sm:16px;
+  --radius-md:20px;
+  --radius-lg:24px;
+  --radius-xl:28px;
+  --radius-pill:100px;
+  --shadow-card:0 4px 24px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.15);
+  --shadow-float:0 8px 40px rgba(0,0,0,0.35),0 2px 8px rgba(0,0,0,0.2);
+  --shadow-teal-glow:0 0 20px rgba(20,184,166,0.15);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:linear-gradient(145deg,var(--bg-deep) 0%,var(--bg-mid) 50%,var(--bg-deep) 100%);
+  background-attachment:fixed;
+  color:var(--text-primary);
+  min-height:100%;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  letter-spacing:-0.01em;
+}
+a{color:var(--teal-light);text-decoration:none}
+input,button{font-family:inherit;font-size:inherit;color:inherit;border:none;outline:none;background:none}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+::selection{background:rgba(20,184,166,0.3)}
+
+/* Ambient */
+.ambient{position:fixed;pointer-events:none;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0}
+.amb-1{top:-10%;left:-5%;width:500px;height:500px;background:radial-gradient(circle,rgba(20,184,166,0.12),transparent 70%);animation:af1 8s ease-in-out infinite}
+.amb-2{bottom:-10%;right:-5%;width:550px;height:550px;background:radial-gradient(circle,rgba(59,130,246,0.07),transparent 70%);animation:af2 10s ease-in-out infinite}
+.amb-3{top:30%;left:60%;width:400px;height:400px;background:radial-gradient(circle,rgba(168,85,247,0.05),transparent 70%);animation:af3 12s ease-in-out infinite}
+@keyframes af1{0%,100%{transform:translate(0,0)}50%{transform:translate(25px,15px)}}
+@keyframes af2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,-25px)}}
+@keyframes af3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
+
+/* Nav */
+.pricing-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-top) + 18px) 24px 18px;
+  position:sticky;top:0;z-index:10;
+  background:rgba(15,23,42,0.85);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-border);
+}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:var(--teal-gradient);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:#fff;
+}
+.nav-logo span{font-size:16px;font-weight:800;letter-spacing:-0.3px}
+.nav-back{
+  padding:8px 18px;border-radius:var(--radius-pill);
+  font-size:13px;font-weight:600;
+  border:1px solid var(--glass-border);
+  color:var(--text-secondary);
+  transition:var(--transition);
+  display:flex;align-items:center;gap:6px;
+}
+.nav-back:hover{border-color:var(--glass-border-hover);color:var(--text-primary)}
+
+/* Hero */
+.pricing-hero{
+  text-align:center;
+  padding:48px 24px 36px;
+  position:relative;z-index:1;
+}
+.pricing-hero h1{
+  font-size:36px;font-weight:800;letter-spacing:-0.8px;
+  line-height:1.15;margin-bottom:12px;
+}
+.pricing-hero h1 .teal{color:var(--teal-light)}
+.pricing-hero p{
+  font-size:16px;color:var(--text-secondary);
+  max-width:480px;margin:0 auto;line-height:1.5;
+}
+
+/* Toggle */
+.toggle-wrap{
+  display:flex;align-items:center;justify-content:center;
+  gap:14px;margin:28px 0 36px;
+  position:relative;z-index:1;
+}
+.toggle-label{font-size:14px;font-weight:600;color:var(--text-tertiary);transition:color var(--transition)}
+.toggle-label.active{color:var(--text-primary)}
+.toggle-track{
+  width:56px;height:30px;border-radius:15px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  cursor:pointer;position:relative;
+  transition:var(--transition);
+}
+.toggle-track.on{background:var(--teal-glow);border-color:var(--teal)}
+.toggle-thumb{
+  position:absolute;top:3px;left:3px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--teal-gradient);
+  box-shadow:var(--shadow-teal-glow);
+  transition:transform var(--transition);
+}
+.toggle-track.on .toggle-thumb{transform:translateX(26px)}
+.save-badge{
+  padding:5px 14px;border-radius:var(--radius-pill);
+  font-size:11px;font-weight:700;
+  background:var(--green-soft);color:var(--green);
+  border:1px solid rgba(34,197,94,0.15);
+}
+
+/* Cards Grid */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;max-width:1080px;
+  margin:0 auto;padding:0 24px 60px;
+  position:relative;z-index:1;
+}
+
+/* Card */
+.price-card{
+  background:var(--glass-heavy);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-xl);
+  padding:32px 26px 28px;
+  position:relative;overflow:hidden;
+  transition:var(--transition);
+  display:flex;flex-direction:column;
+}
+.price-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-float)}
+.price-card.featured{
+  border-color:var(--teal);
+  box-shadow:0 0 40px rgba(20,184,166,0.1),var(--shadow-card);
+}
+.price-card.featured::before{
+  content:'';position:absolute;
+  top:-50%;left:-20%;width:140%;height:70%;
+  background:radial-gradient(ellipse,var(--teal-glow) 0%,transparent 60%);
+  pointer-events:none;
+}
+.popular-badge{
+  position:absolute;top:20px;right:20px;
+  padding:5px 14px;border-radius:var(--radius-pill);
+  font-size:11px;font-weight:700;
+  background:var(--teal-gradient);color:#fff;
+  box-shadow:var(--shadow-teal-glow);
+}
+
+/* Card content */
+.plan-icon{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:18px;
+}
+.plan-icon.free{background:var(--glass);border:1px solid var(--glass-border);color:var(--text-secondary)}
+.plan-icon.pro{background:var(--teal-glow);border:1px solid rgba(20,184,166,0.2);color:var(--teal)}
+.plan-icon.family{background:var(--gold-soft);border:1px solid rgba(245,158,11,0.2);color:var(--gold)}
+
+.plan-name{font-size:20px;font-weight:800;letter-spacing:-0.3px;margin-bottom:6px}
+.plan-desc{font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:20px}
+
+.plan-price{margin-bottom:24px}
+.price-amount{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1}
+.price-amount .dollar{font-size:22px;font-weight:700;vertical-align:top;margin-right:2px;color:var(--text-secondary)}
+.price-amount .cents{font-size:22px;font-weight:700}
+.price-period{font-size:13px;color:var(--text-tertiary);margin-top:4px}
+.price-annual{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.price-free{font-size:36px;font-weight:800;letter-spacing:-0.5px}
+
+/* Features */
+.plan-features{flex:1;margin-bottom:24px}
+.feature{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;font-size:13px;color:var(--text-secondary);
+  line-height:1.4;
+}
+.feature i{
+  font-size:12px;margin-top:3px;flex-shrink:0;
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.feature i.check{background:var(--teal-glow);color:var(--teal)}
+.feature i.x{background:rgba(100,116,139,0.15);color:var(--text-tertiary)}
+.feature .highlight{color:var(--text-primary);font-weight:600}
+
+/* CTA */
+.plan-cta{
+  width:100%;padding:14px;border-radius:var(--radius-pill);
+  font-size:14px;font-weight:700;text-align:center;
+  transition:var(--transition);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.plan-cta.primary{
+  background:var(--teal-gradient);color:#fff;
+  box-shadow:var(--shadow-teal-glow);
+}
+.plan-cta.primary:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(20,184,166,0.3)}
+.plan-cta.secondary{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-primary);
+}
+.plan-cta.secondary:hover{border-color:var(--glass-border-hover);transform:translateY(-1px)}
+.plan-cta.current{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-tertiary);
+  cursor:default;
+}
+.plan-cta .spinner{
+  display:none;width:18px;height:18px;
+  border:2.5px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin 0.6s linear infinite;
+}
+.plan-cta.loading .btn-text{display:none}
+.plan-cta.loading .spinner{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Guarantee */
+.guarantee{
+  text-align:center;padding:0 24px 48px;
+  position:relative;z-index:1;
+}
+.guarantee-card{
+  display:inline-flex;align-items:center;gap:14px;
+  background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:18px 28px;
+}
+.guarantee-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:var(--green-soft);border:1px solid rgba(34,197,94,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--green);flex-shrink:0;
+}
+.guarantee-text{text-align:left}
+.guarantee-text strong{font-size:14px;font-weight:700;display:block;margin-bottom:2px}
+.guarantee-text span{font-size:12px;color:var(--text-secondary)}
+
+/* FAQ */
+.faq-section{
+  max-width:680px;margin:0 auto;padding:0 24px 60px;
+  position:relative;z-index:1;
+}
+.faq-title{font-size:24px;font-weight:800;letter-spacing:-0.4px;text-align:center;margin-bottom:24px}
+.faq-item{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  margin-bottom:10px;overflow:hidden;
+  transition:var(--transition);
+}
+.faq-item:hover{border-color:var(--glass-border-hover)}
+.faq-q{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;cursor:pointer;
+  font-size:14px;font-weight:600;
+}
+.faq-q i{font-size:12px;color:var(--text-tertiary);transition:transform var(--transition)}
+.faq-item.open .faq-q i{transform:rotate(180deg)}
+.faq-a{
+  display:none;padding:0 22px 18px;
+  font-size:13px;color:var(--text-secondary);line-height:1.6;
+}
+.faq-item.open .faq-a{display:block}
+
+/* Responsive */
+@media(max-width:900px){
+  .pricing-grid{grid-template-columns:1fr;max-width:420px}
+  .pricing-hero h1{font-size:28px}
+  .pricing-hero p{font-size:14px}
+  .price-amount{font-size:34px}
+}
+@media(min-width:901px) and (max-width:1100px){
+  .pricing-grid{gap:14px;padding:0 16px 60px}
+  .price-card{padding:28px 20px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient -->
+<div class="ambient amb-1"></div>
+<div class="ambient amb-2"></div>
+<div class="ambient amb-3"></div>
+
+<!-- Nav -->
+<nav class="pricing-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+    <span>Health Agent</span>
+  </div>
+  <button class="nav-back" onclick="window.location.href='/'">
+    <i class="fa-solid fa-arrow-left"></i> Back to App
+  </button>
+</nav>
+
+<!-- Hero -->
+<div class="pricing-hero">
+  <h1>Your family's health<br>deserves the <span class="teal">best</span></h1>
+  <p>Choose the plan that fits your caregiving needs. Cancel anytime, no questions asked.</p>
+</div>
+
+<!-- Toggle -->
+<div class="toggle-wrap">
+  <span class="toggle-label active" id="lblMonthly">Monthly</span>
+  <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+    <div class="toggle-thumb"></div>
+  </div>
+  <span class="toggle-label" id="lblYearly">Yearly</span>
+  <span class="save-badge">Save 25%</span>
+</div>
+
+<!-- Pricing Cards -->
+<div class="pricing-grid">
+
+  <!-- FREE -->
+  <div class="price-card" id="cardFree">
+    <div class="plan-icon free"><i class="fa-solid fa-heart"></i></div>
+    <div class="plan-name">Free</div>
+    <div class="plan-desc">Get started with essential health navigation for one patient.</div>
+    <div class="plan-price">
+      <div class="price-free">$0</div>
+      <div class="price-period">Free forever</div>
+    </div>
+    <div class="plan-features">
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">1 patient</span> profile</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>AI health chat</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Document scanning</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Medication tracking</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Basic appointment reminders</span></div>
+      <div class="feature"><i class="fa-solid fa-xmark x"></i><span>Drug interaction checker</span></div>
+      <div class="feature"><i class="fa-solid fa-xmark x"></i><span>Lab result analysis</span></div>
+      <div class="feature"><i class="fa-solid fa-xmark x"></i><span>Caregiver sharing</span></div>
+    </div>
+    <button class="plan-cta current" id="ctaFree">
+      <span class="btn-text">Current Plan</span>
+    </button>
+  </div>
+
+  <!-- PRO -->
+  <div class="price-card featured" id="cardPro">
+    <div class="popular-badge">Most Popular</div>
+    <div class="plan-icon pro"><i class="fa-solid fa-bolt"></i></div>
+    <div class="plan-name">Pro</div>
+    <div class="plan-desc">Full-featured health navigation for serious caregivers.</div>
+    <div class="plan-price">
+      <div class="price-amount" id="proPriceDisplay">
+        <span class="dollar">$</span>9<span class="cents">.99</span>
+      </div>
+      <div class="price-period" id="proPerDisplay">/month</div>
+      <div class="price-annual" id="proAnnualDisplay"></div>
+    </div>
+    <div class="plan-features">
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">10 patients</span></span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Everything in Free</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">Drug interaction checker</span></span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">Lab result analysis</span> (60+ ranges)</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Rx price comparison</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Insurance claims & appeals</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>AI phone calls (Vapi)</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Predictive health alerts</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Medical timeline & doctor briefs</span></div>
+    </div>
+    <button class="plan-cta primary" id="ctaPro" onclick="subscribe('pro')">
+      <span class="btn-text">Upgrade to Pro</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+
+  <!-- FAMILY -->
+  <div class="price-card" id="cardFamily">
+    <div class="plan-icon family"><i class="fa-solid fa-people-group"></i></div>
+    <div class="plan-name">Family</div>
+    <div class="plan-desc">Share caregiving with your family. Multiple caregivers, one plan.</div>
+    <div class="plan-price">
+      <div class="price-amount" id="famPriceDisplay">
+        <span class="dollar">$</span>14<span class="cents">.99</span>
+      </div>
+      <div class="price-period" id="famPerDisplay">/month</div>
+      <div class="price-annual" id="famAnnualDisplay"></div>
+    </div>
+    <div class="plan-features">
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">5 patients</span></span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Everything in Pro</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span><span class="highlight">Caregiver sharing</span> (invite family)</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Shared task management</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Care coordination alerts</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>Priority support</span></div>
+      <div class="feature"><i class="fa-solid fa-check check"></i><span>HIPAA-compliant sharing</span></div>
+    </div>
+    <button class="plan-cta secondary" id="ctaFamily" onclick="subscribe('family')">
+      <span class="btn-text">Choose Family</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+
+</div>
+
+<!-- Guarantee -->
+<div class="guarantee">
+  <div class="guarantee-card">
+    <div class="guarantee-icon"><i class="fa-solid fa-shield-check"></i></div>
+    <div class="guarantee-text">
+      <strong>30-Day Money-Back Guarantee</strong>
+      <span>Not satisfied? Get a full refund, no questions asked.</span>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="faq-title">Frequently Asked Questions</div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">Can I change plans later?<i class="fa-solid fa-chevron-down"></i></div>
+    <div class="faq-a">Yes! You can upgrade, downgrade, or cancel your plan at any time from your account settings. Changes take effect at the start of your next billing cycle.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">Is my health data secure?<i class="fa-solid fa-chevron-down"></i></div>
+    <div class="faq-a">Absolutely. All data is encrypted with AES-256-GCM at rest and in transit. We maintain HIPAA-compliant audit logging and never sell or share your health data with third parties.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">What counts as a "patient"?<i class="fa-solid fa-chevron-down"></i></div>
+    <div class="faq-a">A patient is any person you're tracking health information for -- your mother, father, spouse, child, or even yourself. Each patient gets their own profile with separate medical records.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">How does caregiver sharing work?<i class="fa-solid fa-chevron-down"></i></div>
+    <div class="faq-a">With the Family plan, you can invite other family members to view and manage patient profiles. Each caregiver gets their own login, and all actions are logged for accountability.</div>
+  </div>
+
+  <div class="faq-item" onclick="this.classList.toggle('open')">
+    <div class="faq-q">Do you offer refunds?<i class="fa-solid fa-chevron-down"></i></div>
+    <div class="faq-a">Yes. We offer a full 30-day money-back guarantee on all paid plans. If you're not satisfied, contact us and we'll process your refund immediately.</div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// HEALTH AGENT -- PRICING
+// =============================================
+
+let isYearly = false;
+
+const pricing = {
+  pro:    { monthly: 9.99,  yearly: 89.99,  monthlyEquiv: 7.50 },
+  family: { monthly: 14.99, yearly: 129.99, monthlyEquiv: 10.83 }
+};
+
+function getToken() {
+  return localStorage.getItem('ha_token') || '';
+}
+
+function toggleBilling() {
+  isYearly = !isYearly;
+  const track = document.getElementById('billingToggle');
+  const lblM = document.getElementById('lblMonthly');
+  const lblY = document.getElementById('lblYearly');
+
+  if (isYearly) {
+    track.classList.add('on');
+    lblM.classList.remove('active');
+    lblY.classList.add('active');
+  } else {
+    track.classList.remove('on');
+    lblM.classList.add('active');
+    lblY.classList.remove('active');
+  }
+
+  updatePrices();
+}
+
+function updatePrices() {
+  // Pro
+  const proPrice = document.getElementById('proPriceDisplay');
+  const proPer = document.getElementById('proPerDisplay');
+  const proAnnual = document.getElementById('proAnnualDisplay');
+
+  if (isYearly) {
+    proPrice.innerHTML = '<span class="dollar">$</span>7<span class="cents">.50</span>';
+    proPer.textContent = '/month';
+    proAnnual.textContent = '$89.99 billed annually';
+  } else {
+    proPrice.innerHTML = '<span class="dollar">$</span>9<span class="cents">.99</span>';
+    proPer.textContent = '/month';
+    proAnnual.textContent = '';
+  }
+
+  // Family
+  const famPrice = document.getElementById('famPriceDisplay');
+  const famPer = document.getElementById('famPerDisplay');
+  const famAnnual = document.getElementById('famAnnualDisplay');
+
+  if (isYearly) {
+    famPrice.innerHTML = '<span class="dollar">$</span>10<span class="cents">.83</span>';
+    famPer.textContent = '/month';
+    famAnnual.textContent = '$129.99 billed annually';
+  } else {
+    famPrice.innerHTML = '<span class="dollar">$</span>14<span class="cents">.99</span>';
+    famPer.textContent = '/month';
+    famAnnual.textContent = '';
+  }
+}
+
+async function subscribe(plan) {
+  const btn = document.getElementById(plan === 'pro' ? 'ctaPro' : 'ctaFamily');
+  btn.classList.add('loading');
+
+  try {
+    const token = getToken();
+    const interval = isYearly ? 'year' : 'month';
+
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ plan, interval })
+    });
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else if (data.sessionId) {
+      // If using Stripe.js
+      if (window.Stripe) {
+        const stripe = Stripe(data.publishableKey || '');
+        stripe.redirectToCheckout({ sessionId: data.sessionId });
+      } else {
+        window.location.href = data.url || '/';
+      }
+    } else {
+      alert(data.error || data.message || 'Could not start checkout');
+    }
+  } catch (err) {
+    alert('Connection error. Please try again.');
+  }
+
+  btn.classList.remove('loading');
+}
+
+// Check current plan
+async function checkCurrentPlan() {
+  try {
+    const token = getToken();
+    if (!token) return;
+
+    const res = await fetch('/api/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+
+    if (data.user || data.success) {
+      const user = data.user || data;
+      const plan = (user.plan || user.tier || 'free').toLowerCase();
+
+      // Update CTA buttons based on current plan
+      if (plan === 'pro') {
+        document.getElementById('ctaFree').className = 'plan-cta secondary';
+        document.getElementById('ctaFree').innerHTML = '<span class="btn-text">Downgrade</span>';
+        document.getElementById('ctaPro').className = 'plan-cta current';
+        document.getElementById('ctaPro').innerHTML = '<span class="btn-text"><i class="fa-solid fa-check" style="margin-right:6px"></i>Current Plan</span>';
+        document.getElementById('ctaPro').onclick = null;
+      } else if (plan === 'family') {
+        document.getElementById('ctaFree').className = 'plan-cta secondary';
+        document.getElementById('ctaFree').innerHTML = '<span class="btn-text">Downgrade</span>';
+        document.getElementById('ctaPro').className = 'plan-cta secondary';
+        document.getElementById('ctaPro').innerHTML = '<span class="btn-text">Downgrade</span>';
+        document.getElementById('ctaFamily').className = 'plan-cta current';
+        document.getElementById('ctaFamily').innerHTML = '<span class="btn-text"><i class="fa-solid fa-check" style="margin-right:6px"></i>Current Plan</span>';
+        document.getElementById('ctaFamily').onclick = null;
+      }
+    }
+  } catch (err) {}
+}
+
+// Check for success/cancel from Stripe redirect
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'true') {
+    // Show success state briefly
+    const hero = document.querySelector('.pricing-hero');
+    hero.innerHTML = `
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--teal-gradient);display:inline-flex;align-items:center;justify-content:center;font-size:30px;color:#fff;margin-bottom:16px;box-shadow:var(--shadow-teal-glow)"><i class="fa-solid fa-check"></i></div>
+      <h1>Welcome to <span class="teal">Pro</span>!</h1>
+      <p>Your upgrade is complete. All premium features are now unlocked.</p>
+      <button class="plan-cta primary" style="max-width:280px;margin:24px auto 0" onclick="window.location.href='/'">
+        <span class="btn-text">Go to Health Agent</span>
+      </button>
+    `;
+  }
+  if (params.get('canceled') === 'true') {
+    // Just remove the param silently
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  checkCurrentPlan();
+})();
+</script>
+</body>
+</html>
