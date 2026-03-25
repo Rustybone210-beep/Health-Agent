@@ -2302,6 +2302,39 @@ app.get("/shared/:token", (req, res) => {
   } catch (e) { res.status(404).send("Link expired or invalid. Request a new one from Health Agent."); }
 });
 
+
+// --- Form Fill Assistant ---
+var formFiller = require("./tools/form-filler");
+app.get("/api/checkin/sheet", function(req, res) {
+  try {
+    var pid = req.query.patientId || getCurrentPatientId();
+    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    var sheet = formFiller.generateCheckInSheet(patient);
+    res.json(sheet);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/checkin/text", function(req, res) {
+  try {
+    var pid = req.query.patientId || getCurrentPatientId();
+    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    var sheet = formFiller.generateCheckInSheet(patient);
+    res.setHeader("Content-Type", "text/plain");
+    res.send(formFiller.formatCheckInAsText(sheet));
+  } catch (e) { res.status(500).send("Error: " + e.message); }
+});
+app.get("/api/checkin/html", function(req, res) {
+  try {
+    var pid = req.query.patientId || getCurrentPatientId();
+    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    var sheet = formFiller.generateCheckInSheet(patient);
+    res.setHeader("Content-Type", "text/html");
+    res.send(formFiller.formatCheckInAsHTML(sheet));
+  } catch (e) { res.status(500).send("Error: " + e.message); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
