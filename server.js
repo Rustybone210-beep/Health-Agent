@@ -2308,7 +2308,7 @@ var formFiller = require("./tools/form-filler");
 app.get("/api/checkin/sheet", function(req, res) {
   try {
     var pid = req.query.patientId || getCurrentPatientId();
-    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    var allPats = typeof getAllPatientsUnfiltered === "function" ? getAllPatientsUnfiltered() : getAllPatients(); var patient = allPats.find(function(p) { return p.id === pid; });
     if (!patient) return res.status(404).json({ error: "Patient not found" });
     var sheet = formFiller.generateCheckInSheet(patient);
     res.json(sheet);
@@ -2317,7 +2317,7 @@ app.get("/api/checkin/sheet", function(req, res) {
 app.get("/api/checkin/text", function(req, res) {
   try {
     var pid = req.query.patientId || getCurrentPatientId();
-    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    var allPats = typeof getAllPatientsUnfiltered === "function" ? getAllPatientsUnfiltered() : getAllPatients(); var patient = allPats.find(function(p) { return p.id === pid; });
     if (!patient) return res.status(404).json({ error: "Patient not found" });
     var sheet = formFiller.generateCheckInSheet(patient);
     res.setHeader("Content-Type", "text/plain");
@@ -2327,7 +2327,7 @@ app.get("/api/checkin/text", function(req, res) {
 app.get("/api/checkin/html", function(req, res) {
   try {
     var pid = req.query.patientId || getCurrentPatientId();
-    var patient = getAllPatients().find(function(p) { return p.id === pid; });
+    var allPats = typeof getAllPatientsUnfiltered === "function" ? getAllPatientsUnfiltered() : getAllPatients(); var patient = allPats.find(function(p) { return p.id === pid; });
     if (!patient) return res.status(404).json({ error: "Patient not found" });
     var sheet = formFiller.generateCheckInSheet(patient);
     res.setHeader("Content-Type", "text/html");
@@ -2453,12 +2453,16 @@ async function seedAdminAccount() {
 }
 seedAdminAccount();
 
+try {
+try {
 app.listen(PORT, () => {
   console.log(`\n🏥 Health Agent running on http://localhost:${PORT}`);
   console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
   console.log(`🔔 Notifications: ${NOTIFICATIONS_FILE}`);
   console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
 });
+} catch(startupErr) { console.log("Startup error:", startupErr.message); }
+} catch(startupErr) { console.log("Startup error:", startupErr.message); }
 // === Lead Pipeline & Verification Routes ===
 
 
