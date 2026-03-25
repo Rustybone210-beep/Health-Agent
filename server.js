@@ -619,7 +619,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           {
             type: 'text',
             text:
-              'Analyze this image carefully. There may be MULTIPLE documents in this image (e.g. front and back of a card, or two different cards side by side). Read EVERY word, number, and detail visible on ALL documents. If you see multiple documents, return ALL of them in your response. For example, if you see a Medicare card AND an Aetna card, extract data from BOTH and include them as separate objects in your response.\n\n' +
+              'CRITICAL: First, count how many SEPARATE documents, cards, or papers are visible in this image. If you see MORE THAN ONE document (for example two insurance cards side by side, or front and back of a card, or a card next to a prescription), you MUST extract data from EACH document separately and return them in a documents array. This is essential — do not skip any visible document. There may be MULTIPLE documents in this image (e.g. front and back of a card, or two different cards side by side). Read EVERY word, number, and detail visible on ALL documents. If you see multiple documents, return ALL of them in your response. For example, if you see a Medicare card AND an Aetna card, extract data from BOTH and include them as separate objects in your response.\n\n' +
               'DOCUMENT TYPE DETECTION — Identify what this is:\n' +
               '- Insurance card: Extract insurance_company, plan_name, member_name, member_id, group_number, rx_bin, rx_pcn, rx_group, copay_amounts, effective_date, phone_numbers (member services, claims, pharmacy)\n' +
               '- Prescription bottle/label: Extract medication_name, dosage, frequency, quantity, refills_remaining, prescriber, pharmacy_name, pharmacy_phone, rx_number, date_filled, expiration_date, warnings\n' +
@@ -629,7 +629,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
               '- Other medical document: Extract all visible text and categorize\n\n' +
               'For patient: ' + (patient?.name || 'PATIENT_NAME_HERE') + '\n\n' +
               'Return a JSON object with ALL extracted fields. Format as: EXTRACTED_DATA:{json}\n\n' +
-              'Include a "document_type" field (insurance_card, prescription, lab_result, medical_bill, referral, other).\n' +
+              'IMPORTANT: If multiple documents are visible, return ALL of them as: EXTRACTED_DATA:{"documents":[{...first...},{...second...}]} with each having its own document_type, summary, and fields. If only one document, return normally. Include a "document_type" field (insurance_card, prescription, lab_result, medical_bill, referral, other).\n' +
               'If you see MULTIPLE documents in the image (e.g. two insurance cards, or front and back), return them as:\n' +
               'EXTRACTED_DATA:{"documents":[{...first document...},{...second document...}]}\n' +
               'Each document should have its own document_type, summary, confidence, and all relevant fields.\n' +
