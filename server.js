@@ -26,6 +26,37 @@ const rxRefillTools = require('./tools/rx-refill');
 const { ensureDataFiles } = require("./init-data");
 ensureDataFiles();
 const app = express();
+
+// Auto-seed admin account if no users exist
+async function seedAdminAccount() {
+  const usersFile = path.join(__dirname, "data", "users.json");
+  try {
+    const users = JSON.parse(fs.readFileSync(usersFile, "utf8"));
+    if (users.length > 0) return;
+  } catch(e) {}
+  try {
+    const admin = await auth.registerUser({
+      email: "jf1986@me.com",
+      password: "Health2251",
+      name: "J Fields",
+      role: "caregiver"
+    });
+    console.log("Admin account created:", admin.email);
+    // Link Linda to admin
+    const patientsFile = path.join(__dirname, "data", "patients.json");
+    try {
+      const pData = JSON.parse(fs.readFileSync(patientsFile, "utf8"));
+      const patients = pData.patients || pData;
+      (Array.isArray(patients) ? patients : []).forEach(p => {
+        if (!p.ownerId) p.ownerId = admin.id;
+      });
+      fs.writeFileSync(patientsFile, JSON.stringify(pData, null, 2));
+      console.log("Patients linked to admin");
+    } catch(e) {}
+  } catch(e) { console.log("Seed error:", e.message); }
+}
+seedAdminAccount();
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 app.use('/drafts', express.static('drafts'));
