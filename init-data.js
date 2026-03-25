@@ -36,7 +36,11 @@ function ensureDataFiles() {
     "network_providers.json": "[]",
     "network_connections.json": "[]",
     "priority_queue.json": "[]",
-    "password_resets.json": "[]"
+    "password_resets.json": "[]",
+    "treatment_history.json": "[]",
+    "photo_log.json": "[]",
+    "provider_coordination.json": "[]",
+    "share_links.json": "[]"
   };
   let created = 0;
   for (const [file, defaultContent] of Object.entries(files)) {

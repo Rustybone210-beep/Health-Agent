@@ -2335,6 +2335,64 @@ app.get("/api/checkin/html", function(req, res) {
   } catch (e) { res.status(500).send("Error: " + e.message); }
 });
 
+
+// --- Treatment Tracker ---
+var treatmentTracker = require("./tools/treatment-tracker");
+app.post("/api/treatments/add", function(req, res) { try { var t = treatmentTracker.addTreatment(req.body); res.json({ success: true, treatment: t }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/treatments", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var t = treatmentTracker.getTreatments(pid, req.query.status); res.json({ treatments: t }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.put("/api/treatments/:id", function(req, res) { try { var t = treatmentTracker.updateTreatment(req.params.id, req.body); res.json({ success: true, treatment: t }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post("/api/treatments/:id/stop", function(req, res) { try { var t = treatmentTracker.stopTreatment(req.params.id, req.body.reason, req.body.effectiveness, req.body.endDate); res.json({ success: true, treatment: t }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post("/api/treatments/:id/side-effect", function(req, res) { try { var t = treatmentTracker.addSideEffect(req.params.id, req.body.effect, req.body.severity, req.body.date); res.json({ success: true, treatment: t }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/treatments/report", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var r = treatmentTracker.generateTreatmentReport(pid); res.json(r); } catch(e) { res.status(500).json({ error: e.message }); } });
+
+// --- Photo Condition Tracker ---
+var photoTracker = require("./tools/photo-tracker");
+app.post("/api/photos/log", function(req, res) { try { var p = photoTracker.logPhoto(req.body); res.json({ success: true, photo: p }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/photos/history", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var photos = photoTracker.getPhotoHistory(pid, req.query.bodyArea, parseInt(req.query.days) || null); res.json({ photos }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/photos/progress", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var report = photoTracker.getProgressReport(pid, req.query.bodyArea); res.json(report); } catch(e) { res.status(500).json({ error: e.message }); } });
+
+// --- Provider Coordinator ---
+var providerCoord = require("./tools/provider-coordinator");
+app.post("/api/coordination/check", function(req, res) { try { var alerts = providerCoord.checkMedChangeAlerts(req.body.medication, req.body.changeType, req.body.doctors); res.json({ alerts }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/coordination/alerts", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var alerts = providerCoord.getActiveAlerts(pid); res.json({ alerts }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.get("/api/coordination/report", function(req, res) { try { var pid = req.query.patientId || getCurrentPatientId(); var patient = getAllPatients().find(function(p){return p.id===pid}); var report = providerCoord.generateCoordinationReport(pid, patient ? patient.medications : [], patient ? patient.specialists : []); res.json(report); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post("/api/coordination/resolve/:id", function(req, res) { try { var a = providerCoord.resolveAlert(req.params.id); res.json({ success: true, alert: a }); } catch(e) { res.status(500).json({ error: e.message }); } });
+
+// --- Smart Appointment Prep ---
+var smartPrep = require("./tools/smart-prep");
+app.get("/api/prep/:appointmentId", function(req, res) {
+  try {
+    var pid = req.query.patientId || getCurrentPatientId();
+    var patient = getAllPatients().find(function(p){return p.id===pid});
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    var apptBooking = require("./tools/appointments-booking");
+    var upcoming = apptBooking.getUpcoming(pid, 365);
+    var appt = upcoming.find(function(a){return a.id===req.params.appointmentId});
+    if (!appt) return res.status(404).json({ error: "Appointment not found" });
+    var symptoms = []; var medChanges = []; var labFlags = [];
+    try { symptoms = JSON.parse(fs.readFileSync(path.join(__dirname,"data","symptom_log.json"),"utf8")).filter(function(s){return s.patientId===pid}).slice(-10); } catch(e){}
+    try { medChanges = JSON.parse(fs.readFileSync(path.join(__dirname,"data","med_changes.json"),"utf8")).filter(function(m){return m.patientId===pid}).slice(-5); } catch(e){}
+    try { var labHist = JSON.parse(fs.readFileSync(path.join(__dirname,"data","lab_history.json"),"utf8")).filter(function(l){return l.patientId===pid}); if(labHist.length>0) labFlags = (labHist[labHist.length-1].analysis||{}).urgentFlags||[]; } catch(e){}
+    var recentData = { symptoms: symptoms, medChanges: medChanges, labFlags: labFlags, recentLabs: [], recentImaging: [], concerns: [] };
+    var prep = smartPrep.generateSmartPrep(patient, appt, recentData);
+    res.json(prep);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/prep/:appointmentId/text", function(req, res) {
+  try {
+    var pid = req.query.patientId || getCurrentPatientId();
+    var patient = getAllPatients().find(function(p){return p.id===pid});
+    if (!patient) return res.status(404).json({ error: "Patient not found" });
+    var apptBooking = require("./tools/appointments-booking");
+    var upcoming = apptBooking.getUpcoming(pid, 365);
+    var appt = upcoming.find(function(a){return a.id===req.params.appointmentId});
+    if (!appt) return res.status(404).json({ error: "Appointment not found" });
+    var prep = smartPrep.generateSmartPrep(patient, appt, { symptoms:[], medChanges:[], labFlags:[] });
+    res.setHeader("Content-Type", "text/plain");
+    res.send(smartPrep.formatPrepAsText(prep));
+  } catch(e) { res.status(500).send("Error: "+e.message); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
