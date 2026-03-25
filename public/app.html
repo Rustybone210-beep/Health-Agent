@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="color-scheme" content="dark light" />
+<meta name="color-scheme" content="dark" />
 <title>Health Agent</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -51,17 +51,7 @@
   --serif:'Source Serif 4',Georgia,serif;
 }
 
-@media(prefers-color-scheme:light){:root{
-  --bg:#f0fdfa;--bg2:#f0f9ff;
-  --surface:rgba(255,255,255,0.92);--surface-2:rgba(240,253,250,0.7);--surface-3:#ccfbf1;
-  --border:rgba(13,148,136,0.1);--border-2:rgba(13,148,136,0.2);
-  --glass:rgba(255,255,255,0.9);--glass-border:rgba(13,148,136,0.1);
-  --bubble-ai:rgba(13,148,136,0.12);--bubble-user:#0f766e;
-  --bubble-ai-text:#134e4a;--bubble-user-text:#fff;
-  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
-  --teal:#0d9488;--teal2:#0f766e;--accent:#0d9488;--accent2:#0f766e;
-  --textInv:#fff;
-}}
+/* dark mode only */
 
 html,body{
   height:100%;height:100dvh;
@@ -310,8 +300,8 @@ a{color:inherit;text-decoration:none}
 .price-footer{font-size:11px;color:var(--text3);padding:8px 0;border-top:1px solid var(--border);margin-bottom:8px}
 
 /* Scan Card */
-.scan-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:18px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,0.15);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.scan-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.scan-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.scan-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .scan-icon{font-size:20px}.scan-title{font-weight:700;font-size:16px;letter-spacing:-0.01em}
 .scan-badges{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
 .scan-badge{font-size:9px;padding:3px 7px;border-radius:999px;border:1px solid var(--border);letter-spacing:0.04em;text-transform:uppercase;font-weight:600}
@@ -319,12 +309,12 @@ a{color:inherit;text-decoration:none}
 .scan-badge.warn{color:var(--warn);background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.2)}
 .scan-badge.info{color:var(--info);background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.2)}
 .scan-card>p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:10px}
-.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.scan-field{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:9px 10px}
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.scan-field{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
 .scan-field.full{grid-column:1/-1}
 .scan-label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:3px}
 .scan-value{font-size:13px;color:var(--text);line-height:1.4}
-.scan-actions{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.scan-actions{margin-top:0;display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
 .scan-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--surface-2);font-size:13px;color:var(--text);cursor:pointer;font-weight:500}
 .scan-btn.primary{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a;border:none;font-weight:600}
 .scan-btn:active{transform:scale(0.96)}
