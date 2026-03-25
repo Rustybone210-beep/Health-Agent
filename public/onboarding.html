@@ -4,278 +4,258 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="color-scheme" content="light dark">
-<title>Health Agent — Setup</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="color-scheme" content="dark">
+<title>Health Agent — Get Started</title>
+<meta name="theme-color" content="#0f172a">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#ffffff;--bg2:#f2f2f7;--surface:#ffffff;--surface-2:#f2f2f7;--surface-3:#e5e5ea;
-  --border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.12);
-  --text:#1c1c1e;--text2:#6e6e73;--text3:#aeaeb2;
-  --teal:#34c759;--teal2:#248a3d;--accent:#0b93f6;--accent2:#0a84e8;
-  --danger:#ff3b30;--warn:#ff9500;
-  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px);
-  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
-  --serif:'Source Serif 4',Georgia,serif;
-}
-@media(prefers-color-scheme:dark){:root{
-  --bg:#000000;--bg2:#1c1c1e;--surface:#1c1c1e;--surface-2:#2c2c2e;--surface-3:#3a3a3c;
-  --border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.14);
-  --text:#f2f2f7;--text2:#8e8e93;--text3:#48484a;
-  --teal:#30d158;--teal2:#248a3d;--accent:#0a84ff;--accent2:#0b93f6;
-}}
-html,body{min-height:100dvh;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-.wrap{max-width:520px;margin:0 auto;padding:calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 20px)}
-.ob-head{text-align:center;margin-bottom:32px}
-.ob-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin-bottom:14px}
-.ob-title{font-family:var(--serif);font-size:26px;font-weight:700;letter-spacing:-0.02em;margin-bottom:6px}
-.ob-sub{font-size:14px;color:var(--text2);line-height:1.5}
-.progress-bar{display:flex;gap:4px;margin-bottom:28px}
-.prog-seg{flex:1;height:4px;border-radius:99px;background:var(--surface-3);transition:background 0.4s}
-.prog-seg.active{background:var(--teal)}
-.step{display:none;animation:fadeUp 0.35s ease}
-.step.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0f172a;--bg2:#1e293b;--glass:rgba(15,23,42,0.88);--glass-border:rgba(45,212,191,0.12);--surface:rgba(51,65,85,0.4);--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--accent:#2dd4bf;--danger:#f87171;--sans:'Inter',-apple-system,sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px)}
+html,body{min-height:100dvh;font-family:var(--sans);background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--text);-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:0 auto;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 24px);min-height:100dvh;display:flex;flex-direction:column}
+.header{text-align:center;margin-bottom:32px}
+.avatar-section{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.ai-avatar{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#0f766e,#0d9488);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(45,212,191,0.2)}50%{transform:scale(1.03);box-shadow:0 0 30px rgba(45,212,191,0.35)}}
+.speech{flex:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:18px 18px 18px 6px;padding:16px;font-size:15px;line-height:1.5;color:var(--text2);backdrop-filter:blur(12px)}
+.speech strong{color:var(--text)}
+.speech .teal{color:var(--accent);font-weight:500}
+.step{display:none;flex:1;flex-direction:column}
+.step.active{display:flex}
+.step-title{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.02em}
+.step-sub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.5}
+.progress{display:flex;gap:6px;margin-bottom:24px}
+.prog-dot{flex:1;height:4px;border-radius:99px;background:rgba(51,65,85,0.5)}
+.prog-dot.done{background:var(--accent)}
+.prog-dot.current{background:var(--accent);opacity:0.6}
 .field{margin-bottom:16px}
-.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--border-2);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--text);outline:none;font-family:var(--sans);appearance:none;-webkit-appearance:none}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,147,246,0.1)}
-.field input::placeholder,.field textarea::placeholder{color:var(--text3)}
-.field textarea{min-height:80px;resize:vertical}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field-note{font-size:11px;color:var(--text3);margin-top:4px}
-.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.scan-card{background:var(--surface-2);border:2px dashed var(--border-2);border-radius:16px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
-.scan-card:active{transform:scale(0.97)}
-.scan-card.done{border-color:var(--teal);border-style:solid;background:rgba(52,199,89,0.04)}
-.scan-card.processing{border-color:var(--warn);border-style:solid}
-.scan-icon{font-size:28px;margin-bottom:8px}
-.scan-card h3{font-size:13px;font-weight:600;margin-bottom:3px}
-.scan-card p{font-size:11px;color:var(--text3);line-height:1.4}
-.scan-card input{display:none}
-.scan-check{position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--teal);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700}
-.scan-card.done .scan-check{display:flex}
-.scan-spinner{display:none;width:20px;height:20px;border:2px solid var(--surface-3);border-top-color:var(--warn);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 6px}
-.scan-card.processing .scan-spinner{display:block}
-.scan-card.processing .scan-icon{display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
-.extracted{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;animation:fadeUp 0.3s ease}
-.extracted-title{font-size:11px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.extracted-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:13px}
-.extracted-row:last-child{border-bottom:none}
-.ext-label{color:var(--text3);font-size:12px}
-.ext-value{color:var(--text);font-weight:500;text-align:right;max-width:60%}
-.btn-row{display:flex;gap:10px;margin-top:24px}
-.btn{flex:1;padding:14px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all 0.15s}
-.btn:active{transform:scale(0.97)}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-.btn-secondary{background:var(--surface-2);border:1px solid var(--border);color:var(--text2)}
-.btn-success{background:var(--teal);color:#fff}
-.skip-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none}
-.skip-link:hover{color:var(--accent)}
-.toast{position:fixed;bottom:calc(var(--safe-bot) + 16px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--teal);color:#fff;padding:10px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
-.toast.show{transform:translateX(-50%) translateY(0)}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--glass-border);border-radius:14px;padding:14px 16px;font-size:16px;color:var(--text);outline:none;font-family:var(--sans);-webkit-appearance:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--text3)}
+.row{display:flex;gap:12px}
+.row .field{flex:1}
+.btn{width:100%;padding:16px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all 0.15s}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a;box-shadow:0 4px 16px rgba(45,212,191,0.25)}
+.btn-secondary{background:var(--surface);border:1px solid var(--glass-border);color:var(--text2);margin-top:10px}
+.btn-row{display:flex;gap:10px;margin-top:auto;padding-top:24px}
+.btn-row .btn{flex:1}
+.scan-area{background:var(--surface);border:2px dashed var(--glass-border);border-radius:20px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px}
+.scan-area:hover{border-color:var(--accent);background:rgba(45,212,191,0.04)}
+.scan-area:active{transform:scale(0.98)}
+.scan-icon{font-size:48px;margin-bottom:12px}
+.scan-text{font-size:16px;font-weight:600;margin-bottom:4px}
+.scan-sub{font-size:13px;color:var(--text3)}
+.card-preview{background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:16px;margin-bottom:16px;backdrop-filter:blur(12px)}
+.card-preview h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--accent)}
+.card-row{display:flex;gap:6px;font-size:13px;margin-bottom:4px}
+.card-label{color:var(--text3);width:80px;flex-shrink:0}
+.card-value{color:var(--text)}
+.msg{font-size:13px;margin-top:10px;padding:10px 14px;border-radius:12px;display:none}
+.msg.show{display:block}
+.msg.err{color:var(--danger);background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15)}
+.msg.ok{color:var(--accent);background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15)}
+.skip{text-align:center;margin-top:12px;font-size:13px;color:var(--text3)}
+.skip a{color:var(--accent);cursor:pointer;font-weight:500}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="ob-head">
-    <div class="ob-logo">HA</div>
-    <div class="ob-title">Welcome to Health Agent</div>
-    <div class="ob-sub">Let's set up your first patient profile in under 2 minutes.</div>
-  </div>
-  <div class="progress-bar">
-    <div class="prog-seg active" id="prog1"></div>
-    <div class="prog-seg" id="prog2"></div>
-    <div class="prog-seg" id="prog3"></div>
+  <div class="progress" id="progress">
+    <div class="prog-dot done"></div>
+    <div class="prog-dot"></div>
+    <div class="prog-dot"></div>
   </div>
 
-  <!-- STEP 1: Basic Info -->
+  <!-- STEP 1: Who are you caring for? -->
   <div class="step active" id="step1">
-    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Who are you caring for?</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Start with the basics. You can always update later.</p>
-    <div class="field"><label>Full Name *</label><input id="patName" placeholder="Linda Fields"></div>
-    <div class="field-row">
-      <div class="field"><label>Your Relationship</label><input id="patRelation" placeholder="Mother, Father, Self..."></div>
-      <div class="field"><label>Date of Birth</label><input id="patDob" placeholder="MM/DD/YYYY"></div>
+    <div class="avatar-section">
+      <div class="ai-avatar">🤖</div>
+      <div class="speech">Welcome! I'm your <strong>Health Agent</strong>.<br><span class="teal">Let's set up your first patient profile.</span></div>
     </div>
-    <div class="field"><label>Address</label><input id="patAddress" placeholder="123 Main St, San Antonio TX 78258"></div>
-    <div class="field-row">
-      <div class="field"><label>Primary Doctor</label><input id="patDoctor" placeholder="Dr. Martinez"></div>
-      <div class="field"><label>Clinic</label><input id="patClinic" placeholder="Alamo Heights Family Medicine"></div>
+    <div class="step-title">Who are you caring for?</div>
+    <div class="step-sub">This could be yourself, a parent, spouse, or anyone you help manage healthcare for.</div>
+    <div class="field"><label>Patient's Full Name *</label><input id="patName" placeholder="Linda Fields"></div>
+    <div class="row">
+      <div class="field"><label>Date of Birth *</label><input id="patDob" placeholder="MM/DD/YYYY"></div>
+      <div class="field"><label>Relationship</label><input id="patRelation" placeholder="Mother, Self, Spouse..."></div>
     </div>
-    <div class="field"><label>Preferred Hospital</label><input id="patHospital" placeholder="Methodist Hospital"></div>
-    <div class="btn-row"><button class="btn btn-primary" onclick="goStep(2)">Continue →</button></div>
+    <div class="row">
+      <div class="field"><label>Primary Doctor</label><input id="patDoctor" placeholder="Dr. Smith"></div>
+      <div class="field"><label>Phone</label><input id="patPhone" placeholder="(210) 555-1234"></div>
+    </div>
+    <div class="field"><label>Address</label><input id="patAddress" placeholder="Street, City, State ZIP"></div>
+    <div class="msg err" id="step1Err"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="goStep2()">Next →</button></div>
   </div>
 
-  <!-- STEP 2: Insurance & Pharmacy -->
+  <!-- STEP 2: Scan insurance card -->
   <div class="step" id="step2">
-    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Insurance & Pharmacy</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Scan your card or enter manually.</p>
-    <div class="scan-grid">
-      <div class="scan-card" id="cardIns" onclick="document.getElementById('fileIns').click()">
-        <div class="scan-check">✓</div><div class="scan-spinner"></div>
-        <div class="scan-icon">🪪</div><h3>Scan Insurance Card</h3><p>I'll read it all</p>
-        <input type="file" id="fileIns" accept="image/*,.pdf" capture="environment" onchange="scanInsurance(this)">
-      </div>
-      <div class="scan-card" id="cardRx" onclick="document.getElementById('fileRx').click()">
-        <div class="scan-check">✓</div><div class="scan-spinner"></div>
-        <div class="scan-icon">💊</div><h3>Scan Rx Bottle</h3><p>Meds, dose, pharmacy</p>
-        <input type="file" id="fileRx" accept="image/*" capture="environment" onchange="scanMedBottle(this)">
-      </div>
+    <div class="avatar-section">
+      <div class="ai-avatar">🤖</div>
+      <div class="speech">Great! Now let's <strong>scan an insurance card</strong>.<br><span class="teal">I'll read everything automatically.</span></div>
     </div>
-    <div id="scanResults"></div>
-    <div style="text-align:center;color:var(--text3);font-size:12px;margin:12px 0">— or enter manually —</div>
-    <div class="field-row">
-      <div class="field"><label>Primary Insurance</label><input id="patIns" placeholder="Medicare"></div>
-      <div class="field"><label>Secondary Insurance</label><input id="patIns2" placeholder="Aetna Supplement"></div>
+    <div class="step-title">Scan Insurance Card</div>
+    <div class="step-sub">Take a photo of the front of the insurance card. I'll extract all the details.</div>
+    <div class="scan-area" onclick="triggerScan()">
+      <div class="scan-icon">📷</div>
+      <div class="scan-text">Tap to scan card</div>
+      <div class="scan-sub">Camera or photo library</div>
     </div>
-    <div class="field"><label>Member ID</label><input id="patMemId" placeholder="6VG3-TR1-TK42"></div>
-    <div class="field-row">
-      <div class="field"><label>Pharmacy Name</label><input id="patPhN" placeholder="Walgreens Stone Oak"></div>
-      <div class="field"><label>Pharmacy Phone</label><input id="patPhP" placeholder="(210) 403-0002"></div>
-    </div>
+    <div id="scanResult"></div>
+    <div class="msg err" id="step2Err"></div>
+    <div class="msg ok" id="step2Ok"></div>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+      <button class="btn btn-secondary" onclick="backTo(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep3()">Next →</button>
     </div>
+    <div class="skip">or <a onclick="goStep3()">Skip for now</a></div>
   </div>
 
-  <!-- STEP 3: Conditions & Meds -->
+  <!-- STEP 3: Conditions & Medications -->
   <div class="step" id="step3">
-    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Health Details</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Conditions, medications, and allergies.</p>
-    <div class="field">
-      <label>Medical Conditions</label>
-      <input id="patCond" placeholder="Hypertension, Type 2 Diabetes">
-      <div class="field-note">Separate with commas</div>
+    <div class="avatar-section">
+      <div class="ai-avatar">🤖</div>
+      <div class="speech">Almost done! Add any <strong>conditions, medications, and allergies</strong>.<br><span class="teal">You can always update these later.</span></div>
     </div>
-    <div class="field">
-      <label>Current Medications</label>
-      <textarea id="patMeds" placeholder="Lisinopril 10mg daily&#10;Metformin 500mg twice daily"></textarea>
-      <div class="field-note">One per line: name dose frequency</div>
+    <div class="step-title">Medical Info</div>
+    <div class="step-sub">Add what you know — you can scan documents later to fill in more.</div>
+    <div class="field"><label>Conditions (comma separated)</label><input id="patConditions" placeholder="Hypertension, Diabetes, Dry Eye..."></div>
+    <div class="field"><label>Medications (comma separated)</label><input id="patMeds" placeholder="Lisinopril 10mg, Metformin 500mg..."></div>
+    <div class="field"><label>Allergies (comma separated)</label><input id="patAllergies" placeholder="Penicillin, Sulfa drugs..."></div>
+    <div class="row">
+      <div class="field"><label>Pharmacy Name</label><input id="patPharmacy" placeholder="Walgreens"></div>
+      <div class="field"><label>Pharmacy Phone</label><input id="patPharmPhone" placeholder="(210) 555-5678"></div>
     </div>
-    <div class="field">
-      <label>Allergies</label>
-      <input id="patAlg" placeholder="Penicillin, Sulfa drugs">
-      <div class="field-note">Separate with commas</div>
-    </div>
+    <div class="msg err" id="step3Err"></div>
+    <div class="msg ok" id="step3Ok"></div>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-      <button class="btn btn-success" onclick="savePatient()" id="saveBtn">Create Profile ✓</button>
+      <button class="btn btn-secondary" onclick="backTo(2)">← Back</button>
+      <button class="btn btn-primary" id="finishBtn" onclick="finishSetup()">Complete Setup ✓</button>
     </div>
-    <a class="skip-link" href="/">Skip — I'll set up later</a>
+    <div class="skip">or <a onclick="finishSetup()">Skip and finish</a></div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleScan(this)">
 
 <script>
-'use strict';
-let currentStep=1;
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
-function goStep(n){
-  if(n===2&&!document.getElementById('patName').value.trim()){toast('Please enter the patient name');return}
-  document.getElementById('step'+currentStep).classList.remove('active');
-  document.getElementById('step'+n).classList.add('active');
-  currentStep=n;
-  for(let i=1;i<=3;i++)document.getElementById('prog'+i).classList.toggle('active',i<=n);
-  window.scrollTo({top:0,behavior:'smooth'});
+const token = localStorage.getItem('ha_token');
+if (!token) window.location.href = '/login';
+
+let scannedInsurance = null;
+
+function goStep2() {
+  const name = document.getElementById('patName').value.trim();
+  const dob = document.getElementById('patDob').value.trim();
+  if (!name) { showMsg('step1Err', 'Patient name is required'); return; }
+  showStep(2);
 }
 
-async function scanInsurance(input){
-  const file=input.files?.[0];if(!file)return;
-  const card=document.getElementById('cardIns');
-  card.classList.add('processing');card.classList.remove('done');
-  const fd=new FormData();fd.append('file',file);
-  try{
-    const res=await fetch('/api/upload',{method:'POST',body:fd});
-    const data=await res.json();
-    if(data.extracted){
-      if(data.extracted.insurance_company)document.getElementById('patIns').value=data.extracted.insurance_company;
-      if(data.extracted.member_id)document.getElementById('patMemId').value=data.extracted.member_id;
-      renderScanResult('🪪 Insurance Card',data.extracted);
-      card.classList.add('done');toast('Insurance card scanned!');
-      fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'deny'})}).catch(()=>{});
-    }else{toast(data.message||'Could not extract data')}
-  }catch(e){toast('Scan error: '+e.message)}
-  card.classList.remove('processing');input.value='';
-}
+function goStep3() { showStep(3); }
+function backTo(n) { showStep(n); }
 
-async function scanMedBottle(input){
-  const file=input.files?.[0];if(!file)return;
-  const card=document.getElementById('cardRx');
-  card.classList.add('processing');card.classList.remove('done');
-  const fd=new FormData();fd.append('file',file);
-  try{
-    const res=await fetch('/api/upload',{method:'POST',body:fd});
-    const data=await res.json();
-    if(data.extracted){
-      if(data.extracted.pharmacy_name)document.getElementById('patPhN').value=data.extracted.pharmacy_name;
-      if(data.extracted.pharmacy_phone)document.getElementById('patPhP').value=data.extracted.pharmacy_phone;
-      const medLine=[data.extracted.medication_name,data.extracted.dosage,data.extracted.frequency].filter(Boolean).join(' ');
-      if(medLine){const m=document.getElementById('patMeds');m.value=(m.value?m.value+'\n':'')+medLine}
-      renderScanResult('💊 Medication',data.extracted);
-      card.classList.add('done');toast('Medication scanned!');
-      fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'deny'})}).catch(()=>{});
-    }else{toast(data.message||'Could not extract data')}
-  }catch(e){toast('Scan error: '+e.message)}
-  card.classList.remove('processing');input.value='';
-}
-
-function renderScanResult(title,data){
-  const el=document.getElementById('scanResults');
-  const skip=new Set(['document_type','confidence','summary','patient_context']);
-  let rows='';
-  for(const[k,v]of Object.entries(data)){
-    if(skip.has(k)||!v||v==='unclear')continue;
-    const label=k.replace(/_/g,' ');
-    const display=typeof v==='object'?JSON.stringify(v):String(v);
-    rows+=`<div class="extracted-row"><span class="ext-label">${esc(label)}</span><span class="ext-value">${esc(display)}</span></div>`;
-  }
-  if(rows)el.insertAdjacentHTML('beforeend',`<div class="extracted"><div class="extracted-title">${title} Extracted</div>${rows}</div>`);
-}
-
-function parseMeds(text){
-  if(!text.trim())return[];
-  return text.split('\n').filter(l=>l.trim()).map(line=>{
-    const parts=line.trim().split(/\s+/);
-    return{name:parts[0]||'',dose:parts[1]||'',frequency:parts.slice(2).join(' ')||''};
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.querySelectorAll('.prog-dot').forEach((d, i) => {
+    d.classList.remove('done', 'current');
+    if (i < n - 1) d.classList.add('done');
+    if (i === n - 1) d.classList.add('done');
   });
 }
 
-async function savePatient(){
-  const name=document.getElementById('patName').value.trim();
-  if(!name){toast('Name is required');return}
-  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Saving...';
-  const patient={
-    name,
-    relationship:document.getElementById('patRelation').value.trim()||'Family Member',
-    dob:document.getElementById('patDob').value.trim(),
-    address:document.getElementById('patAddress').value.trim(),
-    primaryDoctor:document.getElementById('patDoctor').value.trim(),
-    clinic:document.getElementById('patClinic').value.trim(),
-    preferredHospital:document.getElementById('patHospital').value.trim(),
-    insurance:{primary:document.getElementById('patIns').value.trim(),secondary:document.getElementById('patIns2').value.trim(),memberId:document.getElementById('patMemId').value.trim()},
-    pharmacy:{name:document.getElementById('patPhN').value.trim(),phone:document.getElementById('patPhP').value.trim()},
-    conditions:document.getElementById('patCond').value.split(',').map(s=>s.trim()).filter(Boolean),
-    allergies:document.getElementById('patAlg').value.split(',').map(s=>s.trim()).filter(Boolean),
-    medications:parseMeds(document.getElementById('patMeds').value)
-  };
-  try{
-    const res=await fetch('/api/patients/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(patient)});
-    const data=await res.json();
-    if(data.success&&data.patient?.id){
-      await fetch('/api/patients/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:data.patient.id})});
-      toast('Profile created! Redirecting...');
-      setTimeout(()=>window.location.href='/',1500);
-    }else throw new Error(data.error||'Failed to save');
-  }catch(e){toast('Error: '+e.message);btn.disabled=false;btn.textContent='Create Profile ✓'}
+function triggerScan() {
+  document.getElementById('fileInput').click();
 }
+
+async function handleScan(input) {
+  if (!input.files || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  showMsg('step2Ok', 'Scanning... please wait');
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: formData
+    });
+    const data = await res.json();
+    if (data.extracted) {
+      scannedInsurance = data.extracted;
+      let html = '<div class="card-preview"><h3>✅ Card Scanned</h3>';
+      if (data.extracted.insurance_company) html += '<div class="card-row"><span class="card-label">Insurance</span><span class="card-value">' + data.extracted.insurance_company + '</span></div>';
+      if (data.extracted.member_name) html += '<div class="card-row"><span class="card-label">Name</span><span class="card-value">' + data.extracted.member_name + '</span></div>';
+      if (data.extracted.member_id) html += '<div class="card-row"><span class="card-label">Member ID</span><span class="card-value">' + data.extracted.member_id + '</span></div>';
+      if (data.extracted.plan_name) html += '<div class="card-row"><span class="card-label">Plan</span><span class="card-value">' + data.extracted.plan_name + '</span></div>';
+      if (data.extracted.group_number) html += '<div class="card-row"><span class="card-label">Group</span><span class="card-value">' + data.extracted.group_number + '</span></div>';
+      html += '</div>';
+      document.getElementById('scanResult').innerHTML = html;
+      hideMsg('step2Ok');
+      hideMsg('step2Err');
+    } else {
+      showMsg('step2Ok', 'Saved! You can scan more cards later.');
+    }
+  } catch (e) {
+    showMsg('step2Err', 'Scan failed: ' + e.message);
+  }
+}
+
+async function finishSetup() {
+  const name = document.getElementById('patName').value.trim();
+  const dob = document.getElementById('patDob').value.trim();
+  if (!name) { showMsg('step3Err', 'Go back and enter the patient name'); return; }
+
+  document.getElementById('finishBtn').disabled = true;
+  document.getElementById('finishBtn').textContent = 'Setting up...';
+
+  const patient = {
+    name,
+    dob: dob || '',
+    relationship: document.getElementById('patRelation').value.trim() || 'Family Member',
+    primaryDoctor: document.getElementById('patDoctor').value.trim() || '',
+    phone: document.getElementById('patPhone').value.trim() || '',
+    address: document.getElementById('patAddress').value.trim() || '',
+    conditions: document.getElementById('patConditions').value.split(',').map(s => s.trim()).filter(Boolean),
+    medications: document.getElementById('patMeds').value.split(',').map(s => {
+      const parts = s.trim().match(/^(.+?)\s+(\d+\s*\w+)$/);
+      return parts ? { name: parts[1].trim(), dose: parts[2].trim() } : { name: s.trim(), dose: '' };
+    }).filter(m => m.name),
+    allergies: document.getElementById('patAllergies').value.split(',').map(s => s.trim()).filter(Boolean),
+    pharmacy: {
+      name: document.getElementById('patPharmacy').value.trim() || '',
+      phone: document.getElementById('patPharmPhone').value.trim() || ''
+    }
+  };
+
+  if (scannedInsurance) {
+    patient.insurance = {
+      primary: scannedInsurance.insurance_company || scannedInsurance.plan_name || '',
+      memberId: scannedInsurance.member_id || '',
+      groupNumber: scannedInsurance.group_number || ''
+    };
+  }
+
+  try {
+    const res = await fetch('/api/patients/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(patient)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create patient');
+    showMsg('step3Ok', 'Profile created! Redirecting...');
+    setTimeout(function() { window.location.href = '/'; }, 1200);
+  } catch (e) {
+    showMsg('step3Err', e.message);
+    document.getElementById('finishBtn').disabled = false;
+    document.getElementById('finishBtn').textContent = 'Complete Setup ✓';
+  }
+}
+
+function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
+function hideMsg(id) { document.getElementById(id).classList.remove('show'); }
 </script>
 </body>
 </html>

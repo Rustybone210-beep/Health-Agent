@@ -365,14 +365,23 @@ app.post('/api/notifications/add', (req, res) => {
   res.json({ success: true, notification: notif });
 });
 // Patients
-app.get('/api/patients', (_req, res) => {
-  res.json({ patients: getAllPatients() });
+app.get('/api/patients', (req, res) => {
+  try {
+    const userId = req.userSession?.userId || null;
+    const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
+    const patients = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    res.json({ patients });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
-app.get('/api/patients/current', (_req, res) => {
-  const id = getCurrentPatientId();
-  const patients = getAllPatients(session.userId);
-  const patient = patients.find((p) => p.id === id) || patients[0] || null;
-  res.json({ patient, currentId: id });
+app.get('/api/patients/current', (req, res) => {
+  try {
+    const userId = req.userSession?.userId || null;
+    const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
+    const patients = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    const currentId = getCurrentPatientId();
+    const current = patients.find(p => p.id === currentId) || patients[0] || null;
+    res.json({ currentId: current?.id || null, patient: current });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/patients/switch', (req, res) => {
   const { patientId } = req.body;
@@ -2215,9 +2224,6 @@ app.get('/', (req, res) => {
   }
   // Auto-redirect to onboarding if no patients exist
   const patients = getAllPatients();
-  if (!patients || patients.length === 0) {
-    return res.redirect('/onboarding');
-  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 app.get('/onboarding', (_req, res) => {
