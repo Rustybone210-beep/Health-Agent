@@ -563,6 +563,7 @@ body.modal-open{overflow:hidden}
 
       <div class="sb-section">
         <div class="sb-label">Quick Actions</div>
+        <div class="sb-nav-item" onclick="window.open('/emergency','_blank')" style="color:#fca5a5"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444"></i>Emergency Info</div>
         <div class="sb-nav-item" onclick="triggerUpload()"><i class="fa-solid fa-camera"></i>Scan Document</div>
         <div class="sb-nav-item" onclick="checkInteractions()"><i class="fa-solid fa-shield-halved"></i>Drug Interactions</div>
         <div class="sb-nav-item" onclick="comparePrices()"><i class="fa-solid fa-tag"></i>Rx Prices</div>
@@ -1085,6 +1086,19 @@ function renderPlaybookCard(pb) {
     +(pb.hospital_prep?'<div style="margin-top:10px;padding:10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;font-size:11px;color:#93c5fd;line-height:1.4">'+esc(pb.hospital_prep)+'</div>':'')
     +'<div class="ac-btns" style="margin-top:12px"><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>';
   ['chatArea','chatAreaDesktop'].forEach(id=>{const el=document.getElementById(id);if(el){el.insertAdjacentHTML('beforeend',html);el.scrollTop=el.scrollHeight}});
+}
+
+
+async function fireEmergencyCascade(details) {
+  if(!confirm('FIRE EMERGENCY ALERT? This will contact all emergency contacts immediately via phone, email, and all available channels.')) return;
+  try {
+    const data = await api('/api/emergency/fire-cascade', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId: currentPatientId, triggerType: 'Manual Emergency Alert', details: details||'Emergency alert triggered manually from Health Agent.', countryCode: 'US' })
+    });
+    addMsg('ai', '🚨 Emergency cascade fired! ' + (data.contactsReached||0) + ' contacts notified via ' + (data.results||[]).reduce((acc,r)=>acc+r.channels.length,0) + ' channels. Help is on the way.', true, true);
+  } catch(e) { addMsg('ai', '❌ Cascade error: ' + esc(e.message), true, false); }
 }
 
 function renderSecondOpinionCard(programs) {

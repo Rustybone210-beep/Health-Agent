@@ -1,0 +1,19 @@
+{
+  "maria-fields": [
+    {
+      "id": "1",
+      "name": "J Fields",
+      "relationship": "Son / Primary Caregiver",
+      "phone": "+12105551234",
+      "phone2": null,
+      "email": "jf1986@me.com",
+      "email2": "johnisfields@gmail.com",
+      "whatsapp": "+12105551234",
+      "country": "US",
+      "timezone": "America/Chicago",
+      "priority": 1,
+      "lastAlerted": null,
+      "confirmed": true
+    }
+  ]
+}

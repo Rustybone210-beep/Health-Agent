@@ -44,6 +44,7 @@ const anthropic = new Anthropic({
 const adaptiveAgent = require("./tools/adaptive-agent");
 const playbooks = require("./tools/emergency-playbooks");
 const legalSafety = require("./tools/legal-safety");
+const emergencyCascade = require("./tools/emergency-cascade");
 const knowledgeUpdater = require("./tools/knowledge-updater");
 
 // ─── Data File Paths ───────────────────────────────────────
@@ -1349,7 +1350,6 @@ app.post("/api/auth/forgot-password", async (req, res) => {
     const resetUrl = (process.env.APP_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + (process.env.PORT || 3000))) + "/reset-password?token=" + reset.token;
     try {
       if (process.env.RESEND_API_KEY) {
-        const { Resend } = require("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
           from: process.env.FROM_EMAIL || "Health Agent <onboarding@resend.dev>",
@@ -1382,7 +1382,6 @@ app.post("/api/auth/welcome-email", async (req, res) => {
   try {
     const { email, name } = req.body;
     if (process.env.RESEND_API_KEY) {
-      const { Resend } = require("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: process.env.FROM_EMAIL || "Health Agent <onboarding@resend.dev>",
@@ -1583,6 +1582,32 @@ app.get("/api/reminders/due", (_req, res) => {
 });
 
 
+
+
+// Check-in monitoring — every 15 minutes
+// If patient misses a check-in, fire cascade alert
+cron.schedule("*/15 * * * *", async () => {
+  try {
+    const missed = emergencyCascade.getMissedCheckins();
+    for(const checkin of missed) {
+      const patient = getAllPatientsRaw().find(p => p.id === checkin.patientId) || {};
+      const contacts = emergencyCascade.getContacts(checkin.patientId);
+      if(!contacts.length) continue;
+      console.log("[Emergency] Missed check-in for", patient.name||checkin.patientId, "- overdue by", checkin.overdueMinutes, "minutes");
+      // Fire cascade after 30 minutes overdue
+      if(checkin.overdueMinutes >= 30 && !checkin.alertFired) {
+        const detail = patient.name+" has not checked in. Last check-in was "+checkin.overdueMinutes+" minutes ago.";
+        await emergencyCascade.dispatchCascade(patient, contacts, "Missed Check-In Alert", detail, "US", emailTools, voice);
+        // Mark as fired to prevent repeat
+        const checkins = JSON.parse(require("fs").readFileSync(require("path").join(__dirname,"data/checkins.json"),"utf8"));
+        const pc = checkins[checkin.patientId]||[];
+        const idx = pc.findIndex(c=>c.id===checkin.id);
+        if(idx!==-1){pc[idx].alertFired=true;checkins[checkin.patientId]=pc;require("fs").writeFileSync(require("path").join(__dirname,"data/checkins.json"),JSON.stringify(checkins,null,2));}
+        addNotification("general","Check-In Alert Fired",detail,checkin.patientId,null);
+      }
+    }
+  } catch(e) { console.log("[Emergency] Check-in cron error:", e.message); }
+});
 
 // Nightly knowledge upgrade at 11pm
 cron.schedule("0 23 * * *", async () => {
@@ -1986,9 +2011,6 @@ app.get("/api/alerts/predictive", (req, res) => {
   try {
     const pid = req.query.patientId || getCurrentPatientId();
     const patient = getAllPatients().find(p => p.id === pid);
-    const symptomTracker = require("./tools/symptom-tracker");
-    const labAnalyzer = require("./tools/lab-analyzer");
-    const medReminders = require("./tools/med-reminders");
     let labHistory = [];
     try { labHistory = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "lab_history.json"), "utf8")).filter(l => l.patientId === pid); } catch(e){}
     let symptoms = [];
@@ -2492,7 +2514,6 @@ app.get("/api/prep/:appointmentId/text", function(req, res) {
 
 
 // ─── Second Opinion Connector ────────────────────────────
-const soConnector = require("./tools/second-opinion-connector");
 app.get("/api/second-opinion/match", (req, res) => {
   try {
     const pid = req.query.patientId || getCurrentPatientId();
@@ -2700,8 +2721,6 @@ app.post("/api/agent/upgrade", async (req, res) => {
 });
 app.get("/api/agent/knowledge-status", (req, res) => {
   try {
-    const fs = require("fs");
-    const path = require("path");
     const kbPath = path.join(__dirname, "data", "health_knowledge.json");
     if(!fs.existsSync(kbPath)) return res.json({ hasKnowledge: false });
     const kb = JSON.parse(fs.readFileSync(kbPath,"utf8"));
@@ -2761,6 +2780,90 @@ app.get("/api/prior-auth/history", (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ─── Emergency Cascade System ────────────────────────────
+
+app.get("/api/emergency/contacts/:patientId", (req, res) => {
+  try {
+    const contacts = emergencyCascade.getContacts(req.params.patientId);
+    res.json({ contacts });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/emergency/contacts/:patientId", (req, res) => {
+  try {
+    const contact = emergencyCascade.addContact(req.params.patientId, req.body);
+    res.json({ success: true, contact });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/api/emergency/contacts/:patientId", (req, res) => {
+  try {
+    const contacts = emergencyCascade.saveContacts(req.params.patientId, req.body.contacts);
+    res.json({ success: true, contacts });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/emergency/checkin/:patientId", (req, res) => {
+  try {
+    emergencyCascade.recordCheckin(req.params.patientId);
+    res.json({ success: true, checkedInAt: new Date().toISOString() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/emergency/setup-checkin", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const checkin = emergencyCascade.createCheckin(pid, req.body.intervalHours || 12, true);
+    res.json({ success: true, checkin });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/emergency/numbers/:country", (req, res) => {
+  try {
+    const numbers = emergencyCascade.getEmergencyNumbers(req.params.country);
+    res.json({ country: req.params.country, numbers });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/emergency/numbers", (_req, res) => {
+  try {
+    res.json({ numbers: emergencyCascade.getAllEmergencyNumbers() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/emergency/fire-cascade", async (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const contacts = emergencyCascade.getContacts(pid);
+    if(!contacts.length) return res.status(400).json({ error: "No emergency contacts set up. Add contacts first." });
+    const result = await emergencyCascade.dispatchCascade(
+      patient, contacts,
+      req.body.triggerType || "Manual Emergency Alert",
+      req.body.details || "",
+      req.body.countryCode || "US",
+      emailTools, voice
+    );
+    addNotification("general", "Emergency Alert Fired", result.contactsReached+" contacts notified via "+result.results.reduce((acc,r)=>acc+r.channels.length,0)+" channels", pid, null);
+    res.json({ success: true, ...result });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/emergency/alerts/:patientId", (req, res) => {
+  try {
+    const alerts = emergencyCascade.getAlerts(req.params.patientId);
+    res.json({ alerts });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/emergency/alerts/:alertId/resolve", (req, res) => {
+  try {
+    emergencyCascade.resolveAlert(req.params.alertId);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
@@ -2771,6 +2874,10 @@ app.get('/', (req, res) => {
   // Auto-redirect to onboarding if no patients exist
   const patients = getAllPatients();
   res.sendFile(path.join(__dirname, 'public', 'app.html'));
+});
+
+app.get('/emergency', (_req, res) => {
+  res.sendFile(require('path').join(__dirname, 'public', 'emergency.html'));
 });
 app.get('/onboarding', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));

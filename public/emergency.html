@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emergency Info — Health Agent</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;padding:0}
+.emergency-bar{background:#ef4444;padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.emergency-bar h1{font-size:16px;font-weight:800;letter-spacing:.5px}
+.pulse{width:12px;height:12px;border-radius:50%;background:white;animation:pulse 1s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.container{padding:20px;max-width:500px;margin:0 auto}
+.patient-card{background:#1a1a1a;border:2px solid #ef4444;border-radius:16px;padding:20px;margin-bottom:16px}
+.patient-name{font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
+.patient-dob{font-size:14px;color:#999;margin-bottom:16px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:14px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:#888;font-weight:500}
+.info-val{color:#fff;font-weight:600;text-align:right;max-width:60%}
+.section{margin-bottom:16px}
+.section-title{font-size:11px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.pill-list{display:flex;flex-wrap:wrap;gap:6px}
+.pill{padding:5px 12px;border-radius:100px;font-size:12px;font-weight:600}
+.pill-red{background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.4)}
+.pill-blue{background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.3)}
+.pill-teal{background:rgba(20,184,166,0.2);color:#5eead4;border:1px solid rgba(20,184,166,0.3)}
+.emergency-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.e-btn{padding:16px;border-radius:14px;border:none;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.e-btn-911{background:#ef4444;color:white;grid-column:1/-1;font-size:16px;padding:20px}
+.e-btn-alt{background:#1a1a1a;color:#fff;border:1px solid #333}
+.e-btn span{font-size:20px}
+.e-btn small{font-size:11px;opacity:.8;font-weight:400}
+.contacts-list{display:flex;flex-direction:column;gap:8px}
+.contact-card{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center}
+.contact-info h3{font-size:14px;font-weight:700;color:#fff}
+.contact-info p{font-size:12px;color:#888;margin-top:2px}
+.contact-call{background:#22c55e;color:white;border:none;border-radius:100px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none}
+.disclaimer{font-size:11px;color:#555;text-align:center;margin-top:20px;line-height:1.5;padding:16px;border-top:1px solid #222}
+.offline-notice{background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:10px 14px;font-size:12px;color:#888;text-align:center;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="emergency-bar">
+  <div class="pulse"></div>
+  <h1>HEALTH AGENT — EMERGENCY INFO</h1>
+</div>
+
+<div class="container">
+  <div class="offline-notice">
+    This page works offline. Save it to your home screen for instant access.
+  </div>
+
+  <!-- Emergency Call Buttons -->
+  <div class="section">
+    <div class="section-title">Emergency Services</div>
+    <div class="emergency-btns">
+      <a class="e-btn e-btn-911" href="tel:911"><span>🚨</span>CALL 911<small>US Emergency Services</small></a>
+      <a class="e-btn e-btn-alt" href="tel:+18002221222"><span>☠️</span>Poison Control<small>1-800-222-1222</small></a>
+      <a class="e-btn e-btn-alt" href="tel:988"><span>🧠</span>Crisis Line<small>988</small></a>
+      <a class="e-btn e-btn-alt" href="tel:+12159428226"><span>✈️</span>MedJet Intl<small>+1-215-942-8226</small></a>
+    </div>
+  </div>
+
+  <!-- Patient Info Card -->
+  <div class="section">
+    <div class="section-title">Patient Information</div>
+    <div class="patient-card" id="patientCard">
+      <div class="patient-name" id="patName">Loading…</div>
+      <div class="patient-dob" id="patDob">Loading…</div>
+      <div class="info-row"><span class="info-label">Insurance</span><span class="info-val" id="patIns">—</span></div>
+      <div class="info-row"><span class="info-label">Member ID</span><span class="info-val" id="patMemId">—</span></div>
+      <div class="info-row"><span class="info-label">Doctor</span><span class="info-val" id="patDoc">—</span></div>
+      <div class="info-row"><span class="info-label">Pharmacy</span><span class="info-val" id="patPharm">—</span></div>
+    </div>
+  </div>
+
+  <!-- Allergies — most critical -->
+  <div class="section">
+    <div class="section-title" style="color:#ef4444">⚠️ Allergies — TELL PARAMEDICS FIRST</div>
+    <div class="pill-list" id="allergyList">
+      <div class="pill pill-red">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Medications -->
+  <div class="section">
+    <div class="section-title">Current Medications</div>
+    <div class="pill-list" id="medList">
+      <div class="pill pill-blue">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Conditions -->
+  <div class="section">
+    <div class="section-title">Medical Conditions</div>
+    <div class="pill-list" id="condList">
+      <div class="pill pill-teal">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Emergency Contacts -->
+  <div class="section">
+    <div class="section-title">Emergency Contacts</div>
+    <div class="contacts-list" id="contactsList">
+      <div class="contact-card"><div class="contact-info"><h3>Loading…</h3><p>Please log in to load contacts</p></div></div>
+    </div>
+  </div>
+
+  <!-- International Numbers -->
+  <div class="section">
+    <div class="section-title">International Emergency Numbers</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="intlNumbers">
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:#888;margin-bottom:4px">MEXICO</div><div style="font-size:18px;font-weight:800;color:#ef4444">911</div><div style="font-size:10px;color:#666">Also: Red Cross 065</div></div>
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:#888;margin-bottom:4px">EUROPE</div><div style="font-size:18px;font-weight:800;color:#ef4444">112</div><div style="font-size:10px;color:#666">Works without SIM</div></div>
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:#888;margin-bottom:4px">UK</div><div style="font-size:18px;font-weight:800;color:#ef4444">999</div><div style="font-size:10px;color:#666">Also 112</div></div>
+      <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:#888;margin-bottom:4px">JAPAN</div><div style="font-size:18px;font-weight:800;color:#ef4444">119</div><div style="font-size:10px;color:#666">Police: 110</div></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    This emergency page is provided by Health Agent. In all emergencies, call local emergency services first.<br>
+    For non-emergency medical questions, return to the main app.<br><br>
+    <strong style="color:#666">Built in memory of those who needed this and didn't have it.</strong>
+  </div>
+</div>
+
+<script>
+async function loadEmergencyData() {
+  const token = localStorage.getItem('ha_token');
+  if(!token) {
+    // Try to show cached data from localStorage
+    const cached = localStorage.getItem('ha_emergency_cache');
+    if(cached) { renderData(JSON.parse(cached)); return; }
+    document.getElementById('patName').textContent = 'Sign in to load patient data';
+    return;
+  }
+  try {
+    const [patRes, contactRes] = await Promise.all([
+      fetch('/api/patients/current', {headers:{'Authorization':'Bearer '+token}}),
+      fetch('/api/emergency/contacts/' + (JSON.parse(localStorage.getItem('ha_user')||'{}').patientId||''), {headers:{'Authorization':'Bearer '+token}})
+    ]);
+    const patData = await patRes.json();
+    const contactData = await contactRes.json().catch(()=>({contacts:[]}));
+    const patient = patData.patient || {};
+    const contacts = contactData.contacts || [];
+    const data = { patient, contacts };
+    localStorage.setItem('ha_emergency_cache', JSON.stringify(data));
+    renderData(data);
+  } catch(e) {
+    const cached = localStorage.getItem('ha_emergency_cache');
+    if(cached) { renderData(JSON.parse(cached)); }
+  }
+}
+
+function renderData(data) {
+  const p = data.patient || {};
+  const contacts = data.contacts || [];
+  document.getElementById('patName').textContent = p.name || 'Unknown Patient';
+  document.getElementById('patDob').textContent = 'DOB: ' + (p.dob||'Unknown');
+  document.getElementById('patIns').textContent = (p.insurance?.primary||'—') + (p.insurance?.secondary?' + '+p.insurance.secondary:'');
+  document.getElementById('patMemId').textContent = p.insurance?.memberId || '—';
+  document.getElementById('patDoc').textContent = (p.primaryDoctor||'—') + (p.clinic?' · '+p.clinic:'');
+  document.getElementById('patPharm').textContent = p.pharmacy?.name || '—';
+
+  const allergies = p.allergies || [];
+  document.getElementById('allergyList').innerHTML = allergies.length
+    ? allergies.map(a=>'<div class="pill pill-red">⚠️ '+a+'</div>').join('')
+    : '<div class="pill pill-red">None known</div>';
+
+  const meds = p.medications || [];
+  document.getElementById('medList').innerHTML = meds.length
+    ? meds.map(m=>'<div class="pill pill-blue">'+m.name+' '+(m.dose||'')+'</div>').join('')
+    : '<div class="pill pill-blue">None on file</div>';
+
+  const conds = p.conditions || [];
+  document.getElementById('condList').innerHTML = conds.length
+    ? conds.map(c=>'<div class="pill pill-teal">'+c+'</div>').join('')
+    : '<div class="pill pill-teal">None on file</div>';
+
+  document.getElementById('contactsList').innerHTML = contacts.length
+    ? contacts.map(c=>'<div class="contact-card"><div class="contact-info"><h3>'+c.name+'</h3><p>'+c.relationship+(c.phone?' · '+c.phone:'')+'</p></div>'+
+        (c.phone?'<a class="contact-call" href="tel:'+c.phone+'">Call</a>':'')+'</div>').join('')
+    : '<div class="contact-card"><div class="contact-info"><h3>No contacts set up</h3><p>Add emergency contacts in the main app</p></div></div>';
+}
+
+loadEmergencyData();
+</script>
+</body>
+</html>
