@@ -3104,6 +3104,62 @@ app.get("/api/cms/patient-access", (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ─── Demo Mode ───────────────────────────────────────────
+// Anyone can try without creating an account
+app.get("/demo", (_req, res) => {
+  res.sendFile(require("path").join(__dirname, "public", "app.html"));
+});
+
+app.get("/api/demo/patient", (_req, res) => {
+  res.json({
+    patients: [{
+      id: "demo-patient",
+      name: "Maria Johnson",
+      relationship: "Mother",
+      dob: "03/15/1950",
+      age: 76,
+      conditions: ["Type 2 Diabetes","Hypertension","Hypothyroidism","Dry Eye Disease"],
+      medications: [
+        { name:"Metformin", dose:"500mg", frequency:"twice daily" },
+        { name:"Lisinopril", dose:"10mg", frequency:"daily" },
+        { name:"Levothyroxine", dose:"75mcg", frequency:"daily" },
+        { name:"Vitamin D3", dose:"2000IU", frequency:"daily" }
+      ],
+      allergies: ["Penicillin","Aspirin"],
+      insurance: { primary:"Medicare", secondary:"AARP Supplement", memberId:"DEMO-12345" },
+      primaryDoctor: "Dr. Rodriguez",
+      clinic: "Family Medicine Associates",
+      pharmacy: { name:"CVS Pharmacy", phone:"(210) 555-0100" },
+      address: "San Antonio, TX 78258"
+    }],
+    isDemo: true
+  });
+});
+
+app.post("/api/demo/chat", async (req, res) => {
+  const { message } = req.body;
+  const demoPatient = {
+    name:"Maria Johnson", dob:"03/15/1950",
+    conditions:["Type 2 Diabetes","Hypertension","Hypothyroidism","Dry Eye Disease"],
+    medications:[{name:"Metformin",dose:"500mg"},{name:"Lisinopril",dose:"10mg"},{name:"Levothyroxine",dose:"75mcg"}],
+    allergies:["Penicillin","Aspirin"],
+    insurance:{primary:"Medicare",memberId:"DEMO-12345"}
+  };
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: "You are Health Agent, an AI healthcare navigator. This is a DEMO session for a patient named Maria Johnson, age 76, with Type 2 Diabetes, Hypertension, Hypothyroidism, and Dry Eye Disease. She takes Metformin 500mg, Lisinopril 10mg, Levothyroxine 75mcg. Allergic to Penicillin. Medicare insurance. Be helpful, specific, and demonstrate the power of the app. Always add a brief disclaimer to verify with doctor. Keep responses concise and impressive for a demo.",
+      messages: [{ role:"user", content: message||"Hello" }]
+    });
+    const reply = response.content?.[0]?.text || "Demo response";
+    res.json({ reply, isDemo: true });
+  } catch(e) {
+    res.json({ reply: "This is Health Agent — your AI healthcare navigator. In a live account, I would help you scan documents, fight insurance denials, find doctors, check drug interactions, and navigate the entire healthcare system for Maria. Try the real app to see the full power.", isDemo: true });
+  }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
@@ -3119,6 +3175,11 @@ app.get('/', (req, res) => {
 app.get('/emergency', (_req, res) => {
   res.sendFile(require('path').join(__dirname, 'public', 'emergency.html'));
 });
+
+app.get('/landing', (_req, res) => {
+  res.sendFile(require('path').join(__dirname, 'public', 'landing.html'));
+});
+
 app.get('/onboarding', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));
 });
