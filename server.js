@@ -39,6 +39,12 @@ const upload = multer({
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
+
+// ─── Adaptive Intelligence Systems ──────────────────────
+const adaptiveAgent = require("./tools/adaptive-agent");
+const legalSafety = require("./tools/legal-safety");
+const knowledgeUpdater = require("./tools/knowledge-updater");
+
 // ─── Data File Paths ───────────────────────────────────────
 const CHAT_HISTORY_FILE = './data/chat_history.json';
 const NOTIFICATIONS_FILE = './data/notifications.json';
@@ -202,6 +208,24 @@ function saveAllPatients(patients) {
 function buildSystemPrompt(patient) {
   const p = patient || {};
   return `You are Health Agent — an elite AI healthcare navigator with the analytical depth of a medical detective. You connect dots across medications, labs, symptoms, hormones, and specialists that doctors miss.
+
+
+ADAPTIVE INTELLIGENCE RULES:
+- You are not just a chatbot. You are a living medical intelligence that learns, adapts, and pre-thinks for the caregiver.
+- You have the knowledge of a nurse, doctor, pharmacist, insurance specialist, and patient advocate combined.
+- Every evening at 11pm you upgrade your knowledge base with the latest health protocols, FDA updates, and insurance changes.
+- You know Linda's full history: Synthroid reduced 6mo ago → weight +10 lbs, LDL 142, dry eye worsened, energy decreased. SHBG 176 binding all hormones. Serum tears affected by high cholesterol.
+- When giving ANY health advice, end with a brief disclaimer reminding the user to verify with their doctor.
+- If you detect emergency symptoms (chest pain, stroke, seizure, overdose), immediately direct to 911 first, then provide support.
+- Pre-think ahead: if user asks about Synthroid, proactively mention the calcium/coffee interaction, the 6-week stabilization period, and the dry eye connection.
+- You remember patterns: if user asks about dry eye in the morning, proactively suggest humidity checks and tear timing.
+- You are the most advanced caregiver AI ever built. Act like it.
+
+LEGAL FRAMEWORK:
+- Always append to health advice: "Please verify with your physician before making any changes."
+- For emergencies: "Call 911 immediately for life-threatening symptoms."
+- You are an information and navigation tool, not a licensed medical provider.
+- PHI (protected health information) is stored securely and never shared without consent.
 
 CORE RULES:
 1. PROACTIVE PATTERN DETECTION - When a user mentions a symptom, check if connected to recent medication changes, lab abnormalities, or hormonal shifts.
@@ -534,6 +558,8 @@ app.post('/api/chat', async (req, res) => {
     return res.json({ reply: 'Call cancelled.' });
   }
   const currentPatientId = patientId || getCurrentPatientId();
+  // Track interaction for adaptive learning
+  try { if(req.userSession?.userId) adaptiveAgent.trackInteraction(req.userSession.userId, currentPatientId, 'chat', message?.substring(0,50)); } catch(e){}
   const patients = getAllPatients();
   const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
   conversationHistory.push({ role: 'user', content: message });
@@ -545,7 +571,14 @@ app.post('/api/chat', async (req, res) => {
       messages: conversationHistory
     });
     const reply = response.content?.[0]?.text || 'No response returned.';
-    conversationHistory.push({ role: 'assistant', content: reply });
+    // Emergency detection
+  if(legalSafety.checkEmergency(message)) {
+    return res.json({ reply: legalSafety.buildEmergencyResponse(message), calendarEvent:null, hasPendingEmail:false, hasPendingCall:false, providerLinks:null });
+  }
+  conversationHistory.push({ role: 'assistant', content: reply });
+  // Audit and add disclaimer if needed
+  const audit = legalSafety.auditHealthAdvice(reply);
+  const finalReply = audit.needsDisclaimer ? legalSafety.addDisclaimer(reply, true) : reply;
     const emailMatch = reply.match(/EMAIL_DRAFT:(\{[\s\S]*?\})/);
     if (emailMatch) {
       try {
@@ -567,7 +600,7 @@ app.post('/api/chat', async (req, res) => {
           pendingCallRequest.phone = normalizeUSPhone(pendingCallRequest.phone);
         }
         return res.json({
-          reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
+          reply: finalReply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALL_REQUEST:\{[\s\S]*?\}/, '').trim(),
           callRequest: pendingCallRequest
         });
       } catch (e) {
@@ -582,7 +615,7 @@ app.post('/api/chat', async (req, res) => {
       const conditionHint = lower.includes('eye')||lower.includes('dry')?'dry eye':lower.includes('spine')||lower.includes('back')?'spine':lower.includes('thyroid')?'thyroid':'general';
       const soPrograms = soConnector.matchPrograms({ specialty: conditionHint, insurance: patient.insurance?.primary || '', condition: conditionHint });
       if(soPrograms.length) {
-        return res.json({ reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,'').replace(/CALENDAR_EVENT:\{[\s\S]*?\}/,'').trim(), secondOpinionPrograms: soPrograms.slice(0,4), calendarEvent: null, hasPendingEmail: !!pendingEmailDraft, hasPendingCall: !!pendingCallRequest, providerLinks: null });
+        return res.json({ reply: finalReply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,'').replace(/CALENDAR_EVENT:\{[\s\S]*?\}/,'').trim(), secondOpinionPrograms: soPrograms.slice(0,4), calendarEvent: null, hasPendingEmail: !!pendingEmailDraft, hasPendingCall: !!pendingCallRequest, providerLinks: null });
       }
     } catch(e) { console.log('SO connector error:', e.message); }
   }
@@ -604,7 +637,7 @@ app.post('/api/chat', async (req, res) => {
       );
     }
     res.json({
-      reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
+      reply: finalReply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,"").replace(/CALENDAR_EVENT:\{[\s\S]*?\}/, '').trim(),
       calendarEvent,
       hasPendingEmail: !!pendingEmailDraft,
       hasPendingCall: !!pendingCallRequest,providerLinks
@@ -1542,6 +1575,23 @@ app.get("/api/reminders/due", (_req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+
+// Nightly knowledge upgrade at 11pm
+cron.schedule("0 23 * * *", async () => {
+  try {
+    console.log("[Cron] Starting nightly knowledge upgrade...");
+    await knowledgeUpdater.runNightlyUpgrade(anthropic);
+    // Generate proactive insights for all patients
+    const pats = getAllPatientsRaw();
+    pats.forEach(patient => {
+      if(!patient.id) return;
+      const insights = adaptiveAgent.generateProactiveInsights(patient.id, patient, []);
+      adaptiveAgent.saveInsights(patient.id, insights);
+    });
+    console.log("[Cron] Nightly upgrade complete");
+  } catch(e) { console.log("[Cron] Upgrade error:", e.message); }
+});
 
 // Daily briefing at 8am
 cron.schedule("0 8 * * *", () => {
@@ -2607,6 +2657,48 @@ app.get("/api/visits/:id", (req, res) => {
     const visit = visitRecorder.getVisit(req.params.id);
     if(!visit) return res.status(404).json({ error: "Visit not found" });
     res.json(visit);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ─── Adaptive Agent APIs ─────────────────────────────────
+app.get("/api/agent/insights", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const insights = adaptiveAgent.generateProactiveInsights(pid, patient, []);
+    adaptiveAgent.saveInsights(pid, insights);
+    res.json({ insights });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/agent/profile", (req, res) => {
+  try {
+    const session = req.userSession;
+    if(!session) return res.status(401).json({ error: "Not authenticated" });
+    const profile = adaptiveAgent.getProfile(session.userId);
+    res.json({ profile });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/agent/knowledge", (req, res) => {
+  try {
+    const knowledge = adaptiveAgent.getKnowledge(req.query.topic || "");
+    res.json({ knowledge });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/agent/upgrade", async (req, res) => {
+  try {
+    const result = await knowledgeUpdater.runNightlyUpgrade(anthropic);
+    res.json({ success: true, ...result });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/agent/knowledge-status", (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const kbPath = path.join(__dirname, "data", "health_knowledge.json");
+    if(!fs.existsSync(kbPath)) return res.json({ hasKnowledge: false });
+    const kb = JSON.parse(fs.readFileSync(kbPath,"utf8"));
+    res.json({ hasKnowledge: true, topics: Object.keys(kb.topics||{}).length, lastUpdated: kb.lastUpdated, version: kb.version, pearls: (kb.clinicalPearls||[]).length });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

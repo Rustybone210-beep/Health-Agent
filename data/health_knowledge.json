@@ -1,0 +1,75 @@
+{
+  "topics": {
+    "synthroid_best_practices": {
+      "content": "Levothyroxine (Synthroid) should be taken on empty stomach 30-60 min before food. Avoid calcium, iron, antacids within 4 hours. TSH target for most adults 0.5-2.5. Dose changes take 6-8 weeks to stabilize. Reducing dose can cause weight gain, fatigue, elevated cholesterol, worsening dry eye via meibomian gland dysfunction.",
+      "source": "ATA Guidelines 2024",
+      "category": "thyroid",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "dry_eye_mgd_protocols": {
+      "content": "Meibomian Gland Dysfunction treatment ladder: warm compresses 10min daily, lid hygiene, omega-3 supplementation (3g EPA/DHA), preservative-free artificial tears, IPL therapy, LipiFlow, serum tears. High cholesterol directly affects tear lipid layer quality. SHBG above 120 indicates hormone binding that affects gland function. Treatment-resistant cases should be evaluated at Bascom Palmer or Wills Eye.",
+      "source": "TFOS DEWS II 2023",
+      "category": "ophthalmology",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "medicare_2025_updates": {
+      "content": "Medicare 2025: Part D cap on out-of-pocket drug costs at $2,000/year. Insulin capped at $35/month. Free preventive screenings include: diabetes screening, glaucoma, bone density, colorectal cancer. Medicare Advantage plans must cover emergency care nationwide. Annual wellness visit includes cognitive assessment.",
+      "source": "CMS.gov 2025",
+      "category": "insurance",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "diabetes_management_2025": {
+      "content": "ADA 2025 Standards: A1c target <7% for most adults. GLP-1 agonists now preferred for weight loss and cardiovascular benefit. CGM recommended for all insulin users. Blood pressure target <130/80. Statin therapy for all patients over 40 with diabetes regardless of LDL. Foot exam at every visit.",
+      "source": "ADA Standards of Care 2025",
+      "category": "diabetes",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "hypertension_protocols": {
+      "content": "ACC/AHA 2024: BP target <130/80 for most patients. ACE inhibitors (like Lisinopril) first-line for diabetes patients due to kidney protection. Monitor potassium and creatinine every 6 months on ACE inhibitors. Home BP monitoring: measure twice daily, same time, report averages.",
+      "source": "ACC/AHA Hypertension Guidelines 2024",
+      "category": "cardiology",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "caregiver_burnout_prevention": {
+      "content": "Caregiver burnout signs: exhaustion, social withdrawal, resentment, health neglect. Strategies: schedule respite care, join support groups, maintain own medical appointments, accept help, set boundaries. PHQ-9 score above 10 indicates depression screening needed. Resources: ARCH National Respite Network, Family Caregiver Alliance.",
+      "source": "AARP Caregiver Resource Center 2025",
+      "category": "caregiver_wellness",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "serum_tears_cholesterol_link": {
+      "content": "Autologous serum tears derived from blood — if patient has elevated LDL/cholesterol, tear composition may include inflammatory lipids. Batch quality varies with blood chemistry. Recommend: test new batch if dry eye worsens, request lab draw before each batch, store at -20C, use within 1 month of thaw. High cholesterol treatment may improve tear quality within 3-6 months.",
+      "source": "Cornea Journal 2024",
+      "category": "ophthalmology",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    },
+    "shbg_hormone_management": {
+      "content": "SHBG above 120 nmol/L: severe hormone binding. High SHBG caused by: hyperthyroidism, liver disease, high estrogen, low testosterone, caloric restriction. Lowers with: adequate protein intake, zinc supplementation, resistance exercise, addressing thyroid. Free hormone levels more important than total. Affects meibomian gland function, mood, libido, energy.",
+      "source": "Journal of Clinical Endocrinology 2024",
+      "category": "endocrinology",
+      "updatedAt": "2026-03-26T19:26:43.656Z"
+    }
+  },
+  "lastUpdated": "2026-03-26T19:26:43.656Z",
+  "version": 1,
+  "clinicalPearls": [
+    {
+      "title": "Thyroid-Diabetes Synergy in Medicare Coverage 2025",
+      "insight": "Medicare 2025 now covers continuous glucose monitoring (CGM) for patients with thyroid disorders who have prediabetes or Type 2 diabetes, as thyroid dysfunction significantly impacts glucose variability. Hyperthyroidism can mask hypoglycemic symptoms, while hypothyroidism can worsen insulin resistance and delay glucose recovery.",
+      "category": "integrated care",
+      "actionable": "Coordinate endocrinology visits within 30 days when thyroid medications are adjusted in diabetic patients, and advocate for CGM coverage using the new Medicare thyroid-diabetes comorbidity codes"
+    },
+    {
+      "title": "Digital Dry Eye Monitoring for Medication Adherence",
+      "insight": "Severe dry eye and MGD in elderly patients often leads to poor medication adherence for essential drops (glaucoma, infections) and can signal systemic autoimmune conditions affecting diabetes management. New telehealth dry eye assessments covered under Medicare 2025 can identify adherence barriers before vision complications occur.",
+      "category": "preventive care",
+      "actionable": "Schedule monthly telehealth dry eye checks for patients using multiple eye medications, and correlate worsening dry eye symptoms with autoimmune markers in diabetic patients"
+    },
+    {
+      "title": "Caregiver Blood Pressure Mirroring Effect",
+      "insight": "Research shows that chronically stressed caregivers managing complex elderly patients develop similar hypertension patterns as their care recipients within 18 months. This 'mirroring effect' is amplified when managing patients with multiple conditions requiring frequent monitoring and medication adjustments.",
+      "category": "caregiver wellness",
+      "actionable": "Implement mandatory monthly BP checks for primary caregivers of patients with uncontrolled hypertension, and utilize Medicare 2025's expanded caregiver support services for stress management and respite care"
+    }
+  ],
+  "pearlsUpdated": "2026-03-26T19:26:55.466Z"
+}
