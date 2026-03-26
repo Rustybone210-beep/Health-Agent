@@ -2421,6 +2421,50 @@ app.get("/api/second-opinion/summary", (req, res) => {
   } catch(e) { res.status(500).send("Error: " + e.message); }
 });
 
+
+// ─── Daily Briefing ──────────────────────────────────────
+const dailyBriefing = require("./tools/daily-briefing");
+app.get("/api/briefing/today", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || getAllPatientsRaw()[0] || {};
+    const tasks = [];
+    const appointments = [];
+    const notifs = (loadNotifications().notifications || []);
+    try { const t = require("./tools/tasks"); tasks.push(...(t.listTasks(pid)||[])); } catch(e){}
+    try { const a = require("./tools/appointments-booking"); appointments.push(...(a.getUpcoming(pid,7)||[])); } catch(e){}
+    const briefing = dailyBriefing.generateBriefing(patient, tasks, appointments, notifs);
+    res.json(briefing);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/briefing/html", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || getAllPatientsRaw()[0] || {};
+    const tasks = [];
+    const appointments = [];
+    const notifs = (loadNotifications().notifications || []);
+    try { const t = require("./tools/tasks"); tasks.push(...(t.listTasks(pid)||[])); } catch(e){}
+    try { const a = require("./tools/appointments-booking"); appointments.push(...(a.getUpcoming(pid,7)||[])); } catch(e){}
+    const briefing = dailyBriefing.generateBriefing(patient, tasks, appointments, notifs);
+    const html = dailyBriefing.generateHTML(briefing);
+    res.setHeader("Content-Type","text/html");
+    res.send(html);
+  } catch(e) { res.status(500).send("Error: " + e.message); }
+});
+
+// ─── Lab Dashboard ───────────────────────────────────────
+const labDashboard = require("./tools/lab-dashboard");
+app.get("/api/labs/dashboard", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || getAllPatientsRaw()[0] || {};
+    const dashboard = labDashboard.buildDashboard(pid);
+    const insights = labDashboard.generateInsights(dashboard, patient);
+    res.json({ ...dashboard, insights });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
