@@ -681,24 +681,28 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
           {
             type: 'text',
             text:
-              'CRITICAL: First, count how many SEPARATE documents, cards, or papers are visible in this image. If you see MORE THAN ONE document (for example two insurance cards side by side, or front and back of a card, or a card next to a prescription), you MUST extract data from EACH document separately and return them in a documents array. This is essential — do not skip any visible document. There may be MULTIPLE documents in this image (e.g. front and back of a card, or two different cards side by side). Read EVERY word, number, and detail visible on ALL documents. If you see multiple documents, return ALL of them in your response. For example, if you see a Medicare card AND an Aetna card, extract data from BOTH and include them as separate objects in your response.\n\n' +
-              'DOCUMENT TYPE DETECTION — Identify what this is:\n' +
-              '- Insurance card: Extract insurance_company, plan_name, member_name, member_id, group_number, rx_bin, rx_pcn, rx_group, copay_amounts, effective_date, phone_numbers (member services, claims, pharmacy)\n' +
-              '- Prescription bottle/label: Extract medication_name, dosage, frequency, quantity, refills_remaining, prescriber, pharmacy_name, pharmacy_phone, rx_number, date_filled, expiration_date, warnings\n' +
-              '- Lab results: Extract test_names, values, reference_ranges, abnormal_flags, ordering_doctor, lab_name, date_of_test, patient_name\n' +
-              '- Medical bill/EOB: Extract provider_name, date_of_service, total_charge, insurance_paid, patient_responsibility, claim_number, procedure_codes\n' +
-              '- Referral/authorization: Extract referring_doctor, specialist, authorization_number, valid_dates, approved_visits\n' +
-              '- Other medical document: Extract all visible text and categorize\n\n' +
-              'For patient: ' + (patient?.name || 'PATIENT_NAME_HERE') + '\n\n' +
-              'Return a JSON object with ALL extracted fields. Format as: EXTRACTED_DATA:{json}\n\n' +
-              'IMPORTANT: If multiple documents are visible, return ALL of them as: EXTRACTED_DATA:{"documents":[{...first...},{...second...}]} with each having its own document_type, summary, and fields. If only one document, return normally. Include a "document_type" field (insurance_card, prescription, lab_result, medical_bill, referral, other).\n' +
-              'If you see MULTIPLE documents in the image (e.g. two insurance cards, or front and back), return them as:\n' +
-              'EXTRACTED_DATA:{"documents":[{...first document...},{...second document...}]}\n' +
-              'Each document should have its own document_type, summary, confidence, and all relevant fields.\n' +
-              'If there is only one document, still return it as: EXTRACTED_DATA:{...single document fields...}\n' +
-              'Include a "summary" field explaining what this document is and what actions the caregiver should take.\n' +
-              'Include a "confidence" field (high, medium, low) based on image clarity.\n\n' +
-              'Be PRECISE with numbers — member IDs, phone numbers, dates, dosages. Do not guess. If you cannot read something clearly, mark it as "unclear" rather than omitting it.'
+              'ELITE DOCUMENT EXTRACTION — HEALTH AGENT VISION SYSTEM\n\n' +
+'STEP 1 — COUNT: Before doing anything, count every distinct document, card, or piece of paper visible in this image. Look for: different card sizes, different backgrounds, different logos, different text blocks. A Medicare card + Aetna card = 2 documents. Front + back of same card = 2 documents. Write your count at the start of your analysis.\n\n' +
+'STEP 2 — EXTRACT ALL: If you see 2+ documents, you MUST extract ALL of them. Missing any document is a critical failure. Use the documents array format.\n\n' +
+'STEP 3 — PRECISION: Read every character with surgical precision. Member IDs, group numbers, RX BIN, PCN, phone numbers — these must be exact. If a character is unclear, mark it [unclear] not skip it.\n\n' +
+'DOCUMENT TYPES AND REQUIRED FIELDS:\n' +
+'INSURANCE CARD: insurance_company, plan_name, plan_type (HMO/PPO/Medicare/Medicaid/Supplement), member_name, member_id, group_number, rx_bin, rx_pcn, rx_group, rx_id, copay_info (office/specialist/ER/urgent care amounts), effective_date, phone_numbers (member_services, provider, pharmacy, mental_health, claims), website, back_of_card_info\n' +
+'PRESCRIPTION BOTTLE: medication_name, ndc_number, dosage, strength, quantity, days_supply, refills_remaining, refill_by_date, expiration_date, fill_date, rx_number, prescriber_name, prescriber_dea, prescriber_npi, pharmacy_name, pharmacy_phone, pharmacy_address, patient_name, directions, warnings, generic_available\n' +
+'LAB RESULT: lab_name, lab_address, ordering_physician, npi, patient_name, patient_dob, collection_date, report_date, accession_number, test_name (each test separately), result_value, units, reference_range_low, reference_range_high, abnormal_flag (H/L/HH/LL/A), result_status, performing_lab\n' +
+'MEDICAL BILL/EOB: provider_name, provider_npi, provider_address, claim_number, date_of_service, billed_amount, allowed_amount, insurance_paid, adjustment, patient_responsibility, deductible_applied, copay, coinsurance, procedure_codes (CPT), diagnosis_codes (ICD-10), denial_reason_code, appeal_deadline\n' +
+'CT/MRI ORDER: ordering_physician, patient_name, dob, study_type, body_part, clinical_indication, contrast, priority, scheduling_instructions, diagnosis_codes, insurance_auth_number\n\n' +
+'MULTI-CARD PROTOCOL — THIS IS CRITICAL:\n' +
+'If you see Medicare card + Aetna supplement = TWO cards, extract BOTH completely\n' +
+'Medicare card fields: Name, Medicare Number (format: XXX-XX-XXXX-XX), Is entitled to: Hospital (Part A), Medical (Part B), Effective dates\n' +
+'Supplement card fields: Company, Plan letter (A/B/C/D/G/K/L/M/N), Member ID, Group, All phone numbers\n' +
+'NEVER combine two cards into one. NEVER skip the second card.\n\n' +
+'RETURN FORMAT:\n' +
+'Single document: EXTRACTED_DATA:{...all fields...}\n' +
+'Multiple documents: EXTRACTED_DATA:{"documents":[{document 1 complete},{document 2 complete},{document 3 if exists}]}\n' +
+'Each document MUST have: document_type, summary, confidence (high/medium/low based on image clarity), all extracted fields\n\n' +
+'CONFIDENCE RULES: high = all text clearly readable. medium = some blur but key fields readable. low = significant blur but attempted extraction.\n\n' +
+'For patient: ' + (patient?.name || 'Unknown') + '\n\n' +
+'IMAGE ANALYSIS: Look at every corner of the image. Cards are often placed at angles or overlapping. Read ALL visible text including fine print, back-of-card info, and any handwritten notes.'
           }
         ]
       }];
@@ -2897,6 +2901,91 @@ app.get("/api/emergency/checkin-settings/:patientId", (req, res) => {
     const settings = (data[req.params.patientId]||[])[0] || { active: false, scheduleHours: 12 };
     res.json({ settings });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ─── FHIR Engine ─────────────────────────────────────────
+const fhirEngine = require("./tools/fhir-engine");
+
+app.get("/api/fhir/systems", (_req, res) => {
+  try {
+    const systems = fhirEngine.getAvailableSystems();
+    res.json({ systems });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/fhir/connections", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const connections = fhirEngine.getConnections(pid);
+    res.json({ connections });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/fhir/connect", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const connection = fhirEngine.saveConnection(pid, {
+      system: req.body.system,
+      systemName: req.body.systemName,
+      baseUrl: req.body.baseUrl,
+      accessToken: req.body.accessToken,
+      fhirPatientId: req.body.fhirPatientId,
+      refreshToken: req.body.refreshToken || null
+    });
+    res.json({ success: true, connection });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/api/fhir/connections/:system", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    fhirEngine.removeConnection(pid, req.params.system);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/fhir/sync", async (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const connections = fhirEngine.getConnections(pid);
+    if(!connections.length) return res.status(400).json({ error: "No FHIR connections. Connect a health system first." });
+    const allResults = [];
+    for(const conn of connections) {
+      if(!conn.accessToken || !conn.baseUrl) continue;
+      try {
+        const result = await fhirEngine.syncPatientData(pid, conn);
+        allResults.push({ system: conn.system, ...result });
+      } catch(e) { allResults.push({ system: conn.system, error: e.message }); }
+    }
+    res.json({ success: true, results: allResults });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/fhir/data/:resource", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const data = fhirEngine.getFhirData(pid, req.params.resource);
+    res.json({ data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/fhir/data", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const data = fhirEngine.getFhirData(pid);
+    res.json({ data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// SMART on FHIR OAuth callback
+app.get("/fhir/callback", async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    if(!code) return res.status(400).send("No authorization code received");
+    const html = '<!DOCTYPE html><html><head><style>body{font-family:-apple-system,sans-serif;background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}.card{background:rgba(30,41,59,0.8);border:1px solid rgba(148,163,184,0.15);border-radius:20px;padding:32px;max-width:400px}h2{color:#2dd4bf;margin-bottom:12px}p{color:#94a3b8;font-size:14px;line-height:1.6}.code{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.3);border-radius:10px;padding:12px;font-family:monospace;font-size:13px;color:#2dd4bf;margin:16px 0;word-break:break-all}</style></head><body><div class="card"><h2>Authorization Received</h2><p>Copy this code and paste it into Health Agent to complete the connection.</p><div class="code">'+code+'</div><p style="font-size:12px;color:#64748b">This code expires in 10 minutes. Return to Health Agent now.</p></div><script>window.opener&&window.opener.postMessage({type:"fhir_auth",code:"'+code+'",state:"'+state+'"},"*");setTimeout(function(){window.close()},3000)<\/script></body></html>';
+  res.send(html);
+  } catch(e) { res.status(500).send("Error: " + e.message); }
 });
 
 // ─── Static pages ──────────────────────────────────────────

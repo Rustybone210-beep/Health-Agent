@@ -797,6 +797,7 @@ body.modal-open{overflow:hidden}
     </div>
     <div class="ms-divider"></div>
     <div class="ms-list-item" onclick="closeMenuSheet();mobileGoChat();openCheckinSettings()"><i class="fa-solid fa-clock"></i>Check-In Settings</div>
+    <div class="ms-list-item" onclick="closeMenuSheet();mobileGoChat();openPortalSync()"><i class="fa-solid fa-link"></i>Connect Health Systems</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/timeline','_blank')"><i class="fa-solid fa-file-waveform"></i>Medical Timeline</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/brief','_blank')"><i class="fa-solid fa-file-medical"></i>Doctor Brief</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/playbooks','_blank')"><i class="fa-solid fa-book-medical"></i>Emergency Playbooks</div>
@@ -1069,6 +1070,137 @@ function buildScanFieldsHtml(data){const dt=String(data.document_type||'').toLow
 switch(dt){case'insurance_card':return f('Document Type','Insurance Card',false)+f('Insurance Company',data.insurance_company,false)+f('Plan Name',data.plan_name,false)+f('Member Name',data.member_name,false)+f('Member ID',data.member_id,false)+f('Group Number',data.group_number,false)+f('Rx BIN',data.rx_bin,false)+f('Rx PCN',data.rx_pcn,false)+f('Rx Group',data.rx_group,false)+f('Copay',data.copay_amounts,true)+f('Effective Date',data.effective_date,false)+fPhones(data.phone_numbers)+(data.summary?f('Summary',data.summary,true):'');case'prescription':return f('Document Type','Prescription',false)+f('Medication',data.medication_name,false)+f('Dosage',data.dosage,false)+f('Frequency',data.frequency,false)+f('Quantity',data.quantity,false)+f('Refills Remaining',data.refills_remaining,false)+f('Prescriber',data.prescriber,false)+f('Pharmacy',data.pharmacy_name,false)+f('Pharmacy Phone',data.pharmacy_phone,false)+f('Rx Number',data.rx_number,false)+f('Date Filled',data.date_filled,false)+f('Expiration',data.expiration_date,false)+fArr('Warnings',data.warnings,true)+(data.summary?f('Summary',data.summary,true):'');case'lab_result':return f('Document Type','Lab Result',false)+f('Patient',data.patient_name,false)+fArr('Tests',data.test_names,true)+fArr('Values',data.values,true)+fArr('Reference Ranges',data.reference_ranges,true)+fArr('Abnormal Flags',data.abnormal_flags,true)+f('Ordering Doctor',data.ordering_doctor,false)+f('Lab Name',data.lab_name,false)+f('Date of Test',data.date_of_test,false)+(data.summary?f('Summary',data.summary,true):'');case'medical_bill':return f('Document Type','Medical Bill / EOB',false)+f('Provider',data.provider_name,false)+f('Date of Service',data.date_of_service,false)+f('Total Charge',data.total_charge,false)+f('Insurance Paid',data.insurance_paid,false)+f('Patient Owes',data.patient_responsibility,false)+f('Claim Number',data.claim_number,false)+fArr('Procedure Codes',data.procedure_codes,true)+(data.summary?f('Summary',data.summary,true):'');case'referral':return f('Document Type','Referral / Authorization',false)+f('Referring Doctor',data.referring_doctor,false)+f('Specialist',data.specialist,false)+f('Auth Number',data.authorization_number,false)+f('Valid Dates',data.valid_dates,false)+f('Approved Visits',data.approved_visits,false)+(data.summary?f('Summary',data.summary,true):'');default:{const skip=new Set(['document_type','confidence','summary','patient_context']);let html=f('Document Type',data.document_type||'Unknown',false);Object.keys(data).forEach(key=>{if(skip.has(key))return;const val=data[key];if(val===null||val===undefined||val==='')return;const label=key.replace(/_/g,' ');if(Array.isArray(val))html+=fArr(label,val,true);else if(typeof val==='object')Object.keys(val).forEach(sk=>{if(val[sk])html+=f(`${label} — ${sk.replace(/_/g,' ')}`,String(val[sk]),false)});else html+=f(label,String(val),false)});if(data.summary)html+=f('Summary',data.summary,true);return html}}}
 
 
+
+
+async function openPortalSync() {
+  let systems = {};
+  let connections = [];
+  try {
+    const [sysRes, connRes] = await Promise.all([
+      api('/api/fhir/systems'),
+      api('/api/fhir/connections?patientId='+currentPatientId)
+    ]);
+    systems = sysRes.systems || {};
+    connections = connRes.connections || [];
+  } catch(e) {}
+
+  const connectedIds = connections.map(c => c.system);
+
+  const sysCards = Object.keys(systems).map(key => {
+    const s = systems[key];
+    const connected = connectedIds.includes(key);
+    return '<div style="background:'+(connected?'rgba(20,184,166,0.08)':'rgba(15,23,42,0.5)')+';border:1px solid '+(connected?'rgba(20,184,166,0.3)':'var(--border)')+';border-radius:12px;padding:12px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(s.name)+'</div>'
+      +(s.marketShare?'<div style="font-size:10px;color:var(--text3)">'+esc(s.marketShare)+' market share</div>':'')+'</div>'
+      +(connected
+        ? '<span style="background:rgba(34,197,94,0.15);color:var(--success);padding:4px 10px;border-radius:100px;font-size:10px;font-weight:700">Connected</span>'
+        : '<button onclick="startFhirConnect(''+key+'')" style="background:var(--accent);border:none;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;color:white;cursor:pointer">Connect</button>')
+      +'</div>'
+      +(s.notes?'<div style="font-size:11px;color:var(--text3);line-height:1.4">'+esc(s.notes)+'</div>':'')
+      +(connected?'<div style="margin-top:8px;display:flex;gap:8px"><button onclick="syncFhirSystem(''+key+'')" style="background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);border-radius:100px;padding:5px 12px;font-size:10px;font-weight:700;color:var(--accent2);cursor:pointer">Sync Now</button><button onclick="disconnectFhir(''+key+'')" style="background:none;border:1px solid rgba(239,68,68,0.2);border-radius:100px;padding:5px 12px;font-size:10px;color:var(--danger);cursor:pointer">Disconnect</button></div>':'')
+      +'</div>';
+  }).join('');
+
+  const html = '<div class="action-card" id="portalSyncCard">'
+    +'<div class="ac-title"><i class="fa-solid fa-link" style="color:var(--accent);margin-right:8px"></i>Connect Health Systems</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">Connect your health systems to automatically sync lab results, medications, conditions, and appointments. The 21st Century Cures Act gives you the legal right to this data.</div>'
+    + sysCards
+    +'<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:#93c5fd;margin-top:10px;line-height:1.5">'
+    +'<i class="fa-solid fa-shield-halved" style="margin-right:6px"></i>Your data stays private. Health Agent reads your records but never sells or shares your health data. You can disconnect at any time.</div>'
+    +'<div class="ac-btns" style="margin-top:12px">'
+    +(connections.length?'<button class="ac-btn primary" onclick="syncAllFhir()"><i class="fa-solid fa-rotate" style="margin-right:6px"></i>Sync All Connected</button>':'')
+    +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Close</button></div></div>';
+
+  ['chatArea','chatAreaDesktop'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      const existing=el.querySelector('#portalSyncCard');
+      if(existing)existing.remove();
+      el.insertAdjacentHTML('beforeend',html);
+      el.scrollTop=el.scrollHeight;
+    }
+  });
+}
+
+async function startFhirConnect(system) {
+  const steps = {
+    epic: ['1. Log into <strong>MyChart.com</strong> or your hospital's MyChart','2. Go to <strong>Menu → Share My Record → Link My Record to an App</strong>','3. You'll receive an <strong>authorization code</strong>','4. Paste it below to complete the connection'],
+    cerner: ['1. Log into your <strong>health system patient portal</strong>','2. Go to <strong>Health Records → Connected Apps</strong>','3. Search for Health Agent and authorize','4. Paste your authorization code below'],
+    cms_bluebutton: ['1. Go to <strong>MyMedicare.gov</strong> and log in','2. Navigate to <strong>My Account → Connected Apps</strong>','3. Find Health Agent and click Connect','4. Paste the authorization code below'],
+    athenahealth: ['1. Log into your <strong>doctor's patient portal</strong>','2. Look for <strong>My Information → Connected Apps</strong>','3. Authorize Health Agent','4. Paste the code below']
+  };
+
+  const stepsHtml = (steps[system]||['Contact your health system to get your FHIR authorization code']).map(s=>'<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(148,163,184,0.06);font-size:12px;color:var(--text2);line-height:1.4"><span>'+s+'</span></div>').join('');
+
+  const setupHtml = '<div class="action-card" style="border-color:rgba(20,184,166,0.3)">'
+    +'<div class="ac-title"><i class="fa-solid fa-plug" style="color:var(--accent);margin-right:8px"></i>Connect '+esc(system.replace(/_/g,' ').toUpperCase())+'</div>'
+    +'<div style="margin-bottom:14px">'+stepsHtml+'</div>'
+    +'<div class="form-group"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">FHIR Base URL (from your health system)</label>'
+    +'<input id="fhirBaseUrl" class="form-input" placeholder="https://fhir.yourhealthsystem.org/r4" style="font-size:12px"></div>'
+    +'<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Access Token or Authorization Code</label>'
+    +'<input id="fhirToken" class="form-input" placeholder="Paste token or code here" style="font-size:12px"></div>'
+    +'<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Your FHIR Patient ID (from health system)</label>'
+    +'<input id="fhirPatientId" class="form-input" placeholder="e.g. eHYmFpO4c7pVJ4oH0z9j.Og3" style="font-size:12px"></div>'
+    +'<div class="ac-btns" style="margin-top:12px">'
+    +'<button class="ac-btn primary" onclick="completeFhirConnect(''+esc(system)+'')"><i class="fa-solid fa-check" style="margin-right:6px"></i>Complete Connection</button>'
+    +'<button class="ac-btn secondary" onclick="openPortalSync()">Back</button></div></div>';
+
+  ['chatArea','chatAreaDesktop'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      const existing=el.querySelector('#portalSyncCard');
+      if(existing)existing.remove();
+      el.insertAdjacentHTML('beforeend',setupHtml);
+      el.scrollTop=el.scrollHeight;
+    }
+  });
+}
+
+async function completeFhirConnect(system) {
+  const baseUrl = document.getElementById('fhirBaseUrl')?.value?.trim();
+  const token = document.getElementById('fhirToken')?.value?.trim();
+  const fhirPatId = document.getElementById('fhirPatientId')?.value?.trim();
+  if(!baseUrl||!token) { addMsg('ai','Please enter both the FHIR URL and access token.',true,false); return; }
+  try {
+    await api('/api/fhir/connect', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId:currentPatientId, system, systemName:system, baseUrl, accessToken:token, fhirPatientId:fhirPatId||'me' })
+    });
+    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i><strong>'+esc(system)+' connected!</strong> Syncing your data now…',true,true);
+    syncFhirSystem(system);
+  } catch(e) { addMsg('ai','❌ Connection error: '+esc(e.message),true,false); }
+}
+
+async function syncFhirSystem(system) {
+  try {
+    addMsg('ai','<i class="fa-solid fa-rotate" style="color:var(--accent);margin-right:8px"></i>Syncing from '+esc(system)+'…',true,true);
+    const data = await api('/api/fhir/sync', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId:currentPatientId })
+    });
+    const total = (data.results||[]).reduce((acc,r) => acc + (r.synced||[]).reduce((a,s)=>a+s.count,0), 0);
+    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i>Sync complete! <strong>'+total+' records</strong> imported from your health system. Conditions, medications, labs, and appointments are now updated.',true,true);
+  } catch(e) { addMsg('ai','❌ Sync error: '+esc(e.message),true,false); }
+}
+
+async function syncAllFhir() {
+  try {
+    const data = await api('/api/fhir/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:currentPatientId})});
+    addMsg('ai','<i class="fa-solid fa-rotate" style="color:var(--success);margin-right:8px"></i>All systems synced successfully.',true,true);
+  } catch(e) { addMsg('ai','❌ Sync error: '+esc(e.message),true,false); }
+}
+
+async function disconnectFhir(system) {
+  if(!confirm('Disconnect '+system+'? Synced data will remain but no new data will be pulled.')) return;
+  try {
+    await api('/api/fhir/connections/'+system+'?patientId='+currentPatientId,{method:'DELETE'});
+    addMsg('ai','Disconnected '+esc(system)+'. Your existing data is preserved.',true,false);
+    openPortalSync();
+  } catch(e) { addMsg('ai','❌ Error: '+esc(e.message),true,false); }
+}
 
 function renderPlaybookCard(pb) {
   if(!pb) return;
