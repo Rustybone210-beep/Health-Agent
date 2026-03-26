@@ -796,6 +796,7 @@ body.modal-open{overflow:hidden}
       <div class="ms-item" onclick="closeMenuSheet();openProfileSheet()"><span class="ms-icon">👤</span><span class="ms-label">Profile</span></div>
     </div>
     <div class="ms-divider"></div>
+    <div class="ms-list-item" onclick="closeMenuSheet();mobileGoChat();openCheckinSettings()"><i class="fa-solid fa-clock"></i>Check-In Settings</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/timeline','_blank')"><i class="fa-solid fa-file-waveform"></i>Medical Timeline</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/brief','_blank')"><i class="fa-solid fa-file-medical"></i>Doctor Brief</div>
     <div class="ms-list-item" onclick="closeMenuSheet();window.open('/playbooks','_blank')"><i class="fa-solid fa-book-medical"></i>Emergency Playbooks</div>
@@ -1088,6 +1089,93 @@ function renderPlaybookCard(pb) {
   ['chatArea','chatAreaDesktop'].forEach(id=>{const el=document.getElementById(id);if(el){el.insertAdjacentHTML('beforeend',html);el.scrollTop=el.scrollHeight}});
 }
 
+
+
+async function openCheckinSettings() {
+  const pid = currentPatientId;
+  let current = { active: false, scheduleHours: 12 };
+  try {
+    const d = await api('/api/emergency/checkin-settings/' + pid);
+    current = d.settings || current;
+  } catch(e) {}
+
+  const intervals = [
+    { label:'Every 4 hours', val:4 },
+    { label:'Every 6 hours', val:6 },
+    { label:'Every 8 hours', val:8 },
+    { label:'Every 12 hours (default)', val:12 },
+    { label:'Every 24 hours', val:24 },
+    { label:'Every 48 hours', val:48 }
+  ];
+
+  const opts = intervals.map(i =>
+    '<option value="'+i.val+'"'+(current.scheduleHours===i.val?' selected':'')+'>'+i.label+'</option>'
+  ).join('');
+
+  const html = '<div class="action-card" id="checkinPanel" style="border-color:rgba(239,68,68,0.3)">'
+    +'<div class="ac-title"><i class="fa-solid fa-clock" style="color:#ef4444;margin-right:8px"></i>Check-In Monitor Settings</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">When enabled, Health Agent monitors for missed check-ins and fires an emergency alert to all contacts if the patient hasn't checked in within the set window.</div>'
+    +'<div style="margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    +'<span style="font-size:13px;font-weight:600;color:var(--text)">Check-In Monitoring</span>'
+    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer">'
+    +'<input type="checkbox" id="checkinEnabled"'+(current.active?' checked':'')+' style="width:18px;height:18px;accent-color:var(--accent)">'
+    +'<span style="font-size:12px;color:var(--text2)" id="checkinStatusLabel">'+(current.active?'Enabled':'Disabled')+'</span>'
+    +'</label></div>'
+    +'<div id="checkinIntervalWrap" style="'+(current.active?'':'opacity:.4;pointer-events:none')+'">'
+    +'<label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Alert if no check-in after</label>'
+    +'<select id="checkinInterval" class="form-input">'+opts+'</select>'
+    +'</div></div>'
+    +'<div style="background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.5">'
+    +'<i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:6px"></i>'
+    +'Patient or caregiver checks in by tapping <strong style="color:var(--accent2)">I'm OK</strong> in the app. If no check-in is received within the window, all emergency contacts are alerted via phone and email simultaneously.</div>'
+    +'<div class="ac-btns">'
+    +'<button class="ac-btn primary" onclick="saveCheckinSettings()"><i class="fa-solid fa-save" style="margin-right:6px"></i>Save Settings</button>'
+    +'<button class="ac-btn" onclick="recordCheckin()" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:var(--success)"><i class="fa-solid fa-check" style="margin-right:6px"></i>I'm OK</button>'
+    +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Close</button>'
+    +'</div></div>';
+
+  ['chatArea','chatAreaDesktop'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      const existing=el.querySelector('#checkinPanel');
+      if(existing)existing.remove();
+      el.insertAdjacentHTML('beforeend',html);
+      el.scrollTop=el.scrollHeight;
+    }
+  });
+
+  document.getElementById('checkinEnabled').addEventListener('change', function() {
+    document.getElementById('checkinStatusLabel').textContent = this.checked?'Enabled':'Disabled';
+    document.getElementById('checkinIntervalWrap').style.opacity = this.checked?'1':'0.4';
+    document.getElementById('checkinIntervalWrap').style.pointerEvents = this.checked?'auto':'none';
+  });
+}
+
+async function saveCheckinSettings() {
+  const enabled = document.getElementById('checkinEnabled').checked;
+  const intervalHours = parseInt(document.getElementById('checkinInterval').value);
+  try {
+    await api('/api/emergency/checkin-settings', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId: currentPatientId, enabled, intervalHours })
+    });
+    addMsg('ai', enabled
+      ? '<i class="fa-solid fa-clock" style="color:var(--accent);margin-right:8px"></i>Check-in monitoring <strong>enabled</strong>. Alert fires if no check-in within <strong>'+intervalHours+' hours</strong>. Tap "I'm OK" anytime to reset the timer.'
+      : '<i class="fa-solid fa-clock" style="color:var(--text3);margin-right:8px"></i>Check-in monitoring <strong>disabled</strong>. No automatic alerts will fire.'
+    , true, true);
+    document.querySelectorAll('#checkinPanel').forEach(el=>el.remove());
+  } catch(e) { addMsg('ai','❌ Error saving settings: '+esc(e.message),true,false); }
+}
+
+async function recordCheckin() {
+  try {
+    await api('/api/emergency/checkin/' + currentPatientId, { method:'POST' });
+    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i><strong>Check-in recorded.</strong> Timer reset. Next alert window starts now.',true,true);
+    document.querySelectorAll('#checkinPanel').forEach(el=>el.remove());
+  } catch(e) { addMsg('ai','❌ Check-in error: '+esc(e.message),true,false); }
+}
 
 async function fireEmergencyCascade(details) {
   if(!confirm('FIRE EMERGENCY ALERT? This will contact all emergency contacts immediately via phone, email, and all available channels.')) return;

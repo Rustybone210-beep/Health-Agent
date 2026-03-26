@@ -2864,6 +2864,41 @@ app.post("/api/emergency/alerts/:alertId/resolve", (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+app.post("/api/emergency/checkin-settings", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const { intervalHours, enabled } = req.body;
+    const CHECKIN_FILE = require("path").join(__dirname,"data/checkins.json");
+    const fs = require("fs");
+    let data = {};
+    try { data = JSON.parse(fs.readFileSync(CHECKIN_FILE,"utf8")); } catch(e){}
+    if(!data[pid]) data[pid] = [];
+    if(!data[pid].length) {
+      data[pid].push({ id: Date.now().toString(), patientId: pid, scheduleHours: intervalHours||12, active: enabled!==false, lastCheckin: new Date().toISOString(), nextDue: new Date(Date.now()+(intervalHours||12)*3600000).toISOString(), missedCount:0, alertFired:false });
+    } else {
+      data[pid].forEach(c => {
+        if(intervalHours !== undefined) c.scheduleHours = Number(intervalHours);
+        if(enabled !== undefined) c.active = !!enabled;
+        if(enabled && intervalHours) c.nextDue = new Date(Date.now()+Number(intervalHours)*3600000).toISOString();
+      });
+    }
+    fs.writeFileSync(CHECKIN_FILE, JSON.stringify(data,null,2));
+    res.json({ success: true, settings: data[pid][0] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/emergency/checkin-settings/:patientId", (req, res) => {
+  try {
+    const CHECKIN_FILE = require("path").join(__dirname,"data/checkins.json");
+    const fs = require("fs");
+    let data = {};
+    try { data = JSON.parse(fs.readFileSync(CHECKIN_FILE,"utf8")); } catch(e){}
+    const settings = (data[req.params.patientId]||[])[0] || { active: false, scheduleHours: 12 };
+    res.json({ settings });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
