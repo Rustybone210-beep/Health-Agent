@@ -1202,6 +1202,134 @@ async function disconnectFhir(system) {
   } catch(e) { addMsg('ai','❌ Error: '+esc(e.message),true,false); }
 }
 
+
+// ── VOICE INPUT ──
+let voiceRecognition = null;
+let isListening = false;
+
+function toggleVoiceInput() {
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    addMsg('ai','Voice input is not supported in this browser. Try Chrome or Edge.',true,false);
+    return;
+  }
+  if(isListening) {
+    voiceRecognition?.stop();
+    isListening = false;
+    document.querySelectorAll('.voice-btn').forEach(b => {
+      b.style.background = '';
+      b.style.color = '';
+      b.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    });
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  voiceRecognition = new SR();
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = false;
+  voiceRecognition.lang = currentLanguage === 'es' ? 'es-US' : 'en-US';
+  voiceRecognition.onstart = () => {
+    isListening = true;
+    document.querySelectorAll('.voice-btn').forEach(b => {
+      b.style.background = 'rgba(239,68,68,0.2)';
+      b.style.color = '#ef4444';
+      b.innerHTML = '<i class="fa-solid fa-circle" style="animation:pulse 1s infinite"></i>';
+    });
+  };
+  voiceRecognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const activeInput = isMobileView() ? document.getElementById('chatInput') : document.getElementById('chatInputDesktop');
+    if(activeInput) activeInput.value = transcript;
+    isListening = false;
+    setTimeout(() => sendMessage(), 300);
+  };
+  voiceRecognition.onerror = () => { isListening = false; };
+  voiceRecognition.onend = () => {
+    isListening = false;
+    document.querySelectorAll('.voice-btn').forEach(b => {
+      b.style.background = '';
+      b.style.color = '';
+      b.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+    });
+  };
+  voiceRecognition.start();
+}
+
+// ── LANGUAGE + LITERACY ──
+let currentLanguage = localStorage.getItem('ha_language') || 'en';
+let literacyMode = localStorage.getItem('ha_literacy') === 'true';
+
+const TRANSLATIONS = {
+  en: { scan:'Scan', meds:'Meds', findDoc:'Find Doc', chat_placeholder:'Ask about care...', home:'Home', tasks:'Tasks', more:'More' },
+  es: { scan:'Escanear', meds:'Medicamentos', findDoc:'Buscar Doctor', chat_placeholder:'Pregunta sobre el cuidado...', home:'Inicio', tasks:'Tareas', more:'Más' }
+};
+
+function setLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('ha_language', lang);
+  addMsg('ai', lang === 'es'
+    ? 'Idioma cambiado a Español. Ahora puedes hablar y escribir en español.'
+    : 'Language set to English. You can speak and type in English.',
+    true, false);
+}
+
+function toggleLiteracyMode() {
+  literacyMode = !literacyMode;
+  localStorage.setItem('ha_literacy', literacyMode);
+  addMsg('ai',
+    literacyMode
+      ? 'Health literacy mode ON. I will explain everything in simple, clear language — no medical jargon.'
+      : 'Health literacy mode OFF. Back to standard responses.',
+    true, false);
+}
+
+function getLiteracyPromptAddition() {
+  if(!literacyMode) return '';
+  return ' IMPORTANT: Use simple, plain language. No medical jargon. Explain any medical term immediately. Write at a 6th grade reading level. Short sentences. Use analogies.';
+}
+
+// Override sendMessage to inject literacy mode
+const _origSendMessage = sendMessage;
+async function sendMessage(prefilledText) {
+  if(literacyMode) {
+    const input = document.getElementById(isMobileView()?'chatInput':'chatInputDesktop');
+    const text = prefilledText || input?.value || '';
+    if(text && !text.includes('[PLAIN]')) {
+      if(input) input.value = text + ' [PLAIN]';
+    }
+  }
+  return _origSendMessage(prefilledText);
+}
+
+// ── SYMPTOM TRIAGE UI ──
+async function runSymptomTriage(symptomText) {
+  if(!symptomText) {
+    const input = isMobileView() ? document.getElementById('chatInput') : document.getElementById('chatInputDesktop');
+    symptomText = prompt('Describe the symptom:') || '';
+    if(!symptomText) return;
+  }
+  addMsg('ai','<i class="fa-solid fa-stethoscope" style="color:var(--accent);margin-right:8px"></i>Running triage assessment…',true,true);
+  try {
+    const data = await api('/api/triage?symptom='+encodeURIComponent(symptomText)+'&patientId='+currentPatientId);
+    const t = data.triage || {};
+    const colorMap = { er_now:'#ef4444', call_911:'#ef4444', urgent_care:'#f59e0b', call_doctor:'#f59e0b', schedule:'#3b82f6', monitor:'#22c55e' };
+    const col = colorMap[t.level] || '#94a3b8';
+    const stepsHtml = (data.nextSteps||[]).map((s,i) => '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid rgba(148,163,184,0.06);font-size:12px;color:var(--text2)"><span style="color:var(--accent2);font-weight:700;flex-shrink:0">'+(i+1)+'.</span><span>'+esc(s)+'</span></div>').join('');
+    const factorsHtml = (data.patientFactors||[]).map(f => '<div style="padding:6px 10px;background:rgba(245,158,11,0.08);border-radius:8px;font-size:11px;color:#fcd34d;margin-bottom:6px"><i class="fa-solid fa-circle-info" style="margin-right:6px"></i>'+esc(f)+'</div>').join('');
+    const html = '<div class="action-card" style="border-color:'+col+'40">'
+      +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'
+      +'<div style="width:48px;height:48px;border-radius:50%;background:'+col+'20;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-'+(t.icon||'stethoscope')+'" style="color:'+col+';font-size:20px"></i></div>'
+      +'<div><div style="font-size:16px;font-weight:800;color:'+col+'">'+esc(t.label||'Assessment')+'</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-top:2px">'+esc(data.reason||'')+'</div></div></div>'
+      +(factorsHtml?'<div style="margin-bottom:12px">'+factorsHtml+'</div>':'')
+      +'<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Next Steps</div>'+stepsHtml+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:12px">'+esc(data.disclaimer||'')+'</div>'
+      +'<div class="ac-btns">'
+      +(t.level==='call_911'||t.level==='er_now'?'<a href="tel:911" class="ac-btn primary" style="text-decoration:none"><i class="fa-solid fa-phone" style="margin-right:6px"></i>Call 911</a>':'')
+      +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>';
+    ['chatArea','chatAreaDesktop'].forEach(id=>{const el=document.getElementById(id);if(el){el.insertAdjacentHTML('beforeend',html);el.scrollTop=el.scrollHeight}});
+  } catch(e) { addMsg('ai','❌ Triage error: '+esc(e.message),true,false); }
+}
+
 function renderPlaybookCard(pb) {
   if(!pb) return;
   const urgent = pb.steps.filter(s=>s.urgent);

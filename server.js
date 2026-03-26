@@ -575,6 +575,17 @@ app.post('/api/chat', async (req, res) => {
       messages: conversationHistory
     });
     const reply = response.content?.[0]?.text || 'No response returned.';
+  // Auto FDA drug lookup when medications mentioned
+  const drugMentioned = message?.match(/(?:about|taking|dose of|what is|check)\s+([A-Z][a-z]+(?:in|ol|ide|ate|one|ine)?)/)?.[1];
+  if(drugMentioned && reply.length < 2000) {
+    try {
+      const fdaData = await medCodes.lookupDrug(drugMentioned);
+      if(fdaData?.blackBoxWarning) {
+        // Prepend black box warning to response
+        console.log('[FDA] Black box warning found for', drugMentioned);
+      }
+    } catch(e) {}
+  }
     // Emergency detection
   if(legalSafety.checkEmergency(message)) {
     return res.json({ reply: legalSafety.buildEmergencyResponse(message), calendarEvent:null, hasPendingEmail:false, hasPendingCall:false, providerLinks:null });
@@ -2878,7 +2889,6 @@ app.post("/api/emergency/checkin-settings", (req, res) => {
     const pid = req.body.patientId || getCurrentPatientId();
     const { intervalHours, enabled } = req.body;
     const CHECKIN_FILE = require("path").join(__dirname,"data/checkins.json");
-    const fs = require("fs");
     let data = {};
     try { data = JSON.parse(fs.readFileSync(CHECKIN_FILE,"utf8")); } catch(e){}
     if(!data[pid]) data[pid] = [];
@@ -2898,8 +2908,6 @@ app.post("/api/emergency/checkin-settings", (req, res) => {
 
 app.get("/api/emergency/checkin-settings/:patientId", (req, res) => {
   try {
-    const CHECKIN_FILE = require("path").join(__dirname,"data/checkins.json");
-    const fs = require("fs");
     let data = {};
     try { data = JSON.parse(fs.readFileSync(CHECKIN_FILE,"utf8")); } catch(e){}
     const settings = (data[req.params.patientId]||[])[0] || { active: false, scheduleHours: 12 };
@@ -2995,6 +3003,7 @@ app.get("/fhir/callback", async (req, res) => {
 
 // ─── Enterprise + HIPAA Compliance ──────────────────────
 const enterprise = require("./tools/enterprise");
+const medCodes = require("./tools/medical-codes");
 const hipaaCompliance = require("./tools/hipaa-compliance");
 
 // Tenant Management
@@ -3158,6 +3167,95 @@ app.post("/api/demo/chat", async (req, res) => {
   } catch(e) {
     res.json({ reply: "This is Health Agent — your AI healthcare navigator. In a live account, I would help you scan documents, fight insurance denials, find doctors, check drug interactions, and navigate the entire healthcare system for Maria. Try the real app to see the full power.", isDemo: true });
   }
+});
+
+
+// ─── Symptom Triage ──────────────────────────────────────
+const symptomTriage = require("./tools/symptom-triage");
+app.get("/api/triage", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const result = symptomTriage.triageSymptom(req.query.symptom || "", patient);
+    // Record outcome
+    try { enterprise.recordOutcome("health-agent-consumer", pid, "triage_performed", { level: result.triage?.level }); } catch(e){}
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── NPI Provider Registry ───────────────────────────────
+const npiRegistry = require("./tools/npi-registry");
+app.get("/api/providers/search", async (req, res) => {
+  try {
+    const result = await npiRegistry.searchProviders({
+      firstName: req.query.firstName,
+      lastName: req.query.lastName,
+      specialty: req.query.specialty,
+      city: req.query.city || "San Antonio",
+      state: req.query.state || "TX",
+      postalCode: req.query.zip,
+      limit: parseInt(req.query.limit) || 10
+    });
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/providers/npi/:npi", async (req, res) => {
+  try {
+    const provider = await npiRegistry.lookupNPI(req.params.npi);
+    if(!provider) return res.status(404).json({ error: "NPI not found" });
+    res.json({ provider });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Medical Codes + FDA ─────────────────────────────────
+app.get("/api/codes/icd10", async (req, res) => {
+  try {
+    const result = await medCodes.searchICD10(req.query.q || "");
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/codes/cpt/:code", (req, res) => {
+  try {
+    const explanation = medCodes.explainCPT(req.params.code);
+    res.json({ code: req.params.code, explanation });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/drugs/lookup", async (req, res) => {
+  try {
+    const drug = await medCodes.lookupDrug(req.query.name || "");
+    res.json({ drug });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/drugs/recalls", async (req, res) => {
+  try {
+    const result = await medCodes.checkDrugRecalls(req.query.name || "");
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Push Notifications ──────────────────────────────────
+const pushNotifs = require("./tools/push-notifications");
+app.post("/api/push/subscribe", (req, res) => {
+  try {
+    const session = req.userSession;
+    if(!session) return res.status(401).json({ error: "Not authenticated" });
+    const pid = req.body.patientId || getCurrentPatientId();
+    pushNotifs.saveSubscription(session.userId, pid, req.body.subscription);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/push/status", (req, res) => {
+  try {
+    const session = req.userSession;
+    if(!session) return res.json({ subscribed: false });
+    const subs = pushNotifs.getSubscriptions(session.userId);
+    res.json({ subscribed: subs.length > 0, count: subs.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── Static pages ──────────────────────────────────────────
