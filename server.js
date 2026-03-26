@@ -2396,6 +2396,31 @@ app.get("/api/prep/:appointmentId/text", function(req, res) {
   } catch(e) { res.status(500).send("Error: "+e.message); }
 });
 
+
+// ─── Second Opinion Connector ────────────────────────────
+const soConnector = require("./tools/second-opinion-connector");
+app.get("/api/second-opinion/match", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid) || getAllPatientsRaw()[0] || {};
+    const programs = soConnector.matchPrograms({
+      specialty: req.query.specialty || "",
+      insurance: patient.insurance?.primary || "",
+      condition: req.query.condition || ""
+    });
+    res.json({ programs, count: programs.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/second-opinion/summary", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatients().find(p => p.id === pid) || getAllPatientsRaw()[0] || {};
+    const summary = soConnector.buildCaseSummary(patient, req.query.condition || "");
+    res.setHeader("Content-Type", "text/plain");
+    res.send(summary);
+  } catch(e) { res.status(500).send("Error: " + e.message); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));
