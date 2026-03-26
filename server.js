@@ -568,7 +568,19 @@ app.post('/api/chat', async (req, res) => {
         console.log('Call request parse error:', e.message);
       }
     }
-    const provMatch = reply.match(/PROVIDER_SEARCH:(\{[\s\S]*?\})/);let providerLinks=null;if(provMatch){try{const pData=JSON.parse(provMatch[1]);const{buildProviderSearchURL}=require("./tools/insurance");providerLinks=buildProviderSearchURL(pData.insurance,pData.specialty,pData.location)}catch(e){}}
+    // Second opinion auto-detection
+  const soKeywords = ['second opinion','2nd opinion','another doctor','different specialist','get another opinion'];
+  if(soKeywords.some(k => lower.includes(k))) {
+    try {
+      const soConnector = require('./tools/second-opinion-connector');
+      const conditionHint = lower.includes('eye')||lower.includes('dry')?'dry eye':lower.includes('spine')||lower.includes('back')?'spine':lower.includes('thyroid')?'thyroid':'general';
+      const soPrograms = soConnector.matchPrograms({ specialty: conditionHint, insurance: patient.insurance?.primary || '', condition: conditionHint });
+      if(soPrograms.length) {
+        return res.json({ reply: reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/,'').replace(/CALENDAR_EVENT:\{[\s\S]*?\}/,'').trim(), secondOpinionPrograms: soPrograms.slice(0,4), calendarEvent: null, hasPendingEmail: !!pendingEmailDraft, hasPendingCall: !!pendingCallRequest, providerLinks: null });
+      }
+    } catch(e) { console.log('SO connector error:', e.message); }
+  }
+  const provMatch = reply.match(/PROVIDER_SEARCH:(\{[\s\S]*?\})/);let providerLinks=null;if(provMatch){try{const pData=JSON.parse(provMatch[1]);const{buildProviderSearchURL}=require("./tools/insurance");providerLinks=buildProviderSearchURL(pData.insurance,pData.specialty,pData.location)}catch(e){}}
     const calMatch = reply.match(/CALENDAR_EVENT:(\{[\s\S]*?\})/);
     let calendarEvent = null;
     if (calMatch) {
