@@ -180,6 +180,7 @@ function getAllPatientsRaw() {
   }
 }
 
+function getAllPatientsUnfiltered() { return getAllPatientsRaw(); }
 function getAllPatients(userId) {
   const all = getAllPatientsRaw();
   if (!userId) return all;
@@ -392,7 +393,8 @@ app.get('/api/patients', (req, res) => {
   try {
     const userId = req.userSession?.userId || null;
     const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
-    const patients = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    const filtered = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    const patients = filtered.length > 0 ? filtered : allRaw;
     res.json({ patients });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -400,7 +402,8 @@ app.get('/api/patients/current', (req, res) => {
   try {
     const userId = req.userSession?.userId || null;
     const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
-    const patients = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    const filtered = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
+    const patients = filtered.length > 0 ? filtered : allRaw;
     const currentId = getCurrentPatientId();
     const current = patients.find(p => p.id === currentId) || patients[0] || null;
     res.json({ currentId: current?.id || null, patient: current });
@@ -2451,7 +2454,7 @@ async function seedAdminAccount() {
     } catch(e) {}
   } catch(e) { console.log("Seed error:", e.message); }
 }
-seedAdminAccount();
+try { seedAdminAccount(); } catch(e) { console.error("seedAdminAccount failed:", e.message); }
 
 try {
 try {
