@@ -941,10 +941,10 @@ function updateMobileHero(){
 /* ═══ INIT ═══ */
 window.addEventListener('DOMContentLoaded',async()=>{
   try{
-    bindDesktopInput();seedCalendarDefaults();
+    bindDesktopInput();seedCalendarDefaults();mobileGoHome();
     await loadPatients();clearChat();
     await Promise.all([loadChatHistory(),loadNotifications(),checkCalendarStatus()]);
-    updateDashboard();updateMobileHero();
+    updateDashboard();updateMobileHero();const _cp=getPatientById(currentPatientId)||allPatients[0];if(_cp){renderProfileSheet(_cp);renderPatientCard(_cp);}
     setTimeout(()=>{loadTasks().catch(()=>{})},800);
   }catch(err){console.error('init',err);clearChat();addMsg('ai',`❌ ${esc(err.message||'Failed to initialize.')}`,true,false)}
 });
