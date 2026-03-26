@@ -2477,6 +2477,66 @@ app.get("/api/labs/dashboard", (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ─── Med Impact Tracker ──────────────────────────────────
+const medImpact = require("./tools/med-impact-tracker");
+app.post("/api/med-changes/log", (req, res) => {
+  try {
+    const { patientId, medication, changeType, oldDose, newDose, reason, prescriber } = req.body;
+    const entry = medImpact.logChange(patientId||getCurrentPatientId(), medication, changeType, oldDose, newDose, reason, prescriber);
+    res.json({ success: true, entry });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/med-changes/:id/impact", (req, res) => {
+  try {
+    const entry = medImpact.addImpact(req.params.id, req.body.impact, req.body.severity, req.body.date);
+    res.json({ success: true, entry });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/med-changes", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const changes = medImpact.getChanges(pid, req.query.medication);
+    res.json({ changes });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/med-changes/report", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const report = medImpact.generateImpactReport(pid);
+    res.json(report);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+// ─── Insurance Card Wallet ───────────────────────────────
+const insWallet = require("./tools/insurance-wallet");
+app.get("/api/insurance-wallet", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const cards = insWallet.getCards(pid);
+    res.json({ cards });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/insurance-wallet/add", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const card = insWallet.addCard(pid, req.body);
+    res.json({ success: true, card });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete("/api/insurance-wallet/:id", (req, res) => {
+  try { insWallet.deleteCard(req.params.id); res.json({ success: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/insurance-wallet/share", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const text = insWallet.buildQuickShareText(pid, patient);
+    res.setHeader("Content-Type","text/plain");
+    res.send(text);
+  } catch(e) { res.status(500).send("Error: " + e.message); }
+});
+
 // ─── Static pages ──────────────────────────────────────────
 app.get('/', (req, res) => {
   const token = (req.headers.cookie || '').split(';').map(c => c.trim()).find(c => c.startsWith('ha_token='));

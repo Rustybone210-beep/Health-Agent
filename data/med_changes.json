@@ -1,5 +1,44 @@
 [
   {
+    "id": "1774500625766",
+    "patientId": "maria-fields",
+    "medication": "Synthroid (Levothyroxine)",
+    "changeType": "dose-reduction",
+    "oldDose": "100mcg",
+    "newDose": "75mcg",
+    "reason": "Doctor reduced dose — reason unclear",
+    "prescriber": "Dr. Martinez",
+    "date": "2026-03-26",
+    "timestamp": "2026-03-26T04:50:25.766Z",
+    "impacts": [
+      {
+        "impact": "Weight gain +10 lbs",
+        "severity": "high",
+        "date": "2025-10-01",
+        "loggedAt": "2026-03-26T04:50:25.767Z"
+      },
+      {
+        "impact": "LDL elevated to 142",
+        "severity": "high",
+        "date": "2026-02-01",
+        "loggedAt": "2026-03-26T04:50:25.767Z"
+      },
+      {
+        "impact": "Dry eye worsened",
+        "severity": "high",
+        "date": "2025-11-01",
+        "loggedAt": "2026-03-26T04:50:25.767Z"
+      },
+      {
+        "impact": "Energy decreased",
+        "severity": "medium",
+        "date": "2025-10-15",
+        "loggedAt": "2026-03-26T04:50:25.767Z"
+      }
+    ],
+    "symptoms": []
+  },
+  {
     "id": "1774325670750",
     "patientId": "maria-fields",
     "medication": "Synthroid",
