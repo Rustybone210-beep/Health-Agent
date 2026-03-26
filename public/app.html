@@ -1289,16 +1289,6 @@ function getLiteracyPromptAddition() {
 
 // Override sendMessage to inject literacy mode
 const _origSendMessage = sendMessage;
-async function sendMessage(prefilledText) {
-  if(literacyMode) {
-    const input = document.getElementById(isMobileView()?'chatInput':'chatInputDesktop');
-    const text = prefilledText || input?.value || '';
-    if(text && !text.includes('[PLAIN]')) {
-      if(input) input.value = text + ' [PLAIN]';
-    }
-  }
-  return _origSendMessage(prefilledText);
-}
 
 // ── SYMPTOM TRIAGE UI ──
 async function runSymptomTriage(symptomText) {
