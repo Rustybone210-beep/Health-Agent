@@ -565,6 +565,8 @@ app.post('/api/chat', async (req, res) => {
   const patients = getAllPatients();
   const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
   conversationHistory.push({ role: 'user', content: message });
+  // HIPAA PHI audit log
+  try { hipaaCompliance.logPhiAccess(req.userSession?.userId||'unknown', currentPatientId, 'chat', 'conversation', 'success', req.ip||'unknown'); } catch(e){}
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -868,6 +870,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         }
       }
       cleanupFile(filePath);
+      try { enterprise.recordOutcome('health-agent-consumer', currentPatientId, 'document_scanned', { type: extracted?.document_type||'unknown' }); } catch(e){}
       return res.json({
         success: true,
         extracted,
@@ -2189,6 +2192,7 @@ app.post("/api/claims/:id/appeal", (req, res) => {
     const claim = insuranceClaims.createAppeal(req.params.id, req.body.reason, req.body.docs);
     const patient = getAllPatients().find(p => p.id === (req.body.patientId || getCurrentPatientId()));
     const letter = insuranceClaims.generateAppealLetter(claim, patient);
+    try { enterprise.recordOutcome('health-agent-consumer', req.body.patientId||getCurrentPatientId(), 'appeal_filed', { claimId: req.params.id }); } catch(e){}
     res.json({ success: true, claim, appealLetter: letter });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -2986,6 +2990,118 @@ app.get("/fhir/callback", async (req, res) => {
     const html = '<!DOCTYPE html><html><head><style>body{font-family:-apple-system,sans-serif;background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}.card{background:rgba(30,41,59,0.8);border:1px solid rgba(148,163,184,0.15);border-radius:20px;padding:32px;max-width:400px}h2{color:#2dd4bf;margin-bottom:12px}p{color:#94a3b8;font-size:14px;line-height:1.6}.code{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.3);border-radius:10px;padding:12px;font-family:monospace;font-size:13px;color:#2dd4bf;margin:16px 0;word-break:break-all}</style></head><body><div class="card"><h2>Authorization Received</h2><p>Copy this code and paste it into Health Agent to complete the connection.</p><div class="code">'+code+'</div><p style="font-size:12px;color:#64748b">This code expires in 10 minutes. Return to Health Agent now.</p></div><script>window.opener&&window.opener.postMessage({type:"fhir_auth",code:"'+code+'",state:"'+state+'"},"*");setTimeout(function(){window.close()},3000)<\/script></body></html>';
   res.send(html);
   } catch(e) { res.status(500).send("Error: " + e.message); }
+});
+
+
+// ─── Enterprise + HIPAA Compliance ──────────────────────
+const enterprise = require("./tools/enterprise");
+const hipaaCompliance = require("./tools/hipaa-compliance");
+
+// Tenant Management
+app.get("/api/enterprise/tenants", (req, res) => {
+  try {
+    const session = req.userSession;
+    if(!session) return res.status(401).json({ error: "Not authenticated" });
+    const tenants = enterprise.getAllTenants();
+    res.json({ tenants });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/enterprise/tenants", (req, res) => {
+  try {
+    const tenant = enterprise.createTenant(req.body);
+    res.json({ success: true, tenant });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/enterprise/tenant/:tenantId", (req, res) => {
+  try {
+    const tenant = enterprise.getTenant(req.params.tenantId);
+    res.json({ tenant });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Member Enrollment
+app.post("/api/enterprise/enroll", (req, res) => {
+  try {
+    const { tenantId, ...memberData } = req.body;
+    if(!tenantId) return res.status(400).json({ error: "tenantId required" });
+    const enrollment = enterprise.enrollMember(tenantId, memberData);
+    res.json({ success: true, enrollment });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/enterprise/enrollments/:tenantId", (req, res) => {
+  try {
+    const enrollments = enterprise.getEnrollments(req.params.tenantId);
+    res.json({ enrollments, count: enrollments.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Outcomes Tracking
+app.post("/api/enterprise/outcomes", (req, res) => {
+  try {
+    const { tenantId, patientId, outcomeType, data } = req.body;
+    const outcome = enterprise.recordOutcome(tenantId||"health-agent-consumer", patientId||getCurrentPatientId(), outcomeType, data||{});
+    res.json({ success: true, outcome });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/enterprise/outcomes/:tenantId", (req, res) => {
+  try {
+    const report = enterprise.generateOutcomesReport(req.params.tenantId);
+    res.json(report);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/enterprise/star-measures", (_req, res) => {
+  try { res.json({ measures: enterprise.getStarMeasures() }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// HIPAA Compliance
+app.get("/api/compliance/status", (_req, res) => {
+  try { res.json(hipaaCompliance.getComplianceStatus()); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/compliance/audit", (req, res) => {
+  try {
+    const logs = hipaaCompliance.getAuditLog({
+      patientId: req.query.patientId,
+      userId: req.query.userId,
+      since: req.query.since,
+      limit: parseInt(req.query.limit)||100
+    });
+    res.json({ logs, count: logs.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/compliance/baa", (req, res) => {
+  try {
+    const { organizationName, contactEmail, signedBy } = req.body;
+    const baa = hipaaCompliance.createBAA(organizationName, contactEmail, signedBy);
+    res.json({ success: true, baa });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/compliance/baa/:org", (req, res) => {
+  try {
+    const baa = hipaaCompliance.getBAAStatus(req.params.org);
+    res.json({ baa, active: !!baa });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// CMS Patient Access API (FHIR R4 compliant endpoint)
+app.get("/api/cms/patient-access", (req, res) => {
+  try {
+    const pid = req.query.patient || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const fhirData = require("./tools/fhir-engine").getFhirData(pid);
+    const bundle = enterprise.buildCMSPatientAccessResponse(patient, fhirData);
+    res.setHeader("Content-Type","application/fhir+json");
+    res.json(bundle);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── Static pages ──────────────────────────────────────────
