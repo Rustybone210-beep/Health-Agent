@@ -259,6 +259,7 @@ The system will generate clickable search links from Zocdoc, Healthgrades, and G
 20. LAB DASHBOARD - Compare labs over time. Flag TSH 0.44 (low-normal), SHBG 176 (critical), LDL 142 (elevated). Connect lab changes to symptoms and medication changes.
 21. DAILY BRIEFING - Generate morning briefing at /api/briefing/today with today's meds, upcoming appointments, tasks, and health reminders.
 22. INSURANCE WALLET - Digital copies of all insurance cards. Quick share for clinic check-ins.
+23. DOCTOR VISIT RECORDER - After a visit, user can paste notes or transcript and AI extracts: prescriptions, tests ordered, follow-ups, questions answered. Use /api/visits/create then /api/visits/:id/summarize. - Digital copies of all insurance cards. Quick share for clinic check-ins.
 13. RX REFILL & PRICE COMPARISON - When a prescription bottle is scanned, the system automatically checks:
     - Is the Rx expired? How many refills remain? Is it running low?
     - Price comparison across GoodRx, Cost Plus Drugs (Mark Cuban), Amazon Pharmacy, SingleCare, RxSaver, Walmart
@@ -1541,6 +1542,25 @@ app.get("/api/reminders/due", (_req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// Daily briefing at 8am
+cron.schedule("0 8 * * *", () => {
+  try {
+    const pats = getAllPatientsRaw();
+    pats.forEach(patient => {
+      if(!patient.id) return;
+      const tasks = [];
+      const appointments = [];
+      const notifs = (loadNotifications().notifications || []);
+      try { const t = require("./tools/tasks"); tasks.push(...(t.listTasks(patient.id)||[])); } catch(e){}
+      try { const a = require("./tools/appointments-booking"); appointments.push(...(a.getUpcoming(patient.id,7)||[])); } catch(e){}
+      const briefing = require("./tools/daily-briefing").generateBriefing(patient, tasks, appointments, notifs);
+      addNotification("general", "Morning Briefing", briefing.text.substring(0,120)+"...", patient.id, null);
+    });
+    console.log("Daily briefings generated at 8am");
+  } catch(e) { console.log("Briefing cron error:", e.message); }
+});
+
 // Check reminders every minute
 cron.schedule("* * * * *", () => {
   try {
@@ -2540,6 +2560,54 @@ app.get("/api/insurance-wallet/share", (req, res) => {
     res.setHeader("Content-Type","text/plain");
     res.send(text);
   } catch(e) { res.status(500).send("Error: " + e.message); }
+});
+
+
+// ─── Doctor Visit Recorder ───────────────────────────────
+const visitRecorder = require("./tools/visit-recorder");
+app.post("/api/visits/create", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const visit = visitRecorder.createVisit(pid, req.body.doctorName, req.body.visitType, req.body.date);
+    res.json({ success: true, visit });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/visits", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const visits = visitRecorder.getVisits(pid);
+    res.json({ visits });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/visits/:id/summarize", async (req, res) => {
+  try {
+    const { transcript } = req.body;
+    if(!transcript) return res.status(400).json({ error: "Transcript required" });
+    visitRecorder.saveTranscript(req.params.id, transcript);
+    const prompt = visitRecorder.buildSummaryPrompt(transcript);
+    const pid = getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
+      messages: [{ role: "user", content: prompt }]
+    });
+    const text = response.content?.[0]?.text || "{}";
+    let summary = {};
+    try {
+      const clean = text.replace(/```json|```/g,"").trim();
+      summary = JSON.parse(clean);
+    } catch(e) { summary = { summary: text }; }
+    const visit = visitRecorder.saveSummary(req.params.id, summary);
+    res.json({ success: true, visit, summary });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/visits/:id", (req, res) => {
+  try {
+    const visit = visitRecorder.getVisit(req.params.id);
+    if(!visit) return res.status(404).json({ error: "Visit not found" });
+    res.json(visit);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── Static pages ──────────────────────────────────────────
