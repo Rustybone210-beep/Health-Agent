@@ -42,6 +42,7 @@ const anthropic = new Anthropic({
 
 // ─── Adaptive Intelligence Systems ──────────────────────
 const adaptiveAgent = require("./tools/adaptive-agent");
+const playbooks = require("./tools/emergency-playbooks");
 const legalSafety = require("./tools/legal-safety");
 const knowledgeUpdater = require("./tools/knowledge-updater");
 
@@ -607,7 +608,13 @@ app.post('/api/chat', async (req, res) => {
         console.log('Call request parse error:', e.message);
       }
     }
-    // Second opinion auto-detection
+    // Emergency playbook auto-detection
+  const pbMatch = playbooks.detectPlaybook(message);
+  if(pbMatch && !lower.includes('second opinion')) {
+    const pbReply = reply.replace(/PROVIDER_SEARCH:\{[\s\S]*?\}/g,'').replace(/CALENDAR_EVENT:\{[\s\S]*?\}/g,'').trim();
+    return res.json({ reply: pbReply, emergencyPlaybook: pbMatch, calendarEvent:null, hasPendingEmail:!!pendingEmailDraft, hasPendingCall:!!pendingCallRequest, providerLinks:null });
+  }
+  // Second opinion auto-detection
   const soKeywords = ['second opinion','2nd opinion','another doctor','different specialist','get another opinion'];
   if(soKeywords.some(k => lower.includes(k))) {
     try {
@@ -2699,6 +2706,58 @@ app.get("/api/agent/knowledge-status", (req, res) => {
     if(!fs.existsSync(kbPath)) return res.json({ hasKnowledge: false });
     const kb = JSON.parse(fs.readFileSync(kbPath,"utf8"));
     res.json({ hasKnowledge: true, topics: Object.keys(kb.topics||{}).length, lastUpdated: kb.lastUpdated, version: kb.version, pearls: (kb.clinicalPearls||[]).length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ─── Emergency Playbooks ─────────────────────────────────
+app.get("/api/playbooks", (_req, res) => {
+  try { res.json({ playbooks: playbooks.getAllPlaybooks() }); } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/playbooks/:id", (req, res) => {
+  try {
+    const pb = playbooks.getPlaybook(req.params.id);
+    if(!pb) return res.status(404).json({ error: "Playbook not found" });
+    res.json(pb);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+// ─── PortalSync ───────────────────────────────────────────
+const portalSync = require("./tools/portal-sync");
+app.get("/api/portals", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const portals = portalSync.getPortals(pid);
+    res.json({ portals });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/portals/find", (req, res) => {
+  try {
+    const results = portalSync.findPortalForQuery(req.query.q || "");
+    res.json({ results });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/portals/add", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const portal = portalSync.addCustomPortal(pid, req.body);
+    res.json({ success: true, portal });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+// ─── Prior Authorization ──────────────────────────────────
+const priorAuth = require("./tools/prior-auth");
+app.post("/api/prior-auth/generate", (req, res) => {
+  try {
+    const pid = req.body.patientId || getCurrentPatientId();
+    const patient = getAllPatientsRaw().find(p => p.id === pid) || {};
+    const result = priorAuth.generatePARequest(patient, req.body.medication, req.body.diagnosis, req.body.clinicalJustification, req.body.prescriber);
+    res.json({ success: true, ...result });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.get("/api/prior-auth/history", (req, res) => {
+  try {
+    const pid = req.query.patientId || getCurrentPatientId();
+    const history = priorAuth.getPAHistory(pid);
+    res.json({ history });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
