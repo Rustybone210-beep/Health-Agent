@@ -1,0 +1,32 @@
+{
+  "appId": "com.healthagent.app",
+  "appName": "Health Agent",
+  "webDir": "public",
+  "server": {
+    "url": "https://health-agent-719697980755.us-central1.run.app",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0f172a",
+    "scheme": "Health Agent"
+  },
+  "android": {
+    "backgroundColor": "#0f172a",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f172a",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f172a"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

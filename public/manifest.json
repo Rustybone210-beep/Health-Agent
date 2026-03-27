@@ -1,26 +1,62 @@
 {
   "name": "Health Agent",
   "short_name": "HealthAgent",
-  "description": "AI-powered healthcare navigation and caregiver command center",
+  "description": "AI-powered healthcare navigator. Track medications, manage appointments, coordinate care, and navigate insurance — all with AI that actually does the work.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#34c759",
+  "background_color": "#0f172a",
+  "theme_color": "#14b8a6",
   "orientation": "portrait-primary",
   "scope": "/",
+  "id": "/",
   "categories": ["health", "medical", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat with AI",
+      "short_name": "Chat",
+      "description": "Ask Health Agent anything about your care",
+      "url": "/",
+      "icons": [{"src": "/icons/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Emergency",
+      "short_name": "Emergency",
+      "description": "Emergency protocols and contacts",
+      "url": "/emergency",
+      "icons": [{"src": "/icons/icon-192.png", "sizes": "192x192"}]
     }
   ],
   "screenshots": [],
