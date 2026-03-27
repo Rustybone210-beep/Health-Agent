@@ -23,14 +23,18 @@ function listDrafts() {
 
 
 
-// === REAL EMAIL SENDING WITH RESEND (added for #3) ===
+// === REAL EMAIL SENDING WITH RESEND ===
 const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 async function sendRealEmail(to, subject, htmlBody) {
+  if (!resend) {
+    console.log('⚠️  Resend not configured — email not sent to', to);
+    return { success: false, error: 'Email not configured' };
+  }
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Health Agent <onboarding@resend.dev>', // change to your verified email later
+      from: process.env.FROM_EMAIL || 'Health Agent <onboarding@resend.dev>',
       to: [to],
       subject: subject,
       html: htmlBody,
