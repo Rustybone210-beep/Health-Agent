@@ -1,0 +1,18 @@
+[
+  {
+    "id": "CONSENT-1774643697847",
+    "patientId": "maria-fields",
+    "patientName": "Linda Fields",
+    "authorizedBy": "Jonis Fields",
+    "relationship": "caregiver",
+    "scope": "full",
+    "authorizedUsers": [
+      "*"
+    ],
+    "status": "active",
+    "grantedAt": "2026-03-27T20:34:57.847Z",
+    "expiresAt": null,
+    "revokedAt": null,
+    "notes": "Linda Fields authorized her son Jonis Fields as primary caregiver with full access to health records and care coordination. Verbal and written consent provided."
+  }
+]
