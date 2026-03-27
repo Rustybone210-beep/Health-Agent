@@ -1003,10 +1003,10 @@ function updateDashboard(){const pt=allTasks.filter(t=>t.status!=='done'),hp=pt.
 
 /* ═══ PATIENTS ═══ */
 async function loadPatients(){const[pd,cd]=await Promise.all([api('/api/patients'),api('/api/patients/current')]);allPatients=Array.isArray(pd.patients)?pd.patients:[];currentPatientId=cd.currentId||allPatients[0]?.id||null;const cp=cd.patient||allPatients.find(p=>p.id===currentPatientId)||allPatients[0]||null;renderPatientDropdown();renderPatientCard(cp);renderProfileSheet(cp);updateTopbarTitle(cp)}
-function renderPatientDropdown(){const dd=document.getElementById('patientDropdown');if(!dd)return;const c=allPatients.find(p=>p.id===currentPatientId);setText('selectorName',c?.name||'No Patient');setText('selectorRel',c?.relationship||c?.relation||'Family Member');dd.innerHTML=allPatients.map(p=>`<div class="pat-opt ${p.id===currentPatientId?'active':''}" onclick="switchPatient('${esc(p.id)}')"><div class="opt-n">${esc(p.name)}</div><div class="opt-r">${esc(p.relationship||p.relation||'Family Member')} · DOB ${esc(p.dob||'—')}</div></div>`).join('')+`<div class="add-pat" onclick="openAddPatient()">＋ Add family member</div>`}
+function renderPatientDropdown(){const dd=document.getElementById('patientDropdown');if(!dd)return;const c=allPatients.find(p=>p.id===currentPatientId);setText('selectorName',c?.name||'No Patient');setText('selectorRel',c?.relationship||c?.relation||'Family Member');dd.innerHTML=allPatients.map(p=>`<div class="pat-opt ${p.id===currentPatientId?'active':''}" data-fn="switchPatient" data-arg="${esc(p.id)}" onclick="window[this.dataset.fn](this.dataset.arg)"><div class="opt-n">${esc(p.name)}</div><div class="opt-r">${esc(p.relationship||p.relation||'Family Member')} · DOB ${esc(p.dob||'—')}</div></div>`).join('')+`<div class="add-pat" onclick="openAddPatient()">＋ Add family member</div>`}
 async function switchPatient(id){try{await api('/api/patients/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:id,model:MODEL_NAME})});currentPatientId=id;latestScanData=null;closePatientDropdown();closeProfileSheet();await loadPatients();await loadChatHistory();await loadTasks().catch(()=>{});updateDashboard();clearChat();currentMessages=[];currentSessionId=null;const p=getPatientById(id);if(p)addMsg('ai',`Switched to <strong>${esc(p.name)}</strong>. How can I help?`,true,true)}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
 function renderPatientCard(patient){const el=document.getElementById('cardContent');if(!el)return;if(!patient){el.innerHTML='<div style="color:var(--text3)">No patient loaded.</div>';return}const meds=(patient.medications||[]).map(m=>`<span class="pill p-teal">${esc(m.name)} ${esc(m.dose||'')}</span>`).join(''),algs=(patient.allergies||[]).map(a=>`<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('');el.innerHTML=`<div class="pc-row"><span class="pc-l">Name</span><span class="pc-v">${esc(patient.name)}</span></div><div class="pc-row"><span class="pc-l">DOB</span><span class="pc-v">${esc(patient.dob||'—')}</span></div><div class="pc-row"><span class="pc-l">Doctor</span><span class="pc-v">${esc(patient.primaryDoctor||'—')}</span></div><div class="pc-row"><span class="pc-l">Insurance</span><span class="pc-v">${esc(patient.insurance?.primary||'—')}</span></div>${meds?`<div style="margin-top:8px"><div class="s-lbl" style="margin-bottom:4px">Medications</div><div class="pill-row">${meds}</div></div>`:''}${algs?`<div style="margin-top:7px"><div class="s-lbl" style="margin-bottom:4px">Allergies</div><div class="pill-row">${algs}</div></div>`:''}`}
-function renderProfileSheet(patient){if(!patient)return;const initials=(patient.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(),age=calcAge(patient.dob),rel=patient.relationship||patient.relation||'';['psAvatar','mobilePatAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=initials});setText('psName',patient.name||'Patient');setText('psSub',[age?`${age}`:null,rel].filter(Boolean).join(' · ')||'Family Member');setText('psCondN',(patient.conditions||[]).length);setText('psMedN',(patient.medications||[]).length);setText('psAlgN',(patient.allergies||[]).length);setText('psDob',patient.dob||'—');setText('psDoctor',`${patient.primaryDoctor||'—'} · ${patient.clinic||'—'}`);setText('psInsurance',patient.insurance?.primary||'—');setText('psPharmacy',`${patient.pharmacy?.name||'—'} ${patient.pharmacy?.phone||''}`.trim());document.getElementById('psCondPills').innerHTML=(patient.conditions||[]).map(c=>`<span class="pill p-gold">${esc(c)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psMedPills').innerHTML=(patient.medications||[]).map(m=>`<span class="pill p-teal">${esc(m.name)} ${esc(m.dose||'')}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psAlgPills').innerHTML=(patient.allergies||[]).map(a=>`<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psPatientList').innerHTML=allPatients.map(p=>`<button onclick="switchPatient('${esc(p.id)}')" style="width:100%;padding:10px 12px;background:${p.id===currentPatientId?'rgba(11,147,246,0.08)':'var(--surface-2)'};border:1px solid ${p.id===currentPatientId?'rgba(11,147,246,0.2)':'var(--border)'};border-radius:12px;font-size:13px;cursor:pointer;text-align:left"><strong>${esc(p.name)}</strong> <span style="color:var(--text2);font-size:11px">· ${esc(p.relationship||p.relation||'Family Member')}</span></button>`).join('')}
+function renderProfileSheet(patient){if(!patient)return;const initials=(patient.name||'P').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(),age=calcAge(patient.dob),rel=patient.relationship||patient.relation||'';['psAvatar','mobilePatAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=initials});setText('psName',patient.name||'Patient');setText('psSub',[age?`${age}`:null,rel].filter(Boolean).join(' · ')||'Family Member');setText('psCondN',(patient.conditions||[]).length);setText('psMedN',(patient.medications||[]).length);setText('psAlgN',(patient.allergies||[]).length);setText('psDob',patient.dob||'—');setText('psDoctor',`${patient.primaryDoctor||'—'} · ${patient.clinic||'—'}`);setText('psInsurance',patient.insurance?.primary||'—');setText('psPharmacy',`${patient.pharmacy?.name||'—'} ${patient.pharmacy?.phone||''}`.trim());document.getElementById('psCondPills').innerHTML=(patient.conditions||[]).map(c=>`<span class="pill p-gold">${esc(c)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psMedPills').innerHTML=(patient.medications||[]).map(m=>`<span class="pill p-teal">${esc(m.name)} ${esc(m.dose||'')}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psAlgPills').innerHTML=(patient.allergies||[]).map(a=>`<span class="pill p-red">⚠️ ${esc(a)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';document.getElementById('psPatientList').innerHTML=allPatients.map(p=>`<button data-fn="switchPatient" data-arg="${esc(p.id)}" onclick="window[this.dataset.fn](this.dataset.arg)" style="width:100%;padding:10px 12px;background:${p.id===currentPatientId?'rgba(11,147,246,0.08)':'var(--surface-2)'};border:1px solid ${p.id===currentPatientId?'rgba(11,147,246,0.2)':'var(--border)'};border-radius:12px;font-size:13px;cursor:pointer;text-align:left"><strong>${esc(p.name)}</strong> <span style="color:var(--text2);font-size:11px">· ${esc(p.relationship||p.relation||'Family Member')}</span></button>`).join('')}
 function togglePatientDropdown(){document.getElementById('patientDropdown')?.classList.toggle('open')}
 function closePatientDropdown(){document.getElementById('patientDropdown')?.classList.remove('open')}
 document.addEventListener('click',e=>{if(!e.target.closest('#patientSelector'))closePatientDropdown();if(!e.target.closest('#notifPanel')&&!e.target.closest('.notif-btn')&&!e.target.closest('#notifBtnMobileWrap')&&!e.target.closest('.tb-bell'))document.getElementById('notifPanel')?.classList.remove('open')});
@@ -1028,7 +1028,7 @@ async function saveNewPatient(){const name=document.getElementById('newName').va
 
 /* ═══ CHAT HISTORY ═══ */
 async function loadChatHistory(){try{const data=await api('/api/chat-history');renderChatHistory(data.sessions||[])}catch(e){console.error('loadChatHistory',e)}}
-function renderChatHistory(sessions){const list=document.getElementById('chatHistoryList');if(!list)return;const f=(sessions||[]).filter(s=>!s.patientId||s.patientId===currentPatientId);if(!f.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div>';return}list.innerHTML=f.slice(0,20).map(s=>`<div class="hist-item ${s.id===currentSessionId?'active':''}" onclick="loadSession('${esc(s.id)}')"><span style="flex-shrink:0;margin-top:1px">💬</span><div class="hist-content"><div class="hist-preview">${esc(s.preview||'Chat session')}</div><div class="hist-time">${formatRelTime(s.timestamp)}</div></div><button class="hist-del" onclick="deleteSession(event,'${esc(s.id)}')">✕</button></div>`).join('')}
+function renderChatHistory(sessions){const list=document.getElementById('chatHistoryList');if(!list)return;const f=(sessions||[]).filter(s=>!s.patientId||s.patientId===currentPatientId);if(!f.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:3px 0">No history yet</div>';return}list.innerHTML=f.slice(0,20).map(s=>`<div class="hist-item ${s.id===currentSessionId?'active':''}" data-fn="loadSession" data-arg="${esc(s.id)}" onclick="window[this.dataset.fn](this.dataset.arg)"><span style="flex-shrink:0;margin-top:1px">💬</span><div class="hist-content"><div class="hist-preview">${esc(s.preview||'Chat session')}</div><div class="hist-time">${formatRelTime(s.timestamp)}</div></div><button class="hist-del" onclick="deleteSession(event,'${esc(s.id)}')">✕</button></div>`).join('')}
 async function loadSession(id){try{const session=await api(`/api/chat-history/${encodeURIComponent(id)}`);currentSessionId=id;currentMessages=Array.isArray(session.messages)?session.messages:[];clearChat(false);for(const m of currentMessages){addMsg(m.role==='user'?'user':'ai',m.content||'',false,m.role!=='user')}closeSidebar();await loadChatHistory()}catch(e){console.error('loadSession',e);addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
 async function deleteSession(e,id){e.stopPropagation();try{await api(`/api/chat-history/${encodeURIComponent(id)}`,{method:'DELETE'});if(currentSessionId===id){currentSessionId=null;currentMessages=[];clearChat()}await loadChatHistory()}catch(err){addMsg('ai',`❌ ${esc(err.message)}`,true,false)}}
 function newChat(){if(currentMessages.length>0)saveChatSession().catch(()=>{});currentSessionId=null;currentMessages=[];clearChat();loadChatHistory().catch(()=>{})}
@@ -1038,7 +1038,7 @@ window.addEventListener('beforeunload',()=>{if(!currentMessages.length)return;co
 
 /* ═══ NOTIFICATIONS ═══ */
 async function loadNotifications(){try{const data=await api('/api/notifications');notifications=data.notifications||[];renderNotifications();updateNotifBadge()}catch(e){console.error('loadNotifications',e)}}
-function renderNotifications(){const list=document.getElementById('notifList');if(!list)return;if(!notifications.length){list.innerHTML='<div class="ni-empty">✅ All clear</div>';return}const icons={medication:'💊',appointment:'📅',insurance:'🛡️',general:'💡'};list.innerHTML=notifications.slice(0,20).map(n=>`<div class="ni ${n.read?'read':'unread'}" onclick="readNotif('${esc(n.id)}')"><div class="ni-head"><span>${icons[n.type]||'🔔'}</span><span class="ni-title">${esc(n.title)}</span></div><div class="ni-msg">${esc(n.message)}</div><div class="ni-time">${formatRelTime(n.createdAt)}</div></div>`).join('')}
+function renderNotifications(){const list=document.getElementById('notifList');if(!list)return;if(!notifications.length){list.innerHTML='<div class="ni-empty">✅ All clear</div>';return}const icons={medication:'💊',appointment:'📅',insurance:'🛡️',general:'💡'};list.innerHTML=notifications.slice(0,20).map(n=>`<div class="ni ${n.read?'read':'unread'}" data-fn="readNotif" data-arg="${esc(n.id)}" onclick="window[this.dataset.fn](this.dataset.arg)"><div class="ni-head"><span>${icons[n.type]||'🔔'}</span><span class="ni-title">${esc(n.title)}</span></div><div class="ni-msg">${esc(n.message)}</div><div class="ni-time">${formatRelTime(n.createdAt)}</div></div>`).join('')}
 function updateNotifBadge(){const unread=notifications.filter(n=>!n.read).length;['notifBadgeDesktop','notifBadgeMobile'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=unread>9?'9+':String(unread);el.style.display=unread>0?'flex':'none'}})}
 async function readNotif(id){try{await api(`/api/notifications/read/${encodeURIComponent(id)}`,{method:'POST'});const n=notifications.find(x=>x.id===id);if(n)n.read=true;renderNotifications();updateNotifBadge()}catch(e){console.error('readNotif',e)}}
 async function markAllRead(){try{await api('/api/notifications/read-all',{method:'POST'});notifications.forEach(n=>{n.read=true});renderNotifications();updateNotifBadge()}catch(e){console.error('markAllRead',e)}}
@@ -1072,6 +1072,7 @@ switch(dt){case'insurance_card':return f('Document Type','Insurance Card',false)
 
 
 
+
 async function openPortalSync() {
   let systems = {};
   let connections = [];
@@ -1084,123 +1085,102 @@ async function openPortalSync() {
     connections = connRes.connections || [];
   } catch(e) {}
 
-  const connectedIds = connections.map(c => c.system);
+  const connectedIds = connections.map(function(c){ return c.system; });
+  const wrap = document.createElement('div');
+  wrap.className = 'action-card';
+  wrap.id = 'portalSyncCard';
 
-  const sysCards = Object.keys(systems).map(key => {
+  let innerHtml = '<div class="ac-title"><i class="fa-solid fa-link" style="color:var(--accent);margin-right:8px"></i>Connect Health Systems</div>';
+  innerHtml += '<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">Connect your health systems to sync lab results, medications, and appointments. The 21st Century Cures Act gives you the legal right to this data.</div>';
+
+  Object.keys(systems).forEach(function(key) {
     const s = systems[key];
     const connected = connectedIds.includes(key);
-    return '<div style="background:'+(connected?'rgba(20,184,166,0.08)':'rgba(15,23,42,0.5)')+';border:1px solid '+(connected?'rgba(20,184,166,0.3)':'var(--border)')+';border-radius:12px;padding:12px;margin-bottom:8px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-      +'<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(s.name)+'</div>'
-      +(s.marketShare?'<div style="font-size:10px;color:var(--text3)">'+esc(s.marketShare)+' market share</div>':'')+'</div>'
-      +(connected
-        ? '<span style="background:rgba(34,197,94,0.15);color:var(--success);padding:4px 10px;border-radius:100px;font-size:10px;font-weight:700">Connected</span>'
-        : '<button onclick="startFhirConnect(''+key+'')" style="background:var(--accent);border:none;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;color:white;cursor:pointer">Connect</button>')
-      +'</div>'
-      +(s.notes?'<div style="font-size:11px;color:var(--text3);line-height:1.4">'+esc(s.notes)+'</div>':'')
-      +(connected?'<div style="margin-top:8px;display:flex;gap:8px"><button onclick="syncFhirSystem(''+key+'')" style="background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);border-radius:100px;padding:5px 12px;font-size:10px;font-weight:700;color:var(--accent2);cursor:pointer">Sync Now</button><button onclick="disconnectFhir(''+key+'')" style="background:none;border:1px solid rgba(239,68,68,0.2);border-radius:100px;padding:5px 12px;font-size:10px;color:var(--danger);cursor:pointer">Disconnect</button></div>':'')
-      +'</div>';
-  }).join('');
+    const card = document.createElement('div');
+    card.style.cssText = 'background:'+(connected?'rgba(20,184,166,0.08)':'rgba(15,23,42,0.5)')+';border:1px solid '+(connected?'rgba(20,184,166,0.3)':'var(--border)')+';border-radius:12px;padding:12px;margin-bottom:8px';
 
-  const html = '<div class="action-card" id="portalSyncCard">'
-    +'<div class="ac-title"><i class="fa-solid fa-link" style="color:var(--accent);margin-right:8px"></i>Connect Health Systems</div>'
-    +'<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">Connect your health systems to automatically sync lab results, medications, conditions, and appointments. The 21st Century Cures Act gives you the legal right to this data.</div>'
-    + sysCards
-    +'<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:#93c5fd;margin-top:10px;line-height:1.5">'
-    +'<i class="fa-solid fa-shield-halved" style="margin-right:6px"></i>Your data stays private. Health Agent reads your records but never sells or shares your health data. You can disconnect at any time.</div>'
-    +'<div class="ac-btns" style="margin-top:12px">'
-    +(connections.length?'<button class="ac-btn primary" onclick="syncAllFhir()"><i class="fa-solid fa-rotate" style="margin-right:6px"></i>Sync All Connected</button>':'')
-    +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Close</button></div></div>';
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px';
 
-  ['chatArea','chatAreaDesktop'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){
-      const existing=el.querySelector('#portalSyncCard');
-      if(existing)existing.remove();
-      el.insertAdjacentHTML('beforeend',html);
-      el.scrollTop=el.scrollHeight;
+    const info = document.createElement('div');
+    info.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text)">'+esc(s.name)+'</div>'
+      +(s.marketShare?'<div style="font-size:10px;color:var(--text3)">'+esc(s.marketShare)+' market share</div>':'');
+
+    row.appendChild(info);
+
+    if(connected) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'background:rgba(34,197,94,0.15);color:var(--success);padding:4px 10px;border-radius:100px;font-size:10px;font-weight:700';
+      badge.textContent = 'Connected';
+      row.appendChild(badge);
+    } else {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'background:var(--accent);border:none;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:700;color:white;cursor:pointer';
+      btn.textContent = 'Connect';
+      btn.addEventListener('click', (function(k){ return function(){ startFhirConnect(k); }; })(key));
+      row.appendChild(btn);
+    }
+
+    card.appendChild(row);
+
+    if(s.notes) {
+      const notes = document.createElement('div');
+      notes.style.cssText = 'font-size:11px;color:var(--text3);line-height:1.4';
+      notes.textContent = s.notes;
+      card.appendChild(notes);
+    }
+
+    if(connected) {
+      const actions = document.createElement('div');
+      actions.style.cssText = 'margin-top:8px;display:flex;gap:8px';
+
+      const syncBtn = document.createElement('button');
+      syncBtn.style.cssText = 'background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.2);border-radius:100px;padding:5px 12px;font-size:10px;font-weight:700;color:var(--accent2);cursor:pointer';
+      syncBtn.textContent = 'Sync Now';
+      syncBtn.addEventListener('click', (function(k){ return function(){ syncFhirSystem(k); }; })(key));
+
+      const discBtn = document.createElement('button');
+      discBtn.style.cssText = 'background:none;border:1px solid rgba(239,68,68,0.2);border-radius:100px;padding:5px 12px;font-size:10px;color:var(--danger);cursor:pointer';
+      discBtn.textContent = 'Disconnect';
+      discBtn.addEventListener('click', (function(k){ return function(){ disconnectFhir(k); }; })(key));
+
+      actions.appendChild(syncBtn);
+      actions.appendChild(discBtn);
+      card.appendChild(actions);
+    }
+
+    wrap.appendChild(card);
+  });
+
+  innerHtml += '<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:#93c5fd;margin-top:10px;line-height:1.5"><i class="fa-solid fa-shield-halved" style="margin-right:6px"></i>Your data stays private. Health Agent never sells your health data.</div>';
+  innerHtml += '<div class="ac-btns" style="margin-top:12px">';
+  if(connections.length) innerHtml += '<button class="ac-btn primary" onclick="syncAllFhir()"><i class="fa-solid fa-rotate" style="margin-right:6px"></i>Sync All</button>';
+  innerHtml += '<button class="ac-btn secondary" onclick="removeClosestCard(this)">Close</button></div>';
+
+  wrap.innerHTML = innerHtml;
+
+  ['chatArea','chatAreaDesktop'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      const existing = el.querySelector('#portalSyncCard');
+      if(existing) existing.remove();
+      el.appendChild(wrap.cloneNode(true));
+      el.scrollTop = el.scrollHeight;
     }
   });
 }
 
-async function startFhirConnect(system) {
-  const steps = {
-    epic: ['1. Log into <strong>MyChart.com</strong> or your hospital's MyChart','2. Go to <strong>Menu → Share My Record → Link My Record to an App</strong>','3. You'll receive an <strong>authorization code</strong>','4. Paste it below to complete the connection'],
-    cerner: ['1. Log into your <strong>health system patient portal</strong>','2. Go to <strong>Health Records → Connected Apps</strong>','3. Search for Health Agent and authorize','4. Paste your authorization code below'],
-    cms_bluebutton: ['1. Go to <strong>MyMedicare.gov</strong> and log in','2. Navigate to <strong>My Account → Connected Apps</strong>','3. Find Health Agent and click Connect','4. Paste the authorization code below'],
-    athenahealth: ['1. Log into your <strong>doctor's patient portal</strong>','2. Look for <strong>My Information → Connected Apps</strong>','3. Authorize Health Agent','4. Paste the code below']
-  };
 
-  const stepsHtml = (steps[system]||['Contact your health system to get your FHIR authorization code']).map(s=>'<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(148,163,184,0.06);font-size:12px;color:var(--text2);line-height:1.4"><span>'+s+'</span></div>').join('');
 
-  const setupHtml = '<div class="action-card" style="border-color:rgba(20,184,166,0.3)">'
-    +'<div class="ac-title"><i class="fa-solid fa-plug" style="color:var(--accent);margin-right:8px"></i>Connect '+esc(system.replace(/_/g,' ').toUpperCase())+'</div>'
-    +'<div style="margin-bottom:14px">'+stepsHtml+'</div>'
-    +'<div class="form-group"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">FHIR Base URL (from your health system)</label>'
-    +'<input id="fhirBaseUrl" class="form-input" placeholder="https://fhir.yourhealthsystem.org/r4" style="font-size:12px"></div>'
-    +'<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Access Token or Authorization Code</label>'
-    +'<input id="fhirToken" class="form-input" placeholder="Paste token or code here" style="font-size:12px"></div>'
-    +'<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Your FHIR Patient ID (from health system)</label>'
-    +'<input id="fhirPatientId" class="form-input" placeholder="e.g. eHYmFpO4c7pVJ4oH0z9j.Og3" style="font-size:12px"></div>'
-    +'<div class="ac-btns" style="margin-top:12px">'
-    +'<button class="ac-btn primary" onclick="completeFhirConnect(''+esc(system)+'')"><i class="fa-solid fa-check" style="margin-right:6px"></i>Complete Connection</button>'
-    +'<button class="ac-btn secondary" onclick="openPortalSync()">Back</button></div></div>';
 
-  ['chatArea','chatAreaDesktop'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){
-      const existing=el.querySelector('#portalSyncCard');
-      if(existing)existing.remove();
-      el.insertAdjacentHTML('beforeend',setupHtml);
-      el.scrollTop=el.scrollHeight;
-    }
-  });
-}
 
-async function completeFhirConnect(system) {
-  const baseUrl = document.getElementById('fhirBaseUrl')?.value?.trim();
-  const token = document.getElementById('fhirToken')?.value?.trim();
-  const fhirPatId = document.getElementById('fhirPatientId')?.value?.trim();
-  if(!baseUrl||!token) { addMsg('ai','Please enter both the FHIR URL and access token.',true,false); return; }
-  try {
-    await api('/api/fhir/connect', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ patientId:currentPatientId, system, systemName:system, baseUrl, accessToken:token, fhirPatientId:fhirPatId||'me' })
-    });
-    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i><strong>'+esc(system)+' connected!</strong> Syncing your data now…',true,true);
-    syncFhirSystem(system);
-  } catch(e) { addMsg('ai','❌ Connection error: '+esc(e.message),true,false); }
-}
 
-async function syncFhirSystem(system) {
-  try {
-    addMsg('ai','<i class="fa-solid fa-rotate" style="color:var(--accent);margin-right:8px"></i>Syncing from '+esc(system)+'…',true,true);
-    const data = await api('/api/fhir/sync', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ patientId:currentPatientId })
-    });
-    const total = (data.results||[]).reduce((acc,r) => acc + (r.synced||[]).reduce((a,s)=>a+s.count,0), 0);
-    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i>Sync complete! <strong>'+total+' records</strong> imported from your health system. Conditions, medications, labs, and appointments are now updated.',true,true);
-  } catch(e) { addMsg('ai','❌ Sync error: '+esc(e.message),true,false); }
-}
 
-async function syncAllFhir() {
-  try {
-    const data = await api('/api/fhir/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:currentPatientId})});
-    addMsg('ai','<i class="fa-solid fa-rotate" style="color:var(--success);margin-right:8px"></i>All systems synced successfully.',true,true);
-  } catch(e) { addMsg('ai','❌ Sync error: '+esc(e.message),true,false); }
-}
 
-async function disconnectFhir(system) {
-  if(!confirm('Disconnect '+system+'? Synced data will remain but no new data will be pulled.')) return;
-  try {
-    await api('/api/fhir/connections/'+system+'?patientId='+currentPatientId,{method:'DELETE'});
-    addMsg('ai','Disconnected '+esc(system)+'. Your existing data is preserved.',true,false);
-    openPortalSync();
-  } catch(e) { addMsg('ai','❌ Error: '+esc(e.message),true,false); }
-}
+
+
+
+
 
 
 // ── VOICE INPUT ──
@@ -1364,7 +1344,7 @@ async function openCheckinSettings() {
 
   const html = '<div class="action-card" id="checkinPanel" style="border-color:rgba(239,68,68,0.3)">'
     +'<div class="ac-title"><i class="fa-solid fa-clock" style="color:#ef4444;margin-right:8px"></i>Check-In Monitor Settings</div>'
-    +'<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">When enabled, Health Agent monitors for missed check-ins and fires an emergency alert to all contacts if the patient hasn't checked in within the set window.</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5">When enabled, Health Agent monitors for missed check-ins and fires an emergency alert to all contacts if the patient has not checked in within the set window.</div>'
     +'<div style="margin-bottom:14px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
     +'<span style="font-size:13px;font-weight:600;color:var(--text)">Check-In Monitoring</span>'
@@ -1378,10 +1358,10 @@ async function openCheckinSettings() {
     +'</div></div>'
     +'<div style="background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.5">'
     +'<i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:6px"></i>'
-    +'Patient or caregiver checks in by tapping <strong style="color:var(--accent2)">I'm OK</strong> in the app. If no check-in is received within the window, all emergency contacts are alerted via phone and email simultaneously.</div>'
+    +'Patient or caregiver checks in by tapping <strong style="color:var(--accent2)">I am OK</strong> in the app. If no check-in is received within the window, all emergency contacts are alerted via phone and email simultaneously.</div>'
     +'<div class="ac-btns">'
     +'<button class="ac-btn primary" onclick="saveCheckinSettings()"><i class="fa-solid fa-save" style="margin-right:6px"></i>Save Settings</button>'
-    +'<button class="ac-btn" onclick="recordCheckin()" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:var(--success)"><i class="fa-solid fa-check" style="margin-right:6px"></i>I'm OK</button>'
+    +'<button class="ac-btn" onclick="recordCheckin()" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:var(--success)"><i class="fa-solid fa-check" style="margin-right:6px"></i>I am OK</button>'
     +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Close</button>'
     +'</div></div>';
 
@@ -1412,7 +1392,7 @@ async function saveCheckinSettings() {
       body: JSON.stringify({ patientId: currentPatientId, enabled, intervalHours })
     });
     addMsg('ai', enabled
-      ? '<i class="fa-solid fa-clock" style="color:var(--accent);margin-right:8px"></i>Check-in monitoring <strong>enabled</strong>. Alert fires if no check-in within <strong>'+intervalHours+' hours</strong>. Tap "I'm OK" anytime to reset the timer.'
+      ? '<i class="fa-solid fa-clock" style="color:var(--accent);margin-right:8px"></i>Check-in monitoring <strong>enabled</strong>. Alert fires if no check-in within <strong>'+intervalHours+' hours</strong>. Tap "I am OK" anytime to reset the timer.'
       : '<i class="fa-solid fa-clock" style="color:var(--text3);margin-right:8px"></i>Check-in monitoring <strong>disabled</strong>. No automatic alerts will fire.'
     , true, true);
     document.querySelectorAll('#checkinPanel').forEach(el=>el.remove());
@@ -1452,10 +1432,10 @@ function renderSecondOpinionCard(programs) {
   }).join('');
   const html = '<div class="action-card provider-card">'
     +'<div class="ac-title"><i class="fa-solid fa-magnifying-glass-plus" style="color:var(--accent);margin-right:8px"></i>Second Opinion Programs</div>'
-    +'<div class="ac-body">Matched to Linda's insurance and condition. Click any program to apply:</div>'
+    +'<div class="ac-body">Matched to Linda insurance and condition. Click any program to apply:</div>'
     +'<div class="provider-links">'+rows+'</div>'
     +'<div class="ac-btns">'
-    +'<button class="ac-btn primary" onclick="qa('Generate a complete case summary packet for second opinion submission')">Generate Case Summary</button>'
+    +'<button class="ac-btn primary" data-qa="Generate a complete case summary packet for second opinion submission" onclick="qa(this.dataset.qa)">Generate Case Summary</button>'
     +'<button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button>'
     +'</div></div>';
   ['chatArea','chatAreaDesktop'].forEach(id=>{const a=document.getElementById(id);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
@@ -1476,7 +1456,7 @@ function renderRxStatusCard(rxStatus,rxPlan,rxData){
   if(rxPlan&&rxPlan.steps.length){stepsHtml=`<div class="rx-steps">${rxPlan.steps.map((s,i)=>`<div class="rx-step"><span class="rx-step-n">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>`}
 
   let btnsHtml='<div class="ac-btns">';
-  if(rxPlan?.callTargets?.length){rxPlan.callTargets.forEach(ct=>{if(ct.phone){btnsHtml+=`<button class="ac-btn warn" onclick="qa('Call ${esc(ct.name)} at ${esc(ct.phone)} about ${esc(ct.reason)}')">📞 Call ${esc(ct.name)}</button>`}else{btnsHtml+=`<button class="ac-btn warn" onclick="qa('Help me call ${esc(ct.name)} about ${esc(ct.reason)}')">📞 Call ${esc(ct.name)}</button>`}})}
+  if(rxPlan?.callTargets?.length){rxPlan.callTargets.forEach(ct=>{if(ct.phone){btnsHtml+=`<button class="ac-btn warn" data-qa="Call ${esc(ct.name)} at ${esc(ct.phone)} about ${esc(ct.reason)}" onclick="qa(this.dataset.qa)">📞 Call ${esc(ct.name)}</button>`}else{btnsHtml+=`<button class="ac-btn warn" data-qa="Help me call ${esc(ct.name)} about ${esc(ct.reason)}" onclick="qa(this.dataset.qa)">📞 Call ${esc(ct.name)}</button>`}})}
   btnsHtml+=`<button class="ac-btn primary" onclick="comparePrices('${esc(medName)}','${esc(rxData?.dosage||'')}')">💰 Compare Prices</button>`;
   btnsHtml+=`<button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div>`;
 
@@ -1486,7 +1466,7 @@ function renderRxStatusCard(rxStatus,rxPlan,rxData){
 
 /* ═══ PRICE COMPARE CARD ═══ */
 function renderPriceCompareCard(drugName,links,dosage){
-  const html=`<div class="action-card price-card"><div class="ac-title">💰 Price Comparison — ${esc(drugName)}${dosage?' '+esc(dosage):''}</div><div class="ac-body">Compare prices to find the best deal:</div><div class="price-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-link-icon">${l.icon||'💊'}</span><span class="price-link-text"><strong>${esc(l.name)}</strong><span class="price-link-sub">${esc(l.description||'')}</span></span><span class="price-link-savings">${esc(l.savings||'')}</span><span class="price-link-arrow">→</span></a>`).join('')}</div><div class="price-footer">💡 Prices vary by pharmacy and location. Always verify with your insurance.</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Which is cheaper for ${esc(drugName)} — insurance or GoodRx?')">Ask Health Agent</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
+  const html=`<div class="action-card price-card"><div class="ac-title">💰 Price Comparison — ${esc(drugName)}${dosage?' '+esc(dosage):''}</div><div class="ac-body">Compare prices to find the best deal:</div><div class="price-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="price-link"><span class="price-link-icon">${l.icon||'💊'}</span><span class="price-link-text"><strong>${esc(l.name)}</strong><span class="price-link-sub">${esc(l.description||'')}</span></span><span class="price-link-savings">${esc(l.savings||'')}</span><span class="price-link-arrow">→</span></a>`).join('')}</div><div class="price-footer">💡 Prices vary by pharmacy and location. Always verify with your insurance.</div><div class="ac-btns"><button class="ac-btn secondary" data-qa="Which is cheaper for ${esc(drugName)} — insurance or GoodRx?" onclick="qa(this.dataset.qa)">Ask Health Agent</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
   ['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
 }
 
@@ -1519,7 +1499,7 @@ async function checkInteractions(){
         const sevClass=ix.severity==='high'?'ix-high':ix.severity==='moderate'?'ix-moderate':'ix-low';
         const sevIcon=ix.severity==='high'?'🔴':ix.severity==='moderate'?'🟡':'🟢';
         return`<div class="ix-item ${sevClass}"><div class="ix-header"><span class="ix-sev">${sevIcon} ${esc(ix.severity).toUpperCase()}</span><span class="ix-drugs">${esc(ix.drug1)} + ${esc(ix.drug2)}</span></div><div class="ix-desc">${esc(ix.description)}</div></div>`;
-      }).join('')}</div><div class="ix-footer">⚕️ Always discuss medication changes with your healthcare provider.</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Help me talk to Dr. Martinez about these medication interactions')">📞 Discuss with Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
+      }).join('')}</div><div class="ix-footer">⚕️ Always discuss medication changes with your healthcare provider.</div><div class="ac-btns"><button class="ac-btn secondary" data-qa="Help me talk to Dr. Martinez about these medication interactions" onclick="qa(this.dataset.qa)">📞 Discuss with Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;
       ['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});
     }else{
       addMsg('ai','✅ <strong>No known interactions found</strong> between '+esc(checkList.join(', '))+'. Always verify with your pharmacist or doctor.',true,true);
@@ -1531,7 +1511,7 @@ function askDoctor(){if(!latestScanData){addMsg('ai','⚠️ Scan something firs
 /* ═══ ACTION CARDS ═══ */
 function addCalendarCard(event){const payload=encodeURIComponent(JSON.stringify(event));const html=`<div class="action-card"><div class="ac-title">📅 Add to Calendar?</div><div class="ac-body"><strong>${esc(event.title)}</strong><br/>${esc(event.date)} at ${esc(event.time||'09:00')} · ${esc(String(event.duration||60))} min</div><div class="ac-btns"><button class="ac-btn success" onclick="addToCalendar(JSON.parse(decodeURIComponent('${payload}')))">Add</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
 function addCallCard(callReq){const cid=`call-card-${Date.now()}`;const html=`<div class="action-card" data-call-card="${cid}"><div class="ac-title">📞 Confirm Call</div><div class="ac-body">Call <strong>${esc(callReq.name)}</strong> at ${esc(callReq.phone||'unknown')}<br/>Reason: ${esc(callReq.reason||'Medical inquiry')}</div><div class="ac-btns"><button class="ac-btn warn" data-dyn-action="confirm-call" data-card="${cid}">📞 Confirm</button><button class="ac-btn secondary" data-dyn-action="cancel-call" data-card="${cid}">Cancel</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="confirm-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await confirmCall()});bindDynamicButton(`[data-dyn-action="cancel-call"][data-card="${cid}"]`,async()=>{removeCardsByData('call-card',cid);await cancelCall()})}
-function addProviderSearchCard(links){if(!links||!links.length)return;const html=`<div class="action-card provider-card"><div class="ac-title">🔍 Provider Search Results</div><div class="ac-body">Click below to find in-network providers:</div><div class="provider-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="provider-link"><span class="provider-link-icon">${l.name==='Google Search'?'🔎':l.name==='Zocdoc'?'🩺':'⭐'}</span><span class="provider-link-text"><strong>${esc(l.name)}</strong><span class="provider-link-sub">${l.name==='Google Search'?'Broad search results':l.name==='Zocdoc'?'Book appointments online':'Ratings & reviews'}</span></span><span class="provider-link-arrow">→</span></a>`).join('')}</div><div class="ac-btns"><button class="ac-btn secondary" onclick="qa('Help me switch to a new doctor who takes my insurance')">🔄 Switch Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
+function addProviderSearchCard(links){if(!links||!links.length)return;const html=`<div class="action-card provider-card"><div class="ac-title">🔍 Provider Search Results</div><div class="ac-body">Click below to find in-network providers:</div><div class="provider-links">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="provider-link"><span class="provider-link-icon">${l.name==='Google Search'?'🔎':l.name==='Zocdoc'?'🩺':'⭐'}</span><span class="provider-link-text"><strong>${esc(l.name)}</strong><span class="provider-link-sub">${l.name==='Google Search'?'Broad search results':l.name==='Zocdoc'?'Book appointments online':'Ratings & reviews'}</span></span><span class="provider-link-arrow">→</span></a>`).join('')}</div><div class="ac-btns"><button class="ac-btn secondary" data-qa="Help me switch to a new doctor who takes my insurance" onclick="qa(this.dataset.qa)">🔄 Switch Doctor</button><button class="ac-btn secondary" onclick="removeClosestCard(this)">Dismiss</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}})}
 function addEmailActionCard(){const eid=`email-card-${Date.now()}`;const html=`<div class="action-card" data-email-card="${eid}"><div class="ac-title">✉️ Email Ready</div><div class="ac-body">Your draft is ready. Send now?</div><div class="ac-btns"><button class="ac-btn primary" data-dyn-action="send-email" data-card="${eid}">📤 Send</button><button class="ac-btn secondary" data-dyn-action="save-email" data-card="${eid}">Save Draft</button></div></div>`;['chatArea','chatAreaDesktop'].forEach(aId=>{const a=document.getElementById(aId);if(a){a.insertAdjacentHTML('beforeend',html);a.scrollTop=a.scrollHeight}});bindDynamicButton(`[data-dyn-action="send-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);await sendDraftEmail()});bindDynamicButton(`[data-dyn-action="save-email"][data-card="${eid}"]`,async()=>{removeCardsByData('email-card',eid);addMsg('ai','Draft saved.',true,false)})}
 function removeClosestCard(btn){const card=btn.closest('.action-card');if(card)card.remove()}
 function removeCardsByData(attrName,value){document.querySelectorAll(`[data-${attrName}="${value}"]`).forEach(el=>el.remove())}
@@ -1557,7 +1537,7 @@ async function openTaskPanel(){document.getElementById('taskPanel')?.classList.a
 function closeTaskPanel(){document.getElementById('taskPanel')?.classList.remove('open');document.getElementById('taskPanelOverlay').style.display='none';unlockBody()}
 async function loadTasks(){try{const data=await api(`/api/tasks?patientId=${encodeURIComponent(currentPatientId||'')}`);allTasks=data.tasks||[];renderTasks();updateTaskBadge();updateDashboard()}catch(e){console.error('loadTasks',e)}}
 function setTaskFilter(status,btn){taskFilter=status;document.querySelectorAll('.task-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderTasks()}
-function renderTasks(){const today=new Date().toISOString().split('T')[0];let tasks=taskFilter==='all'?[...allTasks]:allTasks.filter(t=>t.status===taskFilter);tasks.sort((a,b)=>{const p={high:0,medium:1,low:2};if(a.status==='done'&&b.status!=='done')return 1;if(b.status==='done'&&a.status!=='done')return-1;const pd=(p[a.priority]??1)-(p[b.priority]??1);if(pd!==0)return pd;if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate);return 0});const container=document.getElementById('taskList');if(!container)return;if(!tasks.length){container.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">${taskFilter==='done'?'🎉 No completed tasks':'✅ No tasks here'}</div>`;return}const ci={appointment:'📅',medication:'💊',insurance:'🛡️',general:'📌'};container.innerHTML=tasks.map(t=>{const overdue=t.dueDate&&t.dueDate<today&&t.status!=='done';const ds=t.dueDate?formatTaskDate(t.dueDate):'';return`<div class="task-item ${t.status==='done'?'done':''}" data-id="${esc(t.id)}"><div class="ti-head"><input type="checkbox" class="task-checkbox" ${t.status==='done'?'checked':''} onchange="toggleTaskDone('${esc(t.id)}',this.checked)" /><span class="t-title ${t.status==='done'?'done':''}">${ci[t.category]||'📌'} ${esc(t.title)}</span></div>${t.description?`<div class="t-desc">${esc(t.description)}</div>`:''}<div class="t-meta">${ds?`<span class="t-due ${overdue?'ov':''}">${overdue?'⚠️ ':'📅 '}${ds}</span>`:''}<span class="t-pri pri-${esc(t.priority||'medium')}">${esc(t.priority||'medium')}</span></div><div class="t-acts">${t.status==='pending'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','in-progress')">▶ Start</button>`:''}${t.status==='in-progress'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','pending')">⏸ Pause</button>`:''}<button class="t-act del" onclick="deleteTask('${esc(t.id)}')">🗑</button></div></div>`}).join('')}
+function renderTasks(){const today=new Date().toISOString().split('T')[0];let tasks=taskFilter==='all'?[...allTasks]:allTasks.filter(t=>t.status===taskFilter);tasks.sort((a,b)=>{const p={high:0,medium:1,low:2};if(a.status==='done'&&b.status!=='done')return 1;if(b.status==='done'&&a.status!=='done')return-1;const pd=(p[a.priority]??1)-(p[b.priority]??1);if(pd!==0)return pd;if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate);return 0});const container=document.getElementById('taskList');if(!container)return;if(!tasks.length){container.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">${taskFilter==='done'?'🎉 No completed tasks':'✅ No tasks here'}</div>`;return}const ci={appointment:'📅',medication:'💊',insurance:'🛡️',general:'📌'};container.innerHTML=tasks.map(t=>{const overdue=t.dueDate&&t.dueDate<today&&t.status!=='done';const ds=t.dueDate?formatTaskDate(t.dueDate):'';return`<div class="task-item ${t.status==='done'?'done':''}" data-id="${esc(t.id)}"><div class="ti-head"><input type="checkbox" class="task-checkbox" ${t.status==='done'?'checked':''} onchange="toggleTaskDone('${esc(t.id)}',this.checked)" /><span class="t-title ${t.status==='done'?'done':''}">${ci[t.category]||'📌'} ${esc(t.title)}</span></div>${t.description?`<div class="t-desc">${esc(t.description)}</div>`:''}<div class="t-meta">${ds?`<span class="t-due ${overdue?'ov':''}">${overdue?'⚠️ ':'📅 '}${ds}</span>`:''}<span class="t-pri pri-${esc(t.priority||'medium')}">${esc(t.priority||'medium')}</span></div><div class="t-acts">${t.status==='pending'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','in-progress')">▶ Start</button>`:''}${t.status==='in-progress'?`<button class="t-act" onclick="setTaskStatus('${esc(t.id)}','pending')">⏸ Pause</button>`:''}<button class="t-act del" data-fn="deleteTask" data-arg="${esc(t.id)}" onclick="window[this.dataset.fn](this.dataset.arg)">🗑</button></div></div>`}).join('')}
 function updateTaskBadge(){const pending=allTasks.filter(t=>t.status!=='done').length;const badge=document.getElementById('taskBadge');if(badge){badge.textContent=String(pending);badge.style.display=pending>0?'inline':'none'}}
 async function toggleTaskDone(id,checked){try{await api(`/api/tasks/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:checked?'done':'pending',model:MODEL_NAME})});await loadTasks()}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
 async function setTaskStatus(id,status){try{await api(`/api/tasks/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,model:MODEL_NAME})});await loadTasks()}catch(e){addMsg('ai',`❌ ${esc(e.message)}`,true,false)}}
@@ -1566,6 +1546,90 @@ async function saveTask(){const title=document.getElementById('taskTitle').value
 
 /* ═══ SERVICE WORKER ═══ */
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}
+
+function startFhirConnect(system) {
+  const stepMap = {
+    epic: ['Log into MyChart at your health system', 'Go to Menu then Share My Record then Link My Record to an App', 'You will receive an authorization code', 'Paste it below to complete the connection'],
+    cerner: ['Log into your health system patient portal', 'Go to Health Records then Connected Apps', 'Authorize Health Agent', 'Paste the code below'],
+    cms_bluebutton: ['Go to MyMedicare.gov and log in', 'Navigate to My Account then Connected Apps', 'Find Health Agent and click Connect', 'Paste the authorization code below'],
+    athenahealth: ['Log into your doctors patient portal', 'Look for My Information then Connected Apps', 'Authorize Health Agent', 'Paste the code below']
+  };
+  const steps = stepMap[system] || ['Contact your health system to get your FHIR authorization code'];
+  const stepsHtml = steps.map(function(s) {
+    return '<div style="padding:8px 0;border-bottom:1px solid rgba(148,163,184,0.06);font-size:12px;color:var(--text2);line-height:1.4">' + s + '</div>';
+  }).join('');
+
+  const html = '<div class="action-card" style="border-color:rgba(20,184,166,0.3)">'
+    + '<div class="ac-title"><i class="fa-solid fa-plug" style="color:var(--accent);margin-right:8px"></i>Connect ' + esc(system.replace(/_/g,' ').toUpperCase()) + '</div>'
+    + '<div style="margin-bottom:14px">' + stepsHtml + '</div>'
+    + '<div class="form-group"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">FHIR Base URL</label>'
+    + '<input id="fhirBaseUrl" class="form-input" placeholder="https://fhir.yourhealthsystem.org/r4" style="font-size:12px"></div>'
+    + '<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Access Token or Authorization Code</label>'
+    + '<input id="fhirToken" class="form-input" placeholder="Paste token or code here" style="font-size:12px"></div>'
+    + '<div class="form-group" style="margin-top:10px"><label class="form-label" style="font-size:11px;color:var(--text2);display:block;margin-bottom:6px">Your FHIR Patient ID</label>'
+    + '<input id="fhirPatientId" class="form-input" placeholder="e.g. eHYmFpO4c7pVJ4oH0z9j" style="font-size:12px"></div>'
+    + '<div class="ac-btns" style="margin-top:12px">'
+    + '<button class="ac-btn primary" id="fhirConnectBtn">Complete Connection</button>'
+    + '<button class="ac-btn secondary" onclick="openPortalSync()">Back</button></div></div>';
+
+  ['chatArea','chatAreaDesktop'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      const existing = el.querySelector('#portalSyncCard');
+      if(existing) existing.remove();
+      el.insertAdjacentHTML('beforeend', html);
+      el.scrollTop = el.scrollHeight;
+      const btn = el.querySelector('#fhirConnectBtn');
+      if(btn) btn.addEventListener('click', function(){ completeFhirConnect(system); });
+    }
+  });
+}
+
+async function completeFhirConnect(system) {
+  const baseUrl = document.getElementById('fhirBaseUrl') && document.getElementById('fhirBaseUrl').value.trim();
+  const token = document.getElementById('fhirToken') && document.getElementById('fhirToken').value.trim();
+  const fhirPatId = document.getElementById('fhirPatientId') && document.getElementById('fhirPatientId').value.trim();
+  if(!baseUrl || !token) { addMsg('ai','Please enter both the FHIR URL and access token.',true,false); return; }
+  try {
+    await api('/api/fhir/connect', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId:currentPatientId, system:system, systemName:system, baseUrl:baseUrl, accessToken:token, fhirPatientId:fhirPatId||'me' })
+    });
+    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i><strong>' + esc(system) + ' connected!</strong> Syncing your data now...', true, true);
+    syncFhirSystem(system);
+  } catch(e) { addMsg('ai','Connection error: ' + esc(e.message), true, false); }
+}
+
+async function syncFhirSystem(system) {
+  try {
+    addMsg('ai','<i class="fa-solid fa-rotate" style="color:var(--accent);margin-right:8px"></i>Syncing from ' + esc(system) + '...', true, true);
+    const data = await api('/api/fhir/sync', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ patientId:currentPatientId })
+    });
+    const total = (data.results||[]).reduce(function(acc,r){ return acc + (r.synced||[]).reduce(function(a,s){ return a+s.count; },0); }, 0);
+    addMsg('ai','<i class="fa-solid fa-check-circle" style="color:var(--success);margin-right:8px"></i>Sync complete! <strong>' + total + ' records</strong> imported.', true, true);
+  } catch(e) { addMsg('ai','Sync error: ' + esc(e.message), true, false); }
+}
+
+async function syncAllFhir() {
+  try {
+    await api('/api/fhir/sync', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({patientId:currentPatientId})});
+    addMsg('ai','All systems synced.', true, true);
+  } catch(e) { addMsg('ai','Sync error: ' + esc(e.message), true, false); }
+}
+
+async function disconnectFhir(system) {
+  if(!confirm('Disconnect ' + system + '?')) return;
+  try {
+    await api('/api/fhir/connections/' + system + '?patientId=' + currentPatientId, {method:'DELETE'});
+    addMsg('ai','Disconnected ' + esc(system) + '. Your existing data is preserved.', true, false);
+    openPortalSync();
+  } catch(e) { addMsg('ai','Error: ' + esc(e.message), true, false); }
+}
+
 </script>
 </body>
 </html>
