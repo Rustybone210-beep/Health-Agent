@@ -3188,6 +3188,12 @@ app.get('/emergency', (_req, res) => {
 app.get('/landing', (_req, res) => {
   res.sendFile(require('path').join(__dirname, 'public', 'landing.html'));
 });
+app.get('/terms', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+app.get('/privacy', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
 
 app.get('/onboarding', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'onboarding.html'));

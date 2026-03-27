@@ -97,6 +97,12 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0a1628,#1
         <label class="form-label">Password</label>
         <input id="regPassword" class="form-input" type="password" placeholder="Min 8 characters" autocomplete="new-password">
       </div>
+      <div style="margin:12px 0;padding:12px;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.15);border-radius:10px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#94a3b8;line-height:1.5">
+          <input type="checkbox" id="consentCheck" style="margin-top:3px;flex-shrink:0;accent-color:#14b8a6">
+          <span>I agree to the <a href="/terms" target="_blank" style="color:#2dd4bf">Terms of Service</a> and <a href="/privacy" target="_blank" style="color:#2dd4bf">Privacy Policy</a>. I understand Health Agent uses AI to assist with healthcare navigation and is <strong style="color:#f1f5f9">not a substitute for professional medical advice</strong>. Health data is processed with de-identification protections under <a href="/privacy#hipaa" target="_blank" style="color:#2dd4bf">HIPAA safeguards</a>.</span>
+        </label>
+      </div>
       <button class="btn-primary" onclick="doRegister()"><i class="fa-solid fa-user-plus" style="margin-right:8px"></i>Create Account</button>
     </div>
   </div>
@@ -184,6 +190,7 @@ async function doRegister() {
   const password=document.getElementById('regPassword').value;
   if(!email||!password){showError('Email and password required.');return}
   if(password.length<8){showError('Password must be at least 8 characters.');return}
+  if(!document.getElementById('consentCheck').checked){showError('Please agree to the Terms of Service and Privacy Policy.');return}
   setLoading(true);
   try {
     const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
