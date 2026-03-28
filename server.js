@@ -432,9 +432,11 @@ app.post('/api/chat', async (req, res) => {
   // confirm call
   if (lower === 'confirm call' && pendingCallRequest) {
     try {
+      const currentPat = patients ? patients.find(p => p.id === getCurrentPatientId()) || patients[0] : {};
       const callResult = await voice.startPhoneCall(
         normalizeUSPhone(pendingCallRequest.phone),
-        pendingCallRequest.reason
+        pendingCallRequest.reason,
+        currentPat
       );
       const callName = pendingCallRequest.name;
       pendingCallRequest = null;
@@ -608,7 +610,22 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 'Each document MUST have: document_type, summary, confidence (high/medium/low based on image clarity), all extracted fields\n\n' +
 'CONFIDENCE RULES: high = all text clearly readable. medium = some blur but key fields readable. low = significant blur but attempted extraction.\n\n' +
 'For patient: ' + (patient?.name || 'Unknown') + '\n\n' +
-'IMAGE ANALYSIS: Look at every corner of the image. Cards are often placed at angles or overlapping. Read ALL visible text including fine print, back-of-card info, and any handwritten notes.'
+'IMAGE ANALYSIS: Look at every corner of the image. Cards are often placed at angles or overlapping. Read ALL visible text including fine print, back-of-card info, and any handwritten notes.\n\n' +
+'HANDWRITING RECOGNITION — CRITICAL:\n' +
+'Doctors have notoriously bad handwriting. You MUST attempt to read ALL handwritten text.\n' +
+'- Look for medication names (even partial matches — "Synth" = Synthroid, "Lisi" = Lisinopril, "Metf" = Metformin)\n' +
+'- Look for dosages (numbers + mg/mcg/ml)\n' +
+'- Look for frequencies (QD=daily, BID=twice daily, TID=3x daily, QID=4x daily, PRN=as needed, QHS=at bedtime)\n' +
+'- Look for refill counts (circled numbers, "RF" or "Ref" followed by number)\n' +
+'- Common abbreviations: Sig=directions, Disp=dispense, DAW=dispense as written, NR=no refill\n' +
+'- If a word is unclear, provide your best guess with [uncertain] flag and explain why\n' +
+'- NEVER skip handwritten text — attempt every word even if confidence is low\n\n' +
+'MULTI-DOCUMENT DETECTION — ENHANCED:\n' +
+'- Look for DIFFERENT paper edges, card borders, or background colors = separate documents\n' +
+'- Front and back of same card = 2 entries (document_type: "insurance_card_front" and "insurance_card_back")\n' +
+'- Medicare (red/white/blue) + Supplement (different company logo) = ALWAYS 2 separate cards\n' +
+'- If you see ANY portion of a second card (even partially obscured), extract what you can\n' +
+'- Count documents FIRST, then extract each one completely before moving to the next'
           }
         ]
       }];
@@ -803,7 +820,8 @@ app.post('/api/call', async (req, res) => {
     const { phone, phoneNumber, reason } = req.body;
     const number = normalizeUSPhone(phone || phoneNumber);
     if (!number) return res.status(400).json({ error: 'Phone number required' });
-    const result = await voice.startPhoneCall(number, reason);
+    const currentPat = getAllPatients().find(p => p.id === getCurrentPatientId()) || {};
+    const result = await voice.startPhoneCall(number, reason, currentPat);
     res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
