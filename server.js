@@ -3277,6 +3277,55 @@ app.delete('/api/share/:token', (req, res) => {
   res.json({ success: revoked });
 });
 
+// ─── SMS Agent (Twilio) ──────────────────────────────────
+const smsAgent = require('./tools/sms-agent');
+
+app.post('/api/sms/webhook', express.urlencoded({ extended: false }), async (req, res) => {
+  const from = req.body.From;
+  const body = req.body.Body;
+  if (!from || !body) return res.status(400).send('<Response><Message>Invalid</Message></Response>');
+  const result = await smsAgent.handleIncomingSMS(from, body, {
+    getAllPatientsRaw, getCurrentPatientId, getPatientsForUser, buildSystemPrompt
+  });
+  res.type('text/xml').send('<?xml version="1.0" encoding="UTF-8"?><Response><Message>' + result.response.replace(/[<>&]/g, '') + '</Message></Response>');
+});
+
+app.post('/api/sms/link-phone', (req, res) => {
+  const userId = req.userSession?.userId;
+  const { phoneNumber } = req.body;
+  if (!userId || !phoneNumber) return res.status(400).json({ error: 'Phone number required' });
+  smsAgent.linkPhoneToAccount(phoneNumber, userId);
+  res.json({ success: true, message: 'Phone linked. You can now text Health Agent.' });
+});
+
+// ─── iMessage API Prep ───────────────────────────────────
+app.get('/api/imessage/summary/:patientId', (req, res) => {
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === req.params.patientId);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  res.json({
+    name: patient.name,
+    age: patient.dob ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / 31557600000) : null,
+    topMeds: (patient.medications || []).slice(0, 3).map(m => m.name + ' ' + (m.dose || '')),
+    conditions: (patient.conditions || []).slice(0, 3),
+    allergies: patient.allergies || [],
+    insurance: patient.insurance?.primary || '',
+    doctor: patient.primaryDoctor || '',
+  });
+});
+
+app.post('/api/imessage/quick-action', (req, res) => {
+  const { action, patientId } = req.body;
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === patientId);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  if (action === 'check meds') res.json({ card: 'medications', data: patient.medications || [] });
+  else if (action === 'share summary') {
+    const { token } = shareDoctor.createShareLink(patientId);
+    res.json({ card: 'share', url: req.protocol + '://' + req.get('host') + '/shared/' + token });
+  } else res.json({ card: 'text', data: 'Try: check meds, share summary' });
+});
+
 // Language
 app.get('/api/language', (_req, res) => {
   const { LANGUAGES } = require('./tools/system-prompt');
