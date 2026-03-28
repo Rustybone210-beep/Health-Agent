@@ -654,6 +654,15 @@ body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);back
     <div class="pill-row" id="psAlgPills"></div>
   </div>
   <div id="psPatientList"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border)">
+    <a href="/emergency" style="display:flex;align-items:center;gap:12px;padding:12px 0;text-decoration:none;color:var(--text);font-size:14px;font-weight:500"><i class="fa-solid fa-heart-pulse" style="color:#ef4444;width:20px;text-align:center"></i>Emergency Card</a>
+    <a href="/timeline" style="display:flex;align-items:center;gap:12px;padding:12px 0;text-decoration:none;color:var(--text);font-size:14px;font-weight:500"><i class="fa-solid fa-clock-rotate-left" style="color:#3b82f6;width:20px;text-align:center"></i>Medical Timeline</a>
+    <a href="/community" style="display:flex;align-items:center;gap:12px;padding:12px 0;text-decoration:none;color:var(--text);font-size:14px;font-weight:500"><i class="fa-solid fa-users" style="color:#a855f7;width:20px;text-align:center"></i>Caregiver Community</a>
+    <a href="/pricing" style="display:flex;align-items:center;gap:12px;padding:12px 0;text-decoration:none;color:var(--text);font-size:14px;font-weight:500"><i class="fa-solid fa-crown" style="color:#22c55e;width:20px;text-align:center"></i>Upgrade Plan</a>
+  </div>
+  <div style="padding:8px 20px 32px">
+    <button onclick="closeProfileSheet();if(confirm('Sign out?'))doLogout()" style="width:100%;padding:14px;border-radius:100px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);color:#ef4444;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px"></i>Sign Out</button>
+  </div>
 </div>
 
 <!-- Menu sheet -->
