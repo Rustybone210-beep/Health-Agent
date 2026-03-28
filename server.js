@@ -28,16 +28,15 @@ const cloudStorage = require("./tools/cloud-storage");
 ensureDataFiles();
 const app = express();
 
-// Download data from cloud storage on startup (before serving requests)
-(async () => {
-  try {
-    await cloudStorage.downloadAll();
-    console.log('[STARTUP] Cloud data synced');
-  } catch (e) {
-    console.log('[STARTUP] Cloud sync skipped:', e.message);
-  }
-})();
+// Cloud data ready flag — server blocks requests until data is loaded
+let cloudDataReady = false;
 
+
+// Block all requests until cloud data is loaded
+app.use((req, res, next) => {
+  if (cloudDataReady || req.path === '/api/health') return next();
+  res.status(503).send('<html><body style="background:#0a0f1a;color:#f1f5f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center"><div><h2 style="color:#2dd4bf">Health Agent</h2><p style="color:#94a3b8">Loading your data... please refresh in a moment.</p></div></body></html>');
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
@@ -3711,18 +3710,31 @@ async function seedAdminAccount() {
     } catch(e) {}
   } catch(e) { console.log("Seed error:", e.message); }
 }
-try { seedAdminAccount(); } catch(e) { console.error("seedAdminAccount failed:", e.message); }
+// seedAdminAccount runs AFTER cloud data loads (see startup below)
 
-try {
-try {
-app.listen(PORT, () => {
-  console.log(`\n🏥 Health Agent running on http://localhost:${PORT}`);
-  console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
-  console.log(`🔔 Notifications: ${NOTIFICATIONS_FILE}`);
-  console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
-});
-} catch(startupErr) { console.log("Startup error:", startupErr.message); }
-} catch(startupErr) { console.log("Startup error:", startupErr.message); }
+// Start server: load cloud data FIRST, then listen
+(async () => {
+  try {
+    console.log('[STARTUP] Loading data from cloud storage...');
+    await cloudStorage.downloadAll();
+    console.log('[STARTUP] Cloud data synced');
+  } catch (e) {
+    console.log('[STARTUP] Cloud sync skipped:', e.message);
+  }
+  // Now data is ready — allow requests
+  cloudDataReady = true;
+  // Re-run seed after data is loaded
+  try { await seedAdminAccount(); } catch(e) {}
+
+  try {
+    app.listen(PORT, () => {
+      console.log(`\n🏥 Health Agent running on http://localhost:${PORT}`);
+      console.log(`📅 Google Calendar: ${googleTokens ? '✅ Connected' : '⚠️  Not connected — visit /auth/google'}`);
+      console.log(`🔔 Notifications: ${NOTIFICATIONS_FILE}`);
+      console.log(`💬 Chat history: ${CHAT_HISTORY_FILE}\n`);
+    });
+  } catch(startupErr) { console.log("Startup error:", startupErr.message); }
+})();
 // === Lead Pipeline & Verification Routes ===
 
 
