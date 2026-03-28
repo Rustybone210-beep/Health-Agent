@@ -4,63 +4,145 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="color-scheme" content="dark">
-<title>Health Agent — Get Started</title>
-<meta name="theme-color" content="#0f172a">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1a">
+<title>Health Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--bg:#0f172a;--bg2:#1e293b;--glass:rgba(15,23,42,0.88);--glass-border:rgba(45,212,191,0.12);--surface:rgba(51,65,85,0.4);--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--accent:#2dd4bf;--danger:#f87171;--sans:'Inter',-apple-system,sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px)}
-html,body{min-height:100dvh;font-family:var(--sans);background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--text);-webkit-font-smoothing:antialiased}
-.wrap{max-width:520px;margin:0 auto;padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bot) + 24px);min-height:100dvh;display:flex;flex-direction:column}
-.header{text-align:center;margin-bottom:32px}
-.avatar-section{display:flex;align-items:center;gap:16px;margin-bottom:32px}
-.ai-avatar{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#0f766e,#0d9488);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;animation:breathe 4s ease-in-out infinite}
-@keyframes breathe{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(45,212,191,0.2)}50%{transform:scale(1.03);box-shadow:0 0 30px rgba(45,212,191,0.35)}}
-.speech{flex:1;background:var(--glass);border:1px solid var(--glass-border);border-radius:18px 18px 18px 6px;padding:16px;font-size:15px;line-height:1.5;color:var(--text2);backdrop-filter:blur(12px)}
-.speech strong{color:var(--text)}
-.speech .teal{color:var(--accent);font-weight:500}
-.step{display:none;flex:1;flex-direction:column}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);
+  min-height:100vh;min-height:100dvh;
+  color:#f1f5f9;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+.glow{
+  position:fixed;top:-80px;left:50%;transform:translateX(-50%);
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(20,184,166,0.06) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{
+  max-width:440px;margin:0 auto;
+  padding:env(safe-area-inset-top,24px) 24px env(safe-area-inset-bottom,24px);
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+  position:relative;z-index:1;
+}
+
+/* Progress */
+.progress{display:flex;gap:8px;padding:20px 0 28px}
+.prog-dot{flex:1;height:3px;border-radius:100px;background:rgba(255,255,255,0.06);transition:background 0.4s}
+.prog-dot.done{background:#14b8a6}
+
+/* Welcome header */
+.welcome{text-align:center;margin-bottom:32px}
+.welcome-name{font-size:40px;font-weight:800;color:#f1f5f9;letter-spacing:-1.5px;line-height:1.1}
+.welcome-sub{font-size:16px;color:#94a3b8;margin-top:10px;line-height:1.5}
+.welcome-sub strong{color:#2dd4bf}
+
+/* Steps */
+.step{display:none;flex:1;flex-direction:column;animation:fadeIn 0.3s ease}
 .step.active{display:flex}
-.step-title{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.02em}
-.step-sub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.5}
-.progress{display:flex;gap:6px;margin-bottom:24px}
-.prog-dot{flex:1;height:4px;border-radius:99px;background:rgba(51,65,85,0.5)}
-.prog-dot.done{background:var(--accent)}
-.prog-dot.current{background:var(--accent);opacity:0.6}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.step-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
+.step-sub{font-size:14px;color:#94a3b8;margin-bottom:24px;line-height:1.5}
+
+/* Fields */
 .field{margin-bottom:16px}
-.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px}
-.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--glass-border);border-radius:14px;padding:14px 16px;font-size:16px;color:var(--text);outline:none;font-family:var(--sans);-webkit-appearance:none}
-.field input:focus,.field select:focus{border-color:var(--accent)}
-.field input::placeholder{color:var(--text3)}
+.field label{
+  display:block;font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.08em;
+  color:#475569;margin-bottom:6px;
+}
+.field input{
+  width:100%;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px;padding:14px 16px;
+  font-size:16px;color:#f1f5f9;outline:none;
+  font-family:inherit;transition:border 0.25s;
+}
+.field input:focus{border-color:rgba(20,184,166,0.4)}
+.field input::placeholder{color:#475569}
 .row{display:flex;gap:12px}
 .row .field{flex:1}
-.btn{width:100%;padding:16px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all 0.15s}
+
+/* Scan area */
+.scan-area{
+  background:rgba(255,255,255,0.02);
+  border:2px dashed rgba(255,255,255,0.08);
+  border-radius:24px;padding:48px 20px;
+  text-align:center;cursor:pointer;
+  transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+  margin-bottom:16px;
+}
+.scan-area:hover{border-color:rgba(20,184,166,0.3);background:rgba(20,184,166,0.02)}
+.scan-area:active{transform:scale(0.98)}
+.scan-icon{font-size:28px;color:#14b8a6;margin-bottom:12px}
+.scan-text{font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:4px}
+.scan-sub{font-size:13px;color:#475569}
+
+/* Scan result card */
+.card-preview{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(20,184,166,0.15);
+  border-radius:16px;padding:16px;margin-bottom:16px;
+}
+.card-preview h3{font-size:13px;font-weight:600;color:#14b8a6;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em}
+.card-row{display:flex;gap:8px;font-size:13px;margin-bottom:6px}
+.card-label{color:#475569;width:80px;flex-shrink:0;font-weight:500}
+.card-value{color:#f1f5f9}
+
+/* Buttons */
+.btn{
+  width:100%;padding:16px;border-radius:100px;
+  font-size:15px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+  border:none;display:flex;align-items:center;justify-content:center;gap:8px;
+}
 .btn:active{transform:scale(0.98)}
-.btn-primary{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a;box-shadow:0 4px 16px rgba(45,212,191,0.25)}
-.btn-secondary{background:var(--surface);border:1px solid var(--glass-border);color:var(--text2);margin-top:10px}
+.btn-primary{
+  background:linear-gradient(135deg,#0d9488,#14b8a6);color:white;
+  box-shadow:0 4px 20px rgba(20,184,166,0.2);
+}
+.btn-primary:hover{box-shadow:0 8px 32px rgba(20,184,166,0.3);transform:translateY(-1px)}
+.btn-secondary{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+  color:#94a3b8;margin-top:10px;
+}
+.btn-secondary:hover{background:rgba(255,255,255,0.08);color:#f1f5f9}
 .btn-row{display:flex;gap:10px;margin-top:auto;padding-top:24px}
 .btn-row .btn{flex:1}
-.scan-area{background:var(--surface);border:2px dashed var(--glass-border);border-radius:20px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px}
-.scan-area:hover{border-color:var(--accent);background:rgba(45,212,191,0.04)}
-.scan-area:active{transform:scale(0.98)}
-.scan-icon{font-size:48px;margin-bottom:12px}
-.scan-text{font-size:16px;font-weight:600;margin-bottom:4px}
-.scan-sub{font-size:13px;color:var(--text3)}
-.card-preview{background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;padding:16px;margin-bottom:16px;backdrop-filter:blur(12px)}
-.card-preview h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--accent)}
-.card-row{display:flex;gap:6px;font-size:13px;margin-bottom:4px}
-.card-label{color:var(--text3);width:80px;flex-shrink:0}
-.card-value{color:var(--text)}
-.msg{font-size:13px;margin-top:10px;padding:10px 14px;border-radius:12px;display:none}
+
+/* Skip link */
+.skip{text-align:center;margin-top:14px;font-size:13px;color:#475569}
+.skip a{color:#2dd4bf;cursor:pointer;font-weight:500;text-decoration:none}
+.skip a:hover{text-decoration:underline}
+
+/* Messages */
+.msg{font-size:13px;margin-top:10px;padding:12px 16px;border-radius:14px;display:none;line-height:1.4}
 .msg.show{display:block}
-.msg.err{color:var(--danger);background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15)}
-.msg.ok{color:var(--accent);background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15)}
-.skip{text-align:center;margin-top:12px;font-size:13px;color:var(--text3)}
-.skip a{color:var(--accent);cursor:pointer;font-weight:500}
+.msg.err{color:#fca5a5;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12)}
+.msg.ok{color:#2dd4bf;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.12)}
+
+@media(max-height:700px){
+  .welcome-name{font-size:30px}
+  .scan-area{padding:32px 16px}
+}
 </style>
 </head>
 <body>
+
+<div class="glow"></div>
+
 <div class="wrap">
   <div class="progress" id="progress">
     <div class="prog-dot done"></div>
@@ -68,71 +150,72 @@ html,body{min-height:100dvh;font-family:var(--sans);background:linear-gradient(1
     <div class="prog-dot"></div>
   </div>
 
-  <!-- STEP 1: Who are you caring for? -->
+  <!-- STEP 1: Welcome + Basic Info -->
   <div class="step active" id="step1">
-    <div class="avatar-section">
-      <div class="ai-avatar">🤖</div>
-      <div class="speech">Welcome! I'm your <strong>Health Agent</strong>.<br><span class="teal">Let's set up your first patient profile.</span></div>
+    <div class="welcome" id="welcomeBlock">
+      <div class="welcome-name" id="welcomeText">Welcome.</div>
+      <div class="welcome-sub">Let's set up your first patient.<br>This takes <strong>about 2 minutes</strong>.</div>
     </div>
+
     <div class="step-title">Who are you caring for?</div>
-    <div class="step-sub">This could be yourself, a parent, spouse, or anyone you help manage healthcare for.</div>
-    <div class="field"><label>Patient's Full Name *</label><input id="patName" placeholder="Linda Fields"></div>
+    <div class="step-sub">A parent, spouse, yourself, or anyone whose healthcare you manage.</div>
+
+    <div class="field"><label>Patient's Full Name</label><input id="patName" placeholder="Their full name"></div>
     <div class="row">
-      <div class="field"><label>Date of Birth *</label><input id="patDob" placeholder="MM/DD/YYYY"></div>
-      <div class="field"><label>Relationship</label><input id="patRelation" placeholder="Mother, Self, Spouse..."></div>
+      <div class="field"><label>Date of Birth</label><input id="patDob" placeholder="MM/DD/YYYY"></div>
+      <div class="field"><label>Relationship</label><input id="patRelation" placeholder="Mother, Self, Spouse"></div>
     </div>
     <div class="row">
       <div class="field"><label>Primary Doctor</label><input id="patDoctor" placeholder="Dr. Smith"></div>
-      <div class="field"><label>Phone</label><input id="patPhone" placeholder="(210) 555-1234"></div>
+      <div class="field"><label>Phone</label><input id="patPhone" placeholder="(555) 123-4567"></div>
     </div>
     <div class="field"><label>Address</label><input id="patAddress" placeholder="Street, City, State ZIP"></div>
+
     <div class="msg err" id="step1Err"></div>
-    <div class="btn-row"><button class="btn btn-primary" onclick="goStep2()">Next →</button></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="goStep2()">Continue</button></div>
   </div>
 
-  <!-- STEP 2: Scan insurance card -->
+  <!-- STEP 2: Scan Insurance Card -->
   <div class="step" id="step2">
-    <div class="avatar-section">
-      <div class="ai-avatar">🤖</div>
-      <div class="speech">Great! Now let's <strong>scan an insurance card</strong>.<br><span class="teal">I'll read everything automatically.</span></div>
-    </div>
     <div class="step-title">Scan Insurance Card</div>
-    <div class="step-sub">Take a photo of the front of the insurance card. I'll extract all the details.</div>
+    <div class="step-sub">Take a photo of the front of the insurance card. The AI reads everything automatically.</div>
+
     <div class="scan-area" onclick="triggerScan()">
-      <div class="scan-icon">📷</div>
+      <div class="scan-icon"><i class="fa-solid fa-camera"></i></div>
       <div class="scan-text">Tap to scan card</div>
       <div class="scan-sub">Camera or photo library</div>
     </div>
+
     <div id="scanResult"></div>
     <div class="msg err" id="step2Err"></div>
     <div class="msg ok" id="step2Ok"></div>
+
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="backTo(1)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep3()">Next →</button>
+      <button class="btn btn-secondary" onclick="backTo(1)">Back</button>
+      <button class="btn btn-primary" onclick="goStep3()">Continue</button>
     </div>
     <div class="skip">or <a onclick="goStep3()">Skip for now</a></div>
   </div>
 
-  <!-- STEP 3: Conditions & Medications -->
+  <!-- STEP 3: Conditions, Meds, Allergies -->
   <div class="step" id="step3">
-    <div class="avatar-section">
-      <div class="ai-avatar">🤖</div>
-      <div class="speech">Almost done! Add any <strong>conditions, medications, and allergies</strong>.<br><span class="teal">You can always update these later.</span></div>
-    </div>
     <div class="step-title">Medical Info</div>
-    <div class="step-sub">Add what you know — you can scan documents later to fill in more.</div>
-    <div class="field"><label>Conditions (comma separated)</label><input id="patConditions" placeholder="Hypertension, Diabetes, Dry Eye..."></div>
-    <div class="field"><label>Medications (comma separated)</label><input id="patMeds" placeholder="Lisinopril 10mg, Metformin 500mg..."></div>
-    <div class="field"><label>Allergies (comma separated)</label><input id="patAllergies" placeholder="Penicillin, Sulfa drugs..."></div>
+    <div class="step-sub">Add what you know. You can scan documents later to fill in more.</div>
+
+    <div class="field"><label>Conditions</label><input id="patConditions" placeholder="Hypertension, Diabetes, Dry Eye..."></div>
+    <div class="field"><label>Medications</label><input id="patMeds" placeholder="Lisinopril 10mg, Metformin 500mg..."></div>
+    <div class="field"><label>Allergies</label><input id="patAllergies" placeholder="Penicillin, Sulfa drugs..."></div>
     <div class="row">
-      <div class="field"><label>Pharmacy Name</label><input id="patPharmacy" placeholder="Walgreens"></div>
-      <div class="field"><label>Pharmacy Phone</label><input id="patPharmPhone" placeholder="(210) 555-5678"></div>
+      <div class="field"><label>Pharmacy</label><input id="patPharmacy" placeholder="Walgreens"></div>
+      <div class="field"><label>Pharmacy Phone</label><input id="patPharmPhone" placeholder="(555) 987-6543"></div>
     </div>
+
     <div class="msg err" id="step3Err"></div>
     <div class="msg ok" id="step3Ok"></div>
+
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="backTo(2)">← Back</button>
-      <button class="btn btn-primary" id="finishBtn" onclick="finishSetup()">Complete Setup ✓</button>
+      <button class="btn btn-secondary" onclick="backTo(2)">Back</button>
+      <button class="btn btn-primary" id="finishBtn" onclick="finishSetup()">Complete Setup</button>
     </div>
     <div class="skip">or <a onclick="finishSetup()">Skip and finish</a></div>
   </div>
@@ -144,11 +227,19 @@ html,body{min-height:100dvh;font-family:var(--sans);background:linear-gradient(1
 const token = localStorage.getItem('ha_token');
 if (!token) window.location.href = '/login';
 
+// Personalize welcome
+try {
+  const user = JSON.parse(localStorage.getItem('ha_user') || '{}');
+  if (user.name) {
+    const first = user.name.split(' ')[0];
+    document.getElementById('welcomeText').textContent = 'Welcome, ' + first + '.';
+  }
+} catch(e) {}
+
 let scannedInsurance = null;
 
 function goStep2() {
   const name = document.getElementById('patName').value.trim();
-  const dob = document.getElementById('patDob').value.trim();
   if (!name) { showMsg('step1Err', 'Patient name is required'); return; }
   showStep(2);
 }
@@ -160,10 +251,10 @@ function showStep(n) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById('step' + n).classList.add('active');
   document.querySelectorAll('.prog-dot').forEach((d, i) => {
-    d.classList.remove('done', 'current');
-    if (i < n - 1) d.classList.add('done');
-    if (i === n - 1) d.classList.add('done');
+    d.classList.remove('done');
+    if (i < n) d.classList.add('done');
   });
+  window.scrollTo(0, 0);
 }
 
 function triggerScan() {
@@ -184,7 +275,7 @@ async function handleScan(input) {
     const data = await res.json();
     if (data.extracted) {
       scannedInsurance = data.extracted;
-      let html = '<div class="card-preview"><h3>✅ Card Scanned</h3>';
+      let html = '<div class="card-preview"><h3><i class="fa-solid fa-check-circle" style="margin-right:6px"></i>Card Scanned</h3>';
       if (data.extracted.insurance_company) html += '<div class="card-row"><span class="card-label">Insurance</span><span class="card-value">' + data.extracted.insurance_company + '</span></div>';
       if (data.extracted.member_name) html += '<div class="card-row"><span class="card-label">Name</span><span class="card-value">' + data.extracted.member_name + '</span></div>';
       if (data.extracted.member_id) html += '<div class="card-row"><span class="card-label">Member ID</span><span class="card-value">' + data.extracted.member_id + '</span></div>';
@@ -204,7 +295,6 @@ async function handleScan(input) {
 
 async function finishSetup() {
   const name = document.getElementById('patName').value.trim();
-  const dob = document.getElementById('patDob').value.trim();
   if (!name) { showMsg('step3Err', 'Go back and enter the patient name'); return; }
 
   document.getElementById('finishBtn').disabled = true;
@@ -212,7 +302,7 @@ async function finishSetup() {
 
   const patient = {
     name,
-    dob: dob || '',
+    dob: document.getElementById('patDob').value.trim() || '',
     relationship: document.getElementById('patRelation').value.trim() || 'Family Member',
     primaryDoctor: document.getElementById('patDoctor').value.trim() || '',
     phone: document.getElementById('patPhone').value.trim() || '',
@@ -245,12 +335,12 @@ async function finishSetup() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to create patient');
-    showMsg('step3Ok', 'Profile created! Redirecting...');
+    showMsg('step3Ok', 'Profile created! Taking you to your agent...');
     setTimeout(function() { window.location.href = '/'; }, 1200);
   } catch (e) {
     showMsg('step3Err', e.message);
     document.getElementById('finishBtn').disabled = false;
-    document.getElementById('finishBtn').textContent = 'Complete Setup ✓';
+    document.getElementById('finishBtn').textContent = 'Complete Setup';
   }
 }
 
