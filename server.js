@@ -3277,6 +3277,41 @@ app.delete('/api/share/:token', (req, res) => {
 });
 
 // ─── SMS Agent (Twilio) ──────────────────────────────────
+// ─── Patient Intake Auto-Fill ────────────────────────────
+const patientIntake = require('./tools/patient-intake');
+
+app.get('/api/intake/profile', (req, res) => {
+  const userId = req.userSession?.userId;
+  const pid = req.query.patientId || getCurrentPatientId(userId);
+  const patients = userId ? getPatientsForUser(userId) : getAllPatientsRaw();
+  const patient = patients.find(p => p.id === pid);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  const data = patientIntake.getClipboardData(patient);
+  const extras = patientIntake.getIntakeExtras(pid);
+  res.json({ ...data, extras });
+});
+
+app.get('/api/intake/portal/:type', (req, res) => {
+  const userId = req.userSession?.userId;
+  const pid = req.query.patientId || getCurrentPatientId(userId);
+  const patients = userId ? getPatientsForUser(userId) : getAllPatientsRaw();
+  const patient = patients.find(p => p.id === pid);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  res.json(patientIntake.getPortalData(patient, req.params.type));
+});
+
+app.post('/api/intake/extras', (req, res) => {
+  const userId = req.userSession?.userId;
+  const pid = req.body.patientId || getCurrentPatientId(userId);
+  const saved = patientIntake.saveIntakeExtras(pid, req.body.extras || {});
+  res.json({ success: true, extras: saved });
+});
+
+// Intake form page — shows all fields with copy buttons
+app.get('/intake', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'intake.html'));
+});
+
 const smsAgent = require('./tools/sms-agent');
 
 app.post('/api/sms/webhook', express.urlencoded({ extended: false }), async (req, res) => {

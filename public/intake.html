@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0f1a">
+<title>Health Agent — Intake Auto-Fill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);min-height:100vh;color:#f1f5f9;-webkit-font-smoothing:antialiased}
+.page{max-width:540px;margin:0 auto;padding:calc(env(safe-area-inset-top,20px) + 20px) 16px calc(env(safe-area-inset-bottom,20px) + 20px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.topbar h1{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.topbar h1 span{color:#2dd4bf}
+.back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#94a3b8;font-size:13px;font-weight:600;text-decoration:none}
+.subtitle{font-size:14px;color:#94a3b8;margin-bottom:24px;line-height:1.5}
+.subtitle strong{color:#2dd4bf}
+.portal-tabs{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.portal-tab{padding:8px 16px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#94a3b8;transition:all 0.2s}
+.portal-tab.active{background:rgba(20,184,166,0.1);color:#2dd4bf;border-color:rgba(20,184,166,0.2)}
+.section{margin-bottom:20px}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#14b8a6;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title i{font-size:12px}
+.field-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:12px;margin-bottom:6px;cursor:pointer;transition:all 0.15s}
+.field-row:active{transform:scale(0.99);background:rgba(20,184,166,0.06)}
+.field-row.copied{border-color:rgba(20,184,166,0.3);background:rgba(20,184,166,0.06)}
+.field-label{font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.05em}
+.field-value{font-size:14px;font-weight:500;color:#f1f5f9;margin-top:2px}
+.field-copy{color:#475569;font-size:12px;flex-shrink:0;margin-left:12px;transition:color 0.2s}
+.field-row.copied .field-copy{color:#14b8a6}
+.empty{font-size:13px;color:#475569;font-style:italic;padding:8px 0}
+.copy-all{width:100%;padding:14px;border-radius:100px;background:linear-gradient(135deg,#0d9488,#14b8a6);color:white;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.copy-all:active{transform:scale(0.98)}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(20,184,166,0.9);color:white;padding:10px 24px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+.loading{text-align:center;padding:48px;color:#475569;font-size:14px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <h1>Intake <span>Auto-Fill</span></h1>
+    <a class="back" href="/"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </div>
+  <div class="subtitle">Tap any field to copy it. Paste into any patient portal — <strong>MyChart, Athena, or any registration form</strong>.</div>
+
+  <div class="portal-tabs">
+    <div class="portal-tab active" onclick="loadPortal('generic')">All Fields</div>
+    <div class="portal-tab" onclick="loadPortal('mychart')">MyChart</div>
+    <div class="portal-tab" onclick="loadPortal('athena')">Athena</div>
+  </div>
+
+  <div id="content"><div class="loading">Loading patient data...</div></div>
+
+  <button class="copy-all" onclick="copyAll()"><i class="fa-solid fa-copy"></i> Copy All Fields</button>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const token = localStorage.getItem('ha_token');
+if (!token) window.location.href = '/login';
+const headers = { 'Authorization': 'Bearer ' + token };
+
+let currentData = null;
+
+async function loadPortal(type) {
+  document.querySelectorAll('.portal-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const endpoint = type === 'generic' ? '/api/intake/profile' : '/api/intake/portal/' + type;
+  try {
+    const res = await fetch(endpoint, { headers });
+    const data = await res.json();
+    currentData = data;
+
+    if (data.sections) {
+      renderSections(data.sections);
+    } else if (data.mapped) {
+      renderMapped(data.mapped);
+    }
+  } catch (e) {
+    document.getElementById('content').innerHTML = '<div class="loading">Error loading data</div>';
+  }
+}
+
+function renderSections(sections) {
+  const icons = {
+    'DEMOGRAPHICS': 'fa-user',
+    'INSURANCE — PRIMARY': 'fa-shield-halved',
+    'INSURANCE — SECONDARY': 'fa-shield-halved',
+    'MEDICAL': 'fa-user-doctor',
+    'CONDITIONS': 'fa-heart-pulse',
+    'MEDICATIONS': 'fa-pills',
+    'ALLERGIES': 'fa-triangle-exclamation',
+    'EMERGENCY CONTACT': 'fa-phone',
+  };
+
+  let html = '';
+  sections.forEach(section => {
+    const hasData = section.fields.some(f => f[1]);
+    if (!hasData) return;
+    html += '<div class="section">';
+    html += '<div class="section-title"><i class="fa-solid ' + (icons[section.title] || 'fa-circle') + '"></i>' + section.title + '</div>';
+    section.fields.forEach(([label, value]) => {
+      if (!value) return;
+      html += '<div class="field-row" onclick="copyField(this,\'' + esc(value) + '\')">';
+      html += '<div><div class="field-label">' + esc(label) + '</div><div class="field-value">' + esc(value) + '</div></div>';
+      html += '<div class="field-copy"><i class="fa-solid fa-copy"></i></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('content').innerHTML = html || '<div class="loading">No data available. Add patient details first.</div>';
+}
+
+function renderMapped(mapped) {
+  let html = '<div class="section"><div class="section-title"><i class="fa-solid fa-file-medical"></i>Portal Fields</div>';
+  for (const [field, value] of Object.entries(mapped)) {
+    if (!value) continue;
+    html += '<div class="field-row" onclick="copyField(this,\'' + esc(String(value)) + '\')">';
+    html += '<div><div class="field-label">' + esc(field) + '</div><div class="field-value">' + esc(String(value)) + '</div></div>';
+    html += '<div class="field-copy"><i class="fa-solid fa-copy"></i></div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+}
+
+function copyField(el, value) {
+  navigator.clipboard.writeText(value).then(() => {
+    el.classList.add('copied');
+    el.querySelector('.field-copy').innerHTML = '<i class="fa-solid fa-check"></i>';
+    showToast('Copied: ' + value.substring(0, 30) + (value.length > 30 ? '...' : ''));
+    setTimeout(() => {
+      el.classList.remove('copied');
+      el.querySelector('.field-copy').innerHTML = '<i class="fa-solid fa-copy"></i>';
+    }, 2000);
+  });
+}
+
+function copyAll() {
+  if (!currentData?.sections) return;
+  let text = '';
+  currentData.sections.forEach(s => {
+    text += s.title + '\n';
+    s.fields.forEach(([label, value]) => {
+      if (value) text += label + ': ' + value + '\n';
+    });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(() => showToast('All fields copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function esc(s) { return String(s || '').replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+loadPortal('generic');
+</script>
+</body>
+</html>
