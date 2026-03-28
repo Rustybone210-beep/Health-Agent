@@ -575,7 +575,7 @@ body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);back
       <!-- Chat IS the home screen -->
       <div id="mobileChat" style="display:flex;flex:1;flex-direction:column;overflow:hidden">
         <div id="chatAreaDesktop" style="display:none"></div>
-        <div id="chatArea"></div>
+        <div id="chatArea" style="flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch"></div>
       </div>
     </div>
 
@@ -593,9 +593,9 @@ body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);back
     <div id="inputBar">
       <div class="input-row">
         <button class="input-btn input-btn-cam" onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-camera"></i></button>
-        <input id="chatInput" type="text" placeholder="Message your health agent..." autocomplete="off" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage(this.value);this.value='';document.getElementById('sendBtn').style.display='none';document.getElementById('micBtn').style.display='flex'}" oninput="document.getElementById('sendBtn').style.display=this.value.trim()?'flex':'none';document.getElementById('micBtn').style.display=this.value.trim()?'none':'flex'">
+        <input id="chatInput" type="text" placeholder="Message your health agent..." autocomplete="off" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();event.stopPropagation();sendMessage();document.getElementById('sendBtn').style.display='none';document.getElementById('micBtn').style.display='flex'}" oninput="document.getElementById('sendBtn').style.display=this.value.trim()?'flex':'none';document.getElementById('micBtn').style.display=this.value.trim()?'none':'flex'">
         <input id="chatInputDesktop" type="text" placeholder="Message..." autocomplete="off" style="display:none">
-        <button class="input-btn input-btn-send" id="sendBtn" onclick="sendMessage(document.getElementById('chatInput').value);document.getElementById('chatInput').value=''" style="display:none"><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="input-btn input-btn-send" id="sendBtn" onclick="sendMessage();document.getElementById('sendBtn').style.display='none';document.getElementById('micBtn').style.display='flex'" style="display:none"><i class="fa-solid fa-arrow-up"></i></button>
         <button class="input-btn input-btn-mic" id="micBtn" onclick="toggleVoiceInput()"><i class="fa-solid fa-microphone"></i></button>
       </div>
     </div>
