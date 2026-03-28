@@ -769,11 +769,12 @@ function closePullDashboard(){document.getElementById('pullDashboard').classList
 /* ═══ MOBILE HOME/CHAT SWITCHING ═══ */
 function mobileGoHome(){
   if(!isMobileView())return;
-  document.getElementById('mobileHome').style.display='flex';
-  document.getElementById('mobileChat').style.display='none';
+  // Chat IS the home screen — show chat, not dashboard
+  document.getElementById('mobileHome').style.display='none';
+  document.getElementById('mobileChat').style.display='flex';
   document.getElementById('navHome').classList.add('active');
   document.getElementById('navChat').classList.remove('active');
-  updateMobileHero();
+  try{updateMobileHero();}catch(e){}
 }
 function mobileGoChat(){
   if(!isMobileView())return;
