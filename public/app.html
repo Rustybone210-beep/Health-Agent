@@ -27,7 +27,8 @@
 --sidebar:320px;--topbar:56px;--botnav:64px;
 --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;overflow:hidden;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+#mainContent,#mobileHome,#mobileChat{max-width:100vw;overflow-x:hidden}
 body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);background-attachment:fixed}
 
 /* ── SCROLLBARS ── */
@@ -534,45 +535,46 @@ body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);back
       </div>
     </div>
 
-    <!-- Mobile patient selector -->
-    <div id="patientSelector" onclick="togglePatientDropdown()" style="display:none">
-      <div class="pat-avatar">LF</div>
-      <div class="pat-info"><div id="selectorName">Patient</div><div id="selectorRel">Family</div></div>
-      <i class="fa-solid fa-chevron-down chevron"></i>
+    <!-- Patient selector pill -->
+    <div style="padding:8px 16px;overflow-x:hidden">
+      <div id="patientSelector" onclick="togglePatientDropdown()" style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);cursor:pointer;position:relative">
+        <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0"></div>
+        <span id="selectorName" style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap">Patient</span>
+        <span id="selectorRel" style="font-size:12px;color:var(--text3);white-space:nowrap"></span>
+        <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--text3)"></i>
+        <div id="patientDropdown" class="pat-dd" style="position:absolute;top:calc(100% + 6px);left:0;min-width:260px"></div>
+      </div>
+      <div id="mobilePatAvatar" style="display:none"></div>
     </div>
 
     <div id="mainContent">
-      <!-- Mobile home / dashboard -->
-      <div id="mobileHome">
-        <div class="mobile-hero">
-          <div id="mobileHeroCard">
-            <div class="hero-top">
-              <div id="mobileHeroAvatar" class="mh-avatar">LF</div>
-              <div>
-                <div id="mobileHeroName">Patient</div>
-                <div class="hero-detail"><span id="mobileHeroAge"></span> <span id="mobileHeroRel"></span></div>
-                <div class="hero-detail"><i class="fa-solid fa-user-doctor" style="margin-right:4px;font-size:11px;color:var(--accent)"></i><span id="mobileHeroDoc">Doctor</span></div>
-                <div class="hero-detail"><i class="fa-solid fa-shield-halved" style="margin-right:4px;font-size:11px;color:var(--accent)"></i><span id="mobileHeroIns">Insurance</span></div>
-                <div style="display:none" id="mobileHeroFn"></div>
-              </div>
-            </div>
-            <div class="hero-stats">
-              <div class="hero-stat"><div class="hs-val"><span id="todayPrimary">0</span></div><div class="hs-label"><span id="todaySecondary">Today</span></div></div>
-              <div class="hero-stat"><div class="hs-val"><span id="upcomingPrimary">0</span></div><div class="hs-label"><span id="upcomingSecondary">Upcoming</span></div></div>
-              <div class="hero-stat"><div class="hs-val"><span id="tasksPrimary">0</span></div><div class="hs-label"><span id="tasksSecondary">Tasks</span></div></div>
-              <div class="hero-stat"><div class="hs-val"><span id="recordsPrimary">0</span></div><div class="hs-label"><span id="recordsSecondary">Records</span></div></div>
-            </div>
-          </div>
+      <!-- Hidden: dashboard data containers (JS writes to these, must exist) -->
+      <div id="mobileHome" style="display:none">
+        <div id="mobileHeroCard" style="display:none">
+          <div id="mobileHeroAvatar" style="display:none"></div>
+          <div id="mobileHeroName" style="display:none"></div>
+          <span id="mobileHeroAge" style="display:none"></span>
+          <span id="mobileHeroRel" style="display:none"></span>
+          <span id="mobileHeroDoc" style="display:none"></span>
+          <span id="mobileHeroIns" style="display:none"></span>
+          <span id="mobileHeroFn" style="display:none"></span>
+          <span id="todayPrimary" style="display:none">0</span>
+          <span id="todaySecondary" style="display:none"></span>
+          <span id="upcomingPrimary" style="display:none">0</span>
+          <span id="upcomingSecondary" style="display:none"></span>
+          <span id="tasksPrimary" style="display:none">0</span>
+          <span id="tasksSecondary" style="display:none"></span>
+          <span id="recordsPrimary" style="display:none">0</span>
+          <span id="recordsSecondary" style="display:none"></span>
         </div>
-        <div class="section-heading">Recent Activity</div>
-        <div id="recentActivityList"></div>
+        <div id="recentActivityList" style="display:none"></div>
       </div>
-      <div id="pullDashboard"></div>
-      <div id="pdBackdrop"></div>
+      <div id="pullDashboard" style="display:none"></div>
+      <div id="pdBackdrop" style="display:none"></div>
 
-      <!-- Chat -->
-      <div id="mobileChat" style="display:none">
-        <div id="chatAreaDesktop"></div>
+      <!-- Chat IS the home screen -->
+      <div id="mobileChat" style="display:flex;flex:1;flex-direction:column;overflow:hidden">
+        <div id="chatAreaDesktop" style="display:none"></div>
         <div id="chatArea"></div>
       </div>
     </div>
@@ -597,12 +599,12 @@ body{background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);back
       </div>
     </div>
 
-    <!-- Bottom nav -->
+    <!-- Bottom nav: 3 tabs -->
     <div id="botNav">
-      <button class="bn-tab active" id="navHome" onclick="mobileGoHome()"><i class="fa-solid fa-house"></i><span>Home</span></button>
-      <button class="bn-tab" id="navChat" onclick="mobileGoChat()"><i class="fa-solid fa-message"></i><span>Chat</span></button>
-      <button class="bn-tab" id="navTasks" onclick="openTaskPanel()" style="position:relative"><i class="fa-solid fa-check-circle"></i><span>Tasks</span><div id="taskBadge">0</div></button>
-      <button class="bn-tab" id="navMore" onclick="openMenuSheet()"><i class="fa-solid fa-ellipsis"></i><span>More</span></button>
+      <button class="bn-tab active" id="navHome" onclick="mobileGoChat()"><i class="fa-solid fa-comment"></i><span>Chat</span></button>
+      <button class="bn-tab" id="navChat" onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-camera"></i><span>Scan</span></button>
+      <button class="bn-tab" id="navTasks" onclick="openProfileSheet()" style="position:relative"><i class="fa-solid fa-user"></i><span>Profile</span><div id="taskBadge" style="display:none">0</div></button>
+      <button class="bn-tab" id="navMore" onclick="openMenuSheet()" style="display:none"><i class="fa-solid fa-ellipsis"></i><span>More</span></button>
     </div>
   </div>
 </div>
