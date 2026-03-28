@@ -177,11 +177,18 @@ function addNotification(type, title, message, patientId = null, dueDate = null)
 const userCurrentPatient = {};
 
 function getCurrentPatientId(userId) {
-  // Per-user patient tracking
+  // Per-user patient tracking — strict isolation
   if (userId && userCurrentPatient[userId]) return userCurrentPatient[userId];
-  // Fallback to file for backward compatibility (single-user mode)
-  const data = safeReadJson(CURRENT_PATIENT_FILE, { patientId: null });
-  return data.patientId || null;
+  if (userId) {
+    // Find first patient owned by this user
+    const userPatients = getAllPatientsRaw().filter(p => p.ownerId === userId);
+    if (userPatients.length > 0) {
+      userCurrentPatient[userId] = userPatients[0].id;
+      return userPatients[0].id;
+    }
+    return null; // New user, no patients yet
+  }
+  return null;
 }
 function setCurrentPatientId(id, userId) {
   if (userId) userCurrentPatient[userId] = id;
@@ -190,9 +197,9 @@ function setCurrentPatientId(id, userId) {
 // Get patients filtered by user ownership
 function getPatientsForUser(userId) {
   const all = getAllPatientsRaw();
-  if (!userId) return all;
-  // Return patients owned by this user, or unowned (legacy) patients for the admin
-  return all.filter(p => p.ownerId === userId || !p.ownerId);
+  if (!userId) return [];
+  // Only return patients owned by this user — strict isolation
+  return all.filter(p => p.ownerId === userId);
 }
 function getAllPatientsRaw() {
   try {
@@ -209,8 +216,8 @@ function getAllPatientsRaw() {
 function getAllPatientsUnfiltered() { return getAllPatientsRaw(); }
 function getAllPatients(userId) {
   const all = getAllPatientsRaw();
-  if (!userId) return all;
-  return all.filter(p => !p.ownerId || p.ownerId === userId);
+  if (!userId) return [];
+  return all.filter(p => p.ownerId === userId);
 }
 function saveAllPatients(patients) {
   try {
@@ -3206,8 +3213,11 @@ app.get('/', (req, res) => {
   if (!session) {
     return res.redirect('/login');
   }
-  // Auto-redirect to onboarding if no patients exist
-  const patients = getAllPatients();
+  // Redirect to onboarding if user has no patients
+  const userPatients = getPatientsForUser(session.userId);
+  if (!userPatients || userPatients.length === 0) {
+    return res.redirect('/onboarding');
+  }
   res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
