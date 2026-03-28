@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0f1a">
 <title>Health Agent</title>
+<script src="/autocomplete-data.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -173,8 +174,13 @@ body{
       <label>Patient's Home Address</label>
       <input id="patStreet" placeholder="Street address" autocomplete="address-line1" style="margin-bottom:8px">
       <div class="row" style="gap:8px">
-        <div class="field" style="margin-bottom:0;flex:1.2"><input id="patCity" placeholder="City" autocomplete="address-level2"></div>
-        <div class="field" style="margin-bottom:0;flex:0.5"><input id="patState" placeholder="State" autocomplete="address-level1" maxlength="2" style="text-transform:uppercase"></div>
+        <div class="field" style="margin-bottom:0;flex:1.2"><input id="patCity" placeholder="City" autocomplete="off"></div>
+        <div class="field" style="margin-bottom:0;flex:0.5">
+          <select id="patState" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 8px;font-size:16px;color:#f1f5f9;font-family:inherit;-webkit-appearance:none">
+            <option value="">State</option>
+            <option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option><option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option><option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option><option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option><option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option><option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option><option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option><option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option><option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option><option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option><option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option><option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option><option value="WI">WI</option><option value="WY">WY</option>
+          </select>
+        </div>
         <div class="field" style="margin-bottom:0;flex:0.6"><input id="patZip" placeholder="ZIP" autocomplete="postal-code" inputmode="numeric" maxlength="5"></div>
       </div>
     </div>
@@ -242,12 +248,30 @@ body{
       <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
     </div>
 
-    <div class="field"><label>Conditions</label><input id="patConditions" placeholder="Hypertension, Diabetes, Dry Eye..."></div>
-    <div class="field"><label>Medications</label><input id="patMeds" placeholder="Lisinopril 10mg, Metformin 500mg..."></div>
-    <div class="field"><label>Allergies</label><input id="patAllergies" placeholder="Penicillin, Sulfa drugs..."></div>
+    <div class="field">
+      <label>Conditions</label>
+      <div id="condPills" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"></div>
+      <input id="patConditions" placeholder="Type to search conditions..." autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Medications</label>
+      <div id="medPills" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"></div>
+      <input id="patMeds" placeholder="Type to search medications..." autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Allergies</label>
+      <input id="patAllergies" placeholder="Penicillin, Sulfa drugs, Latex...">
+    </div>
+    <div class="field">
+      <label>Insurance</label>
+      <input id="patInsurance" placeholder="Type to search insurers..." autocomplete="off">
+    </div>
     <div class="row">
-      <div class="field"><label>Pharmacy</label><input id="patPharmacy" placeholder="Walgreens"></div>
-      <div class="field"><label>Pharmacy Phone</label><input id="patPharmPhone" placeholder="(555) 987-6543"></div>
+      <div class="field">
+        <label>Pharmacy</label>
+        <input id="patPharmacy" placeholder="Type to search pharmacies..." autocomplete="off">
+      </div>
+      <div class="field"><label>Pharmacy Phone</label><input id="patPharmPhone" placeholder="(555) 987-6543" inputmode="tel" oninput="autoFormatPhone(this)"></div>
     </div>
 
     <div class="msg err" id="step3Err"></div>
@@ -376,8 +400,8 @@ async function finishSetup() {
     primaryDoctor: document.getElementById('patDoctor').value.trim() || '',
     phone: document.getElementById('patPhone').value.trim() || '',
     address: [document.getElementById('patStreet').value.trim(), document.getElementById('patCity').value.trim(), document.getElementById('patState').value.trim().toUpperCase(), document.getElementById('patZip').value.trim()].filter(Boolean).join(', ') || '',
-    conditions: document.getElementById('patConditions').value.split(',').map(s => s.trim()).filter(Boolean),
-    medications: document.getElementById('patMeds').value.split(',').map(s => {
+    conditions: [...getPillValues(document.getElementById('condPills')), ...document.getElementById('patConditions').value.split(',').map(s => s.trim())].filter(Boolean),
+    medications: [...getPillValues(document.getElementById('medPills')), ...document.getElementById('patMeds').value.split(',').map(s => s.trim())].filter(Boolean).map(s => {
       const parts = s.trim().match(/^(.+?)\s+(\d+\s*\w+)$/);
       return parts ? { name: parts[1].trim(), dose: parts[2].trim() } : { name: s.trim(), dose: '' };
     }).filter(m => m.name),
@@ -388,10 +412,12 @@ async function finishSetup() {
     }
   };
 
+  // Insurance from typed field or scanned card
+  const typedInsurance = document.getElementById('patInsurance').value.trim();
   if (scannedCards.length > 0) {
     const primary = scannedCards[0];
     patient.insurance = {
-      primary: primary.insurance_company || primary.plan_name || '',
+      primary: typedInsurance || primary.insurance_company || primary.plan_name || '',
       memberId: primary.member_id || '',
       groupNumber: primary.group_number || ''
     };
@@ -424,6 +450,38 @@ function showMsg(id, msg) { const el = document.getElementById(id); el.textConte
 function hideMsg(id) { document.getElementById(id).classList.remove('show'); }
 
 // Med scan functions
+// Initialize autocomplete on smart fields
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof attachAutocomplete !== 'undefined') {
+    // City autocomplete — fills state too
+    attachAutocomplete(document.getElementById('patCity'), AC_CITIES, function(val) {
+      const parts = val.split(', ');
+      if (parts.length === 2) {
+        document.getElementById('patCity').value = parts[0];
+        document.getElementById('patState').value = parts[1];
+      }
+    });
+
+    // Conditions — multi-select as pills
+    attachAutocomplete(document.getElementById('patConditions'), AC_CONDITIONS, null, {
+      multi: true,
+      pillContainer: document.getElementById('condPills')
+    });
+
+    // Medications — multi-select as pills
+    attachAutocomplete(document.getElementById('patMeds'), AC_MEDICATIONS, null, {
+      multi: true,
+      pillContainer: document.getElementById('medPills')
+    });
+
+    // Insurance
+    attachAutocomplete(document.getElementById('patInsurance'), AC_INSURERS);
+
+    // Pharmacy
+    attachAutocomplete(document.getElementById('patPharmacy'), AC_PHARMACIES);
+  }
+});
+
 function triggerMedScan(type) {
   if (type === 'camera') document.getElementById('medCameraInput').click();
   else document.getElementById('medFileInput').click();
