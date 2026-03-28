@@ -2,9 +2,24 @@
 // tools/system-prompt.js — System prompt builder (extracted from server.js)
 // ============================================================
 
-function buildSystemPrompt(patient) {
+const LANGUAGES = {
+  en: 'Respond in English.',
+  es: 'Responde en español. Use plain, warm Spanish that an elderly patient would understand. Keep medical terms in English in parentheses when helpful.',
+  zh: '用中文回答。使用老年患者能理解的简单温暖的中文。在有帮助时用括号标注英文医学术语。',
+  vi: 'Trả lời bằng tiếng Việt. Sử dụng tiếng Việt đơn giản, ấm áp mà bệnh nhân cao tuổi có thể hiểu. Giữ thuật ngữ y tế bằng tiếng Anh trong ngoặc đơn khi hữu ích.',
+  ko: '한국어로 답변하세요. 노인 환자가 이해할 수 있는 쉽고 따뜻한 한국어를 사용하세요. 의학 용어는 필요 시 영어로 괄호 안에 표기하세요.',
+  tl: 'Sumagot sa Tagalog. Gumamit ng simple at mainit na Tagalog na maiintindihan ng matatandang pasyente.',
+  ar: 'أجب باللغة العربية. استخدم لغة عربية بسيطة ودافئة يمكن للمرضى المسنين فهمها.',
+  fr: 'Répondez en français. Utilisez un français simple et chaleureux qu\'un patient âgé pourrait comprendre.',
+  hi: 'हिंदी में जवाब दें। सरल और गर्म हिंदी का उपयोग करें जो एक बुजुर्ग मरीज समझ सके।',
+};
+
+function buildSystemPrompt(patient, language = 'en') {
   const p = patient || {};
+  const langDirective = LANGUAGES[language] || LANGUAGES.en;
   return `You are Health Agent — an elite AI healthcare navigator with the analytical depth of a medical detective. You connect dots across medications, labs, symptoms, hormones, and specialists that doctors miss.
+
+LANGUAGE: ${langDirective}
 
 
 ADAPTIVE INTELLIGENCE RULES:
@@ -114,4 +129,4 @@ When a user wants to switch doctors, walk them through these steps:
 5. Remind them to update their primary care designation with insurance if switching PCPs`;
 }
 
-module.exports = { buildSystemPrompt };
+module.exports = { buildSystemPrompt, LANGUAGES };

@@ -66,6 +66,7 @@ let pendingUpdates = null;
 let pendingEmailDraft = null;
 let pendingCallRequest = null;
 let conversationHistory = [];
+let userLanguage = 'en';
 // ─── Generic Helpers ───────────────────────────────────────
 function safeReadJson(filePath, fallback) {
   try {
@@ -464,7 +465,7 @@ app.post('/api/chat', async (req, res) => {
   try {
     // ── PHI De-identification: scrub before sending to Claude ──
     const scrubber = new PHIScrubber();
-    const scrubbedSystem = scrubber.scrubSystemPrompt(buildSystemPrompt(patient), patient);
+    const scrubbedSystem = scrubber.scrubSystemPrompt(buildSystemPrompt(patient, userLanguage), patient);
     const scrubbedMessages = conversationHistory.map(msg => ({
       role: msg.role,
       content: msg.role === 'user' ? scrubber.scrub(msg.content, patient).scrubbed : msg.content
@@ -3201,6 +3202,215 @@ app.get('/', (req, res) => {
 
 app.get('/emergency', (_req, res) => {
   res.sendFile(require('path').join(__dirname, 'public', 'emergency.html'));
+});
+
+// Language
+app.get('/api/language', (_req, res) => {
+  const { LANGUAGES } = require('./tools/system-prompt');
+  res.json({ current: userLanguage, available: Object.keys(LANGUAGES) });
+});
+app.post('/api/language', (req, res) => {
+  const { LANGUAGES } = require('./tools/system-prompt');
+  const { language } = req.body;
+  if (!language || !LANGUAGES[language]) return res.status(400).json({ error: 'Invalid language. Available: ' + Object.keys(LANGUAGES).join(', ') });
+  userLanguage = language;
+  conversationHistory = [];
+  res.json({ success: true, language: userLanguage });
+});
+
+// Voice notes — transcribe and extract medical info
+app.post('/api/voice-note', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
+  const currentPatientId = getCurrentPatientId();
+  const patients = getAllPatients();
+  const patient = patients.find(p => p.id === currentPatientId) || patients[0] || {};
+  try {
+    const audioBase64 = fs.readFileSync(req.file.path).toString('base64');
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: 'You are a medical transcription assistant. The user just returned from a doctor visit and is dictating what happened. Extract ALL medical information mentioned:\n\n' +
+        '1. MEDICATIONS: Any new prescriptions, changes to existing meds, discontinued meds\n' +
+        '2. TESTS ORDERED: Labs, imaging, referrals\n' +
+        '3. DIAGNOSES: New or confirmed conditions\n' +
+        '4. FOLLOW-UPS: Next appointments, when to return\n' +
+        '5. INSTRUCTIONS: Diet changes, activity restrictions, warnings\n' +
+        '6. QUESTIONS ANSWERED: What the doctor said about patient concerns\n\n' +
+        'Return as JSON: VISIT_SUMMARY:{"date":"today","doctor":"if mentioned","medications_changed":[],"tests_ordered":[],"diagnoses":[],"follow_ups":[],"instructions":[],"notes":"free text summary"}\n' +
+        'Patient: ' + (patient.name || 'Unknown'),
+      messages: [{ role: 'user', content: req.body.transcript || 'Transcribe and analyze this doctor visit summary.' }]
+    });
+    const text = response.content?.[0]?.text || '';
+    const match = text.match(/VISIT_SUMMARY:(\{[\s\S]*?\})/);
+    let visitData = null;
+    if (match) {
+      try { visitData = JSON.parse(match[1]); } catch(e) {}
+    }
+    cleanupFile(req.file.path);
+    res.json({ success: true, summary: text, visitData });
+  } catch (e) {
+    cleanupFile(req.file.path);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Family dashboard — shareable read-only view
+app.get('/api/family-view/:token', (req, res) => {
+  const shares = safeReadJson('./data/family_shares.json', []);
+  const share = shares.find(s => s.token === req.params.token && s.active);
+  if (!share) return res.status(404).json({ error: 'Invalid or expired link' });
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === share.patientId);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  // Return limited info — no login required
+  res.json({
+    name: patient.name,
+    conditions: patient.conditions || [],
+    medications: (patient.medications || []).map(m => ({ name: m.name, dose: m.dose, frequency: m.frequency })),
+    allergies: patient.allergies || [],
+    primaryDoctor: patient.primaryDoctor,
+    clinic: patient.clinic,
+    lastUpdated: new Date().toISOString(),
+    message: share.message || 'Health update from the caregiver'
+  });
+});
+
+app.post('/api/family-share', (req, res) => {
+  const { patientId, message } = req.body;
+  if (!patientId) return res.status(400).json({ error: 'Patient ID required' });
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(16).toString('hex');
+  const shares = safeReadJson('./data/family_shares.json', []);
+  shares.push({ token, patientId, message: message || null, active: true, createdAt: new Date().toISOString() });
+  safeWriteJson('./data/family_shares.json', shares);
+  res.json({ success: true, token, url: '/family/' + token });
+});
+
+// Family view page
+app.get('/family/:token', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'family-view.html'));
+});
+
+// Medication food interactions
+app.get('/api/med-interactions/:patientId', async (req, res) => {
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === req.params.patientId);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  const meds = patient.medications || [];
+  if (!meds.length) return res.json({ interactions: [] });
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      messages: [{ role: 'user', content: 'For these medications: ' + meds.map(m => m.name + ' ' + (m.dose || '')).join(', ') +
+        '\n\nList ALL food and drink interactions. For each interaction, include:\n' +
+        '1. Medication name\n2. Food/drink to avoid or time separately\n3. Why (brief explanation)\n4. Severity (high/medium/low)\n\n' +
+        'Return as JSON: INTERACTIONS:[{"medication":"name","food":"item","reason":"why","severity":"high/medium/low","timing":"when to separate"}]' }]
+    });
+    const text = response.content?.[0]?.text || '';
+    const match = text.match(/INTERACTIONS:(\[[\s\S]*?\])/);
+    let interactions = [];
+    if (match) { try { interactions = JSON.parse(match[1]); } catch(e) {} }
+    res.json({ interactions, raw: text });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Caregiver burnout check
+app.get('/api/caregiver/burnout-check', (req, res) => {
+  const auditLog = require('./tools/audit-log');
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const recentActions = auditLog.getAuditLog({ since: sevenDaysAgo, limit: 1000 });
+  const callCount = recentActions.filter(a => a.action?.includes('call') || a.path?.includes('call')).length;
+  const chatCount = recentActions.filter(a => a.action?.includes('chat') || a.path?.includes('chat')).length;
+  const uploadCount = recentActions.filter(a => a.action?.includes('upload') || a.path?.includes('upload')).length;
+  const totalActions = recentActions.length;
+  const hoursActive = new Set(recentActions.map(a => a.timestamp?.substring(0, 13))).size;
+  let burnoutLevel = 'low';
+  let message = 'You\'re managing well. Keep it up.';
+  if (totalActions > 200 || callCount > 10 || hoursActive > 30) {
+    burnoutLevel = 'high';
+    message = 'You\'ve been incredibly busy this week. Please take some time for yourself. Here are respite care options in your area.';
+  } else if (totalActions > 100 || callCount > 5 || hoursActive > 20) {
+    burnoutLevel = 'moderate';
+    message = 'You\'re putting in a lot of effort. Make sure you\'re getting enough rest.';
+  }
+  res.json({
+    burnoutLevel,
+    message,
+    stats: { totalActions, callCount, chatCount, uploadCount, hoursActive, period: '7 days' }
+  });
+});
+
+// Government benefits check
+app.post('/api/benefits-check', async (req, res) => {
+  const { age, income, state, veteranStatus, disabilityStatus, currentInsurance } = req.body;
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      messages: [{ role: 'user', content: `Check what government healthcare benefits this person qualifies for:
+Age: ${age || 'unknown'}
+Annual income: ${income || 'unknown'}
+State: ${state || 'unknown'}
+Veteran: ${veteranStatus || 'no'}
+Disability: ${disabilityStatus || 'no'}
+Current insurance: ${currentInsurance || 'none'}
+
+List ALL programs they may qualify for with:
+1. Program name
+2. Why they likely qualify
+3. Estimated benefit (what it covers)
+4. How to apply (specific website or phone number)
+5. Application deadline if any
+
+Include: Medicare, Medicaid, ACA Marketplace, Medicare Savings Programs (QMB, SLMB, QI), Extra Help/LIS, SNAP, state pharmaceutical assistance programs, VA health care, CHIP (if applicable), state-specific programs for ${state || 'their state'}.
+
+Return as JSON: BENEFITS:[{"program":"name","qualifies":"likely/possible/unlikely","reason":"why","benefit":"what it covers","howToApply":"url or phone","deadline":"if any"}]` }]
+    });
+    const text = response.content?.[0]?.text || '';
+    const match = text.match(/BENEFITS:(\[[\s\S]*?\])/);
+    let benefits = [];
+    if (match) { try { benefits = JSON.parse(match[1]); } catch(e) {} }
+    res.json({ benefits, raw: text });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Predictive health alerts
+app.get('/api/health-alerts/:patientId', async (req, res) => {
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === req.params.patientId);
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      messages: [{ role: 'user', content: `Based on this patient profile, identify predictive health alerts — things that WILL need attention soon:
+
+Patient: ${patient.name}, Age: ${patient.dob ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / 31557600000) : 'unknown'}
+Conditions: ${(patient.conditions || []).join(', ') || 'none listed'}
+Medications: ${(patient.medications || []).map(m => m.name + ' ' + (m.dose || '')).join(', ') || 'none listed'}
+Allergies: ${(patient.allergies || []).join(', ') || 'none'}
+
+For each alert include:
+1. What to watch for
+2. When it's likely to need attention
+3. What action to take now
+4. Priority (urgent/soon/routine)
+
+Return as JSON: ALERTS:[{"alert":"description","timeframe":"when","action":"what to do","priority":"urgent/soon/routine"}]` }]
+    });
+    const text = response.content?.[0]?.text || '';
+    const match = text.match(/ALERTS:(\[[\s\S]*?\])/);
+    let alerts = [];
+    if (match) { try { alerts = JSON.parse(match[1]); } catch(e) {} }
+    res.json({ alerts, raw: text });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/landing', (_req, res) => {

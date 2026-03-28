@@ -49,8 +49,9 @@ body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#fff;min-heig
 
 <div class="container">
   <div class="offline-notice">
-    This page works offline. Save it to your home screen for instant access.
+    Works offline. Show this screen to paramedics or ER staff.
   </div>
+  <button onclick="toggleParamedicMode()" id="paramedicBtn" style="width:100%;padding:14px;background:#f59e0b;color:black;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:16px;letter-spacing:0.5px">PARAMEDIC MODE — LARGE TEXT</button>
 
   <!-- Emergency Call Buttons -->
   <div class="section">
@@ -73,6 +74,8 @@ body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#fff;min-heig
       <div class="info-row"><span class="info-label">Member ID</span><span class="info-val" id="patMemId">—</span></div>
       <div class="info-row"><span class="info-label">Doctor</span><span class="info-val" id="patDoc">—</span></div>
       <div class="info-row"><span class="info-label">Pharmacy</span><span class="info-val" id="patPharm">—</span></div>
+      <div class="info-row"><span class="info-label">Blood Type</span><span class="info-val" id="patBlood">—</span></div>
+      <div class="info-row"><span class="info-label">Weight</span><span class="info-val" id="patWeight">—</span></div>
     </div>
   </div>
 
@@ -183,6 +186,31 @@ function renderData(data) {
     ? contacts.map(c=>'<div class="contact-card"><div class="contact-info"><h3>'+c.name+'</h3><p>'+c.relationship+(c.phone?' · '+c.phone:'')+'</p></div>'+
         (c.phone?'<a class="contact-call" href="tel:'+c.phone+'">Call</a>':'')+'</div>').join('')
     : '<div class="contact-card"><div class="contact-info"><h3>No contacts set up</h3><p>Add emergency contacts in the main app</p></div></div>';
+}
+
+function toggleParamedicMode() {
+  document.body.classList.toggle('paramedic');
+  const btn = document.getElementById('paramedicBtn');
+  if (document.body.classList.contains('paramedic')) {
+    btn.textContent = 'EXIT PARAMEDIC MODE';
+    btn.style.background = '#ef4444';
+    btn.style.color = 'white';
+    document.body.style.fontSize = '20px';
+    document.querySelectorAll('.patient-name').forEach(e => e.style.fontSize = '32px');
+    document.querySelectorAll('.pill').forEach(e => { e.style.fontSize = '18px'; e.style.padding = '10px 18px'; });
+    document.querySelectorAll('.info-row').forEach(e => e.style.fontSize = '18px');
+    document.querySelectorAll('.info-val').forEach(e => e.style.fontSize = '20px');
+    window.scrollTo(0, 0);
+  } else {
+    btn.textContent = 'PARAMEDIC MODE — LARGE TEXT';
+    btn.style.background = '#f59e0b';
+    btn.style.color = 'black';
+    document.body.style.fontSize = '';
+    document.querySelectorAll('.patient-name').forEach(e => e.style.fontSize = '');
+    document.querySelectorAll('.pill').forEach(e => { e.style.fontSize = ''; e.style.padding = ''; });
+    document.querySelectorAll('.info-row').forEach(e => e.style.fontSize = '');
+    document.querySelectorAll('.info-val').forEach(e => e.style.fontSize = '');
+  }
 }
 
 loadEmergencyData();
