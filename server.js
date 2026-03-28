@@ -24,8 +24,19 @@ const tasksTools = require('./tools/tasks');
 const concernsTools = require('./tools/concerns');
 const rxRefillTools = require('./tools/rx-refill');
 const { ensureDataFiles } = require("./init-data");
+const cloudStorage = require("./tools/cloud-storage");
 ensureDataFiles();
 const app = express();
+
+// Download data from cloud storage on startup (before serving requests)
+(async () => {
+  try {
+    await cloudStorage.downloadAll();
+    console.log('[STARTUP] Cloud data synced');
+  } catch (e) {
+    console.log('[STARTUP] Cloud sync skipped:', e.message);
+  }
+})();
 
 
 app.use(express.json({ limit: '10mb' }));
@@ -78,6 +89,9 @@ function safeReadJson(filePath, fallback) {
 }
 function safeWriteJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  // Sync to cloud storage
+  const filename = path.basename(filePath);
+  cloudStorage.syncAfterWrite(filename);
 }
 function cleanupFile(filePath) {
   try {
@@ -1378,6 +1392,9 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const result = await auth.loginWithPassword(email, password);
+    // Check if user has patients
+    const userPatients = getPatientsForUser(result.user?.id || result.session?.userId);
+    result.hasPatients = userPatients.length > 0;
     res.json(result);
   } catch (e) {
     res.status(401).json({ error: e.message });
@@ -3583,25 +3600,30 @@ const PORT = process.env.PORT || 3000;
 const APP_URL = process.env.APP_URL || process.env.RAILWAY_PUBLIC_DOMAIN ? "https://" + process.env.RAILWAY_PUBLIC_DOMAIN : "http://localhost:" + PORT;
 console.log("APP_URL:", APP_URL);
 // Auto-seed admin account if no users exist
+const ADMIN_ID = 'admin-jfields';
 async function seedAdminAccount() {
   try {
     const usersFile = path.join(__dirname, "data", "users.json");
     let users = [];
     try { users = JSON.parse(fs.readFileSync(usersFile, "utf8")); } catch(e) {}
-    if (users.length > 0) return;
+    // Check if admin already exists
+    if (users.find(u => u.email === 'jf1986@me.com' || u.id === ADMIN_ID)) return;
     const admin = await auth.registerUser({
+      id: ADMIN_ID,
       email: "jf1986@me.com",
       password: "Health2251",
       name: "J Fields",
       role: "caregiver"
     });
-    console.log("Admin account created:", admin.email);
+    console.log("Admin account created:", admin.email, "ID:", ADMIN_ID);
+    // Tag existing patients with admin ID
     const patientsFile = path.join(__dirname, "data", "patients.json");
     try {
       const pData = JSON.parse(fs.readFileSync(patientsFile, "utf8"));
       const pts = pData.patients || pData;
-      (Array.isArray(pts) ? pts : []).forEach(p => { if (!p.ownerId) p.ownerId = admin.id; });
+      (Array.isArray(pts) ? pts : []).forEach(p => { if (!p.ownerId) p.ownerId = ADMIN_ID; });
       fs.writeFileSync(patientsFile, JSON.stringify(pData, null, 2));
+      cloudStorage.syncAfterWrite('patients.json');
     } catch(e) {}
   } catch(e) { console.log("Seed error:", e.message); }
 }

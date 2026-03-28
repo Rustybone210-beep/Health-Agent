@@ -332,7 +332,7 @@ async function doSignIn() {
     localStorage.setItem('ha_token', data.token);
     localStorage.setItem('ha_user', JSON.stringify(data.user || {}));
     document.cookie = 'ha_token=' + data.token + ';path=/;max-age=86400';
-    window.location.href = '/';
+    window.location.href = data.hasPatients ? '/' : '/onboarding';
   } catch (e) { showError('Connection error. Please try again.'); }
   finally { setLoading(false); }
 }

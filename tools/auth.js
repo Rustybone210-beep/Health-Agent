@@ -17,6 +17,7 @@ function loadUsers() {
 
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  try { require('./cloud-storage').syncAfterWrite('users.json'); } catch(e) {}
 }
 
 function loadSessions() {
@@ -28,6 +29,7 @@ function loadSessions() {
 
 function saveSessions(sessions) {
   fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
+  try { require('./cloud-storage').syncAfterWrite('sessions.json'); } catch(e) {}
 }
 
 // Clean expired sessions (older than 30 days)
@@ -49,7 +51,7 @@ function cleanSessions() {
 /**
  * Register a new user
  */
-async function registerUser({ email, password, name, role, biometricEnabled }) {
+async function registerUser({ email, password, name, role, biometricEnabled, id: customId }) {
   const users = loadUsers();
   const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
   if (existing) throw new Error("An account with this email already exists");
@@ -58,7 +60,7 @@ async function registerUser({ email, password, name, role, biometricEnabled }) {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   const user = {
-    id: uuidv4(),
+    id: customId || uuidv4(),
     email: email.toLowerCase().trim(),
     password: hashedPassword,
     name: name || "",
