@@ -3244,6 +3244,39 @@ app.get('/emergency', (_req, res) => {
   res.sendFile(require('path').join(__dirname, 'public', 'emergency.html'));
 });
 
+// ─── Share with Doctor ───────────────────────────────────
+const shareDoctor = require('./tools/share-with-doctor');
+
+app.post('/api/share/create', (req, res) => {
+  const userId = req.userSession?.userId || null;
+  const pid = req.body.patientId || getCurrentPatientId(userId);
+  if (!pid) return res.status(400).json({ error: 'No patient selected' });
+  const { token, expiresAt } = shareDoctor.createShareLink(pid, { userId, note: req.body.note });
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.protocol + '://' + req.get('host');
+  res.json({ success: true, token, url: baseUrl + '/shared/' + token, expiresAt });
+});
+
+app.get('/shared/:token', (req, res) => {
+  const link = shareDoctor.getShareLink(req.params.token);
+  if (!link) return res.status(404).send('<html><body style="background:#0a0f1a;color:#f1f5f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh"><div style="text-align:center"><h1 style="color:#ef4444">Link Expired</h1><p style="color:#94a3b8">This share link has expired or been revoked.</p><a href="https://healthagentcare.com" style="color:#14b8a6">Health Agent</a></div></body></html>');
+  const patients = getAllPatientsRaw();
+  const patient = patients.find(p => p.id === link.patientId);
+  if (!patient) return res.status(404).send('Patient not found');
+  const html = shareDoctor.buildSharedPage(patient, link);
+  res.send(html);
+});
+
+app.get('/api/share/links', (req, res) => {
+  const userId = req.userSession?.userId || null;
+  const pid = req.query.patientId || getCurrentPatientId(userId);
+  res.json({ links: shareDoctor.listActiveLinks(pid) });
+});
+
+app.delete('/api/share/:token', (req, res) => {
+  const revoked = shareDoctor.revokeLink(req.params.token);
+  res.json({ success: revoked });
+});
+
 // Language
 app.get('/api/language', (_req, res) => {
   const { LANGUAGES } = require('./tools/system-prompt');
