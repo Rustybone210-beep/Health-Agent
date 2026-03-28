@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Health Agent</title>
@@ -25,7 +25,7 @@
 --radius:20px;--radius-sm:12px;--radius-xs:8px;
 --sidebar:300px;--topbar:52px;--botnav:60px;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;overflow:hidden;padding-bottom:env(safe-area-inset-bottom)}
 body{background:linear-gradient(145deg,#0a1628 0%,#1e293b 50%,#0a1628 100%);background-attachment:fixed}
 
 /* ── SCROLLBARS ── */
@@ -248,7 +248,7 @@ body{background:linear-gradient(145deg,#0a1628 0%,#1e293b 50%,#0a1628 100%);back
 /* ══════════════════════════════════════
    BOTTOM NAV (mobile)
 ══════════════════════════════════════ */
-#botNav{height:var(--botnav);flex-shrink:0;display:flex;border-top:1px solid var(--border);background:rgba(8,16,30,0.95)}
+#botNav{height:calc(var(--botnav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;display:flex;border-top:1px solid var(--border);background:rgba(8,16,30,0.95)}
 .bn-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);font-size:9px;font-weight:600;cursor:pointer;transition:color .2s;text-transform:uppercase;letter-spacing:.4px;position:relative}
 .bn-tab i{font-size:15px}
 .bn-tab.active{color:var(--accent2)}
