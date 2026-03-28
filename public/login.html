@@ -77,7 +77,10 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0a1628,#1
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input id="siPassword" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password">
+        <div style="position:relative">
+          <input id="siPassword" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
+          <button type="button" onclick="togglePw('siPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:4px" title="Show password"><i class="fa-solid fa-eye"></i></button>
+        </div>
       </div>
       <div class="forgot-link"><a onclick="showForgot()">Forgot password?</a></div>
       <button class="btn-primary" onclick="doSignIn()"><i class="fa-solid fa-right-to-bracket" style="margin-right:8px"></i>Sign In</button>
@@ -95,7 +98,10 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0a1628,#1
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input id="regPassword" class="form-input" type="password" placeholder="Min 8 characters" autocomplete="new-password">
+        <div style="position:relative">
+          <input id="regPassword" class="form-input" type="password" placeholder="Min 8 characters" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" onclick="togglePw('regPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:4px" title="Show password"><i class="fa-solid fa-eye"></i></button>
+        </div>
       </div>
       <div style="margin:12px 0;padding:12px;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.15);border-radius:10px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#94a3b8;line-height:1.5">
@@ -217,6 +223,18 @@ async function doForgot() {
 }
 
 // Enter key support
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fa-solid fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fa-solid fa-eye';
+  }
+}
+
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     if(document.getElementById('forgotPanel').classList.contains('show'))doForgot();
