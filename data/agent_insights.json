@@ -1,0 +1,22 @@
+{
+  "maria-fields": {
+    "insights": [
+      {
+        "type": "environmental",
+        "priority": "low",
+        "title": "Dry Eye Alert",
+        "message": "Indoor heating reduces humidity below 30% — prime conditions for worsening dry eye. Consider a humidifier and increase artificial tear frequency today.",
+        "icon": "eye"
+      },
+      {
+        "type": "proactive",
+        "priority": "low",
+        "title": "Pre-Think: Next Appointment",
+        "message": "Before your next appointment, I can generate a smart prep sheet with questions based on Linda's current symptoms, recent med changes, and lab trends.",
+        "action": "generate_prep",
+        "icon": "calendar"
+      }
+    ],
+    "generatedAt": "2026-03-27T04:00:11.367Z"
+  }
+}

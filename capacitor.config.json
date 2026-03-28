@@ -1,11 +1,7 @@
 {
   "appId": "com.healthagent.app",
   "appName": "Health Agent",
-  "webDir": "public",
-  "server": {
-    "url": "https://health-agent-719697980755.us-central1.run.app",
-    "cleartext": false
-  },
+  "webDir": "capacitor-app",
   "ios": {
     "contentInset": "automatic",
     "backgroundColor": "#0f172a",
