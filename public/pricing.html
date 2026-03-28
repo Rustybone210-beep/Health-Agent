@@ -3,48 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="color-scheme" content="dark light">
-<title>Health Agent — Pricing</title>
-<meta name="theme-color" content="#0f172a">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0f1a">
+<title>Health Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f172a;--bg2:#1e293b;--glass:rgba(15,23,42,0.88);--glass-border:rgba(45,212,191,0.12);--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--accent:#2dd4bf;--sans:'Inter',-apple-system,sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,20px)}
-html,body{min-height:100dvh;font-family:var(--sans);background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--text);-webkit-font-smoothing:antialiased}
-.wrap{max-width:900px;margin:0 auto;padding:calc(var(--safe-top) + 20px) 16px calc(var(--safe-bot) + 20px)}
-.back{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:rgba(51,65,85,0.5);border:1px solid var(--glass-border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:24px}
-h1{font-size:32px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:-0.03em}
-.sub{text-align:center;font-size:16px;color:var(--text2);margin-bottom:32px}
-.toggle{display:flex;justify-content:center;gap:4px;margin-bottom:32px;background:rgba(51,65,85,0.4);border-radius:14px;padding:4px;max-width:280px;margin-left:auto;margin-right:auto}
-.toggle button{flex:1;padding:10px 20px;border-radius:10px;border:none;background:transparent;color:var(--text3);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)}
-.toggle button.active{background:rgba(45,212,191,0.15);color:var(--accent)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);min-height:100vh;color:#f1f5f9;-webkit-font-smoothing:antialiased}
+.glow{position:fixed;top:-120px;left:50%;transform:translateX(-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(20,184,166,0.06) 0%,transparent 70%);pointer-events:none}
+.wrap{max-width:900px;margin:0 auto;padding:calc(env(safe-area-inset-top,20px) + 20px) 16px calc(env(safe-area-inset-bottom,20px) + 20px);position:relative;z-index:1}
+.back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#94a3b8;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:28px;transition:all 0.2s}
+.back:hover{background:rgba(255,255,255,0.08);color:#f1f5f9}
+h1{font-size:36px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-1px}
+h1 span{color:#2dd4bf}
+.sub{text-align:center;font-size:15px;color:#94a3b8;margin-bottom:32px}
+.toggle{display:flex;justify-content:center;gap:4px;margin-bottom:32px;background:rgba(255,255,255,0.04);border-radius:100px;padding:4px;max-width:280px;margin-left:auto;margin-right:auto;border:1px solid rgba(255,255,255,0.06)}
+.toggle button{flex:1;padding:10px 20px;border-radius:100px;border:none;background:transparent;color:#475569;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.25s}
+.toggle button.active{background:rgba(20,184,166,0.12);color:#2dd4bf}
+.savings{display:inline-block;background:rgba(20,184,166,0.1);color:#14b8a6;font-size:10px;font-weight:700;padding:2px 6px;border-radius:100px;margin-left:4px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.card{background:var(--glass);border:1px solid var(--glass-border);border-radius:24px;padding:28px 24px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;flex-direction:column;position:relative;overflow:hidden}
-.card.featured{border-color:var(--accent);box-shadow:0 0 30px rgba(45,212,191,0.1)}
-.card.featured::before{content:'MOST POPULAR';position:absolute;top:16px;right:-28px;background:var(--accent);color:#0f172a;font-size:10px;font-weight:700;padding:4px 32px;transform:rotate(45deg);letter-spacing:0.05em}
-.tier-name{font-size:14px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
-.price{font-size:42px;font-weight:700;margin-bottom:4px;letter-spacing:-0.03em}
-.price span{font-size:16px;font-weight:400;color:var(--text2)}
-.price-note{font-size:12px;color:var(--text3);margin-bottom:20px}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:28px;padding:28px 24px;backdrop-filter:blur(24px);display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.3)}
+.card.featured{border-color:rgba(20,184,166,0.3);box-shadow:0 4px 40px rgba(20,184,166,0.08)}
+.card.featured::before{content:'MOST POPULAR';position:absolute;top:18px;right:-30px;background:#14b8a6;color:#0a0f1a;font-size:9px;font-weight:800;padding:4px 36px;transform:rotate(45deg);letter-spacing:0.08em}
+.tier-name{font-size:11px;font-weight:700;color:#14b8a6;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px}
+.price{font-size:44px;font-weight:800;margin-bottom:4px;letter-spacing:-2px}
+.price span{font-size:16px;font-weight:400;color:#94a3b8;letter-spacing:0}
+.price-note{font-size:12px;color:#475569;margin-bottom:24px}
 .features{flex:1;margin-bottom:24px}
-.feature{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--text2);margin-bottom:10px;line-height:1.5}
-.feature::before{content:'✓';color:var(--accent);font-weight:700;flex-shrink:0}
-.btn{width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all 0.15s}
+.feature{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#94a3b8;margin-bottom:10px;line-height:1.5}
+.feature i{color:#14b8a6;font-size:11px;margin-top:4px;flex-shrink:0}
+.btn{width:100%;padding:15px;border-radius:100px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.25s}
 .btn:active{transform:scale(0.98)}
-.btn-primary{background:linear-gradient(135deg,#2dd4bf,#06b6d4);color:#0f172a}
-.btn-secondary{background:rgba(51,65,85,0.5);border:1px solid var(--glass-border);color:var(--text)}
-.savings{display:inline-block;background:rgba(45,212,191,0.15);color:var(--accent);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;margin-left:8px}
+.btn-primary{background:linear-gradient(135deg,#0d9488,#14b8a6);color:white;box-shadow:0 4px 20px rgba(20,184,166,0.2)}
+.btn-primary:hover{box-shadow:0 8px 32px rgba(20,184,166,0.3);transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#94a3b8}
+.btn-secondary:hover{background:rgba(255,255,255,0.08);color:#f1f5f9}
 </style>
 </head>
 <body>
+<div class="glow"></div>
 <div class="wrap">
-  <a class="back" href="/">← Back to App</a>
-  <h1>Choose Your Plan</h1>
+  <a class="back" href="/"><i class="fa-solid fa-arrow-left"></i> Back to App</a>
+  <h1>Choose Your <span>Plan</span></h1>
   <p class="sub">Start free. Upgrade when you need more.</p>
 
   <div class="toggle">
     <button class="active" onclick="setInterval_('monthly',this)">Monthly</button>
-    <button onclick="setInterval_('yearly',this)">Yearly<span class="savings">Save 25%</span></button>
+    <button onclick="setInterval_('yearly',this)">Yearly<span class="savings">-25%</span></button>
   </div>
 
   <div class="cards">
@@ -53,11 +60,11 @@ h1{font-size:32px;font-weight:700;text-align:center;margin-bottom:8px;letter-spa
       <div class="price">$0<span>/mo</span></div>
       <div class="price-note">Free forever</div>
       <div class="features">
-        <div class="feature">1 patient profile</div>
-        <div class="feature">AI health chat</div>
-        <div class="feature">Document scanning</div>
-        <div class="feature">Basic medication tracking</div>
-        <div class="feature">Emergency playbooks</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>1 patient profile</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>AI health chat</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Document scanning</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Basic medication tracking</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Emergency info card</div>
       </div>
       <button class="btn btn-secondary" onclick="window.location.href='/'">Current Plan</button>
     </div>
@@ -67,18 +74,16 @@ h1{font-size:32px;font-weight:700;text-align:center;margin-bottom:8px;letter-spa
       <div class="price" id="proPrice">$9.99<span>/mo</span></div>
       <div class="price-note" id="proNote">Billed monthly</div>
       <div class="features">
-        <div class="feature">Up to 10 patients</div>
-        <div class="feature">Everything in Free</div>
-        <div class="feature">Rx price comparison (6 sources)</div>
-        <div class="feature">Lab analyzer with connections</div>
-        <div class="feature">Drug interaction checker</div>
-        <div class="feature">Provider search</div>
-        <div class="feature">AI phone calls to providers</div>
-        <div class="feature">Email drafting & sending</div>
-        <div class="feature">Insurance matcher</div>
-        <div class="feature">Living medical summary</div>
-        <div class="feature">Symptom-medication correlator</div>
-        <div class="feature">Priority AI responses</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Up to 10 patients</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Everything in Free</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Rx price comparison</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Lab analyzer with connections</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Drug interaction checker</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>AI phone calls to providers</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Email drafting & sending</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Insurance appeal generator</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Living medical summary</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Family dashboard sharing</div>
       </div>
       <button class="btn btn-primary" onclick="subscribe('pro')">Start Pro</button>
     </div>
@@ -88,13 +93,13 @@ h1{font-size:32px;font-weight:700;text-align:center;margin-bottom:8px;letter-spa
       <div class="price" id="famPrice">$14.99<span>/mo</span></div>
       <div class="price-note" id="famNote">Billed monthly</div>
       <div class="features">
-        <div class="feature">Up to 5 patients</div>
-        <div class="feature">Everything in Pro</div>
-        <div class="feature">Caregiver sharing & invites</div>
-        <div class="feature">Family dashboard</div>
-        <div class="feature">Medication reminders</div>
-        <div class="feature">Adherence tracking & streaks</div>
-        <div class="feature">Priority support</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Unlimited patients</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Everything in Pro</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Caregiver sharing & invites</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Medication reminders</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Caregiver burnout alerts</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Benefits navigator</div>
+        <div class="feature"><i class="fa-solid fa-check"></i>Priority support</div>
       </div>
       <button class="btn btn-primary" onclick="subscribe('family')">Start Family</button>
     </div>
