@@ -2,227 +2,311 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Health Agent — Sign In</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1a">
+<title>Health Agent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0a1628,#1e293b,#0a1628);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:#f1f5f9}
-.card{width:100%;max-width:400px;background:rgba(30,41,59,0.7);backdrop-filter:blur(24px);border:1px solid rgba(148,163,184,0.12);border-radius:28px;padding:36px 32px;box-shadow:0 24px 80px rgba(0,0,0,0.4)}
-.logo{text-align:center;margin-bottom:28px}
-.logo-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6,#2dd4bf);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 0 0 8px rgba(20,184,166,0.1)}
-.logo-icon i{font-size:24px;color:white}
-.logo h1{font-size:22px;font-weight:800;color:#2dd4bf;letter-spacing:-0.5px}
-.logo h1 span{color:#f1f5f9}
-.logo p{font-size:12px;color:#94a3b8;margin-top:4px}
-.tabs{display:flex;background:rgba(15,23,42,0.5);border-radius:12px;padding:4px;margin-bottom:24px;gap:4px}
-.tab{flex:1;padding:9px;border-radius:9px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;text-align:center;transition:all .2s;border:none;background:none}
-.tab.active{background:rgba(20,184,166,0.15);color:#2dd4bf;border:1px solid rgba(20,184,166,0.25)}
-.form-group{margin-bottom:14px}
-.form-label{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
-.form-input{width:100%;background:rgba(15,23,42,0.6);border:1px solid rgba(148,163,184,0.15);border-radius:12px;padding:12px 14px;font-size:14px;color:#f1f5f9;outline:none;font-family:'Inter',sans-serif;transition:border .2s}
-.form-input:focus{border-color:rgba(20,184,166,0.5)}
-.form-input::placeholder{color:#475569}
-.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#0d9488,#14b8a6);border:none;border-radius:12px;font-size:14px;font-weight:700;color:white;cursor:pointer;transition:all .2s;margin-top:6px;letter-spacing:.2px}
-.btn-primary:hover{background:linear-gradient(135deg,#14b8a6,#2dd4bf);transform:translateY(-1px);box-shadow:0 8px 24px rgba(20,184,166,0.3)}
-.btn-primary:active{transform:translateY(0)}
-.btn-secondary{width:100%;padding:12px;background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.15);border-radius:12px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;transition:all .2s;margin-top:8px}
-.btn-secondary:hover{background:rgba(148,163,184,0.14);color:#f1f5f9}
-.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#475569;font-size:11px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(148,163,184,0.1)}
-.error-msg{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:#fca5a5;margin-bottom:14px;display:none}
-.error-msg.show{display:block}
-.success-msg{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:#86efac;margin-bottom:14px;display:none}
-.success-msg.show{display:block}
-.forgot-link{text-align:right;margin-bottom:14px}
-.forgot-link a{font-size:11px;color:#2dd4bf;text-decoration:none;cursor:pointer}
-.forgot-link a:hover{text-decoration:underline}
-.features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:24px;padding-top:20px;border-top:1px solid rgba(148,163,184,0.08)}
-.feature{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}
-.feature i{color:#14b8a6;font-size:11px;width:14px}
-.loading{display:none;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#94a3b8;padding:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(165deg,#0a0f1a 0%,#0f172a 50%,#0a0f1a 100%);
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;color:#f1f5f9;
+  position:relative;overflow:hidden;
+}
+
+/* Teal glow behind title */
+.glow{
+  position:fixed;top:-120px;left:50%;transform:translateX(-50%);
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(20,184,166,0.08) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.container{
+  width:100%;max-width:380px;position:relative;z-index:1;
+}
+
+/* Logo */
+.logo{text-align:center;margin-bottom:40px}
+.logo h1{font-size:36px;font-weight:800;letter-spacing:-1px;color:#f1f5f9}
+.logo h1 span{color:#2dd4bf}
+.logo p{font-size:13px;color:#475569;margin-top:6px;font-weight:400}
+
+/* Glass card */
+.auth-card{
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:28px;
+  padding:28px 24px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+
+/* Input fields */
+.field-group{position:relative}
+.field-group+.field-group{border-top:1px solid rgba(255,255,255,0.06)}
+.field-input{
+  width:100%;background:transparent;border:none;
+  padding:16px 44px 16px 16px;
+  font-size:16px;color:#f1f5f9;font-family:inherit;
+  outline:none;
+}
+.field-input::placeholder{color:#475569}
+.field-icon{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:#475569;font-size:14px;width:18px;text-align:center;
+}
+.field-input.has-icon{padding-left:44px}
+.pw-toggle{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#475569;cursor:pointer;
+  font-size:14px;padding:6px;transition:color 0.2s;
+}
+.pw-toggle:hover{color:#94a3b8}
+
+/* Forgot link */
+.forgot{text-align:right;margin-top:10px;margin-bottom:4px}
+.forgot a{font-size:12px;color:#2dd4bf;text-decoration:none;font-weight:500}
+.forgot a:hover{text-decoration:underline}
+
+/* Buttons */
+.btn{
+  width:100%;padding:15px;border-radius:100px;font-size:15px;font-weight:700;
+  cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  border:none;letter-spacing:0.2px;
+}
+.btn:active{transform:scale(0.98)}
+.btn-teal{
+  background:linear-gradient(135deg,#0d9488,#14b8a6);color:white;
+  margin-top:16px;
+  box-shadow:0 4px 20px rgba(20,184,166,0.2);
+}
+.btn-teal:hover{box-shadow:0 8px 32px rgba(20,184,166,0.3);transform:translateY(-1px)}
+.btn-apple{
+  background:#ffffff;color:#000000;margin-top:10px;
+}
+.btn-apple:hover{background:#f1f5f9}
+.btn-google{
+  background:rgba(255,255,255,0.08);color:#f1f5f9;margin-top:8px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.btn-google:hover{background:rgba(255,255,255,0.12)}
+.btn i{font-size:16px}
+.btn-apple .apple-logo{font-size:18px;font-weight:400}
+
+/* Divider */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:20px 0;color:#475569;font-size:11px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.08em;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
+
+/* Footer links */
+.footer-links{text-align:center;margin-top:28px}
+.footer-links a{
+  font-size:13px;color:#2dd4bf;text-decoration:none;font-weight:500;
+}
+.footer-links a:hover{text-decoration:underline}
+.footer-links span{font-size:13px;color:#475569;margin:0 4px}
+
+/* Encryption footer */
+.encryption{
+  text-align:center;margin-top:32px;
+  font-size:11px;color:#334155;font-weight:400;
+}
+.encryption i{margin-right:4px;font-size:10px}
+
+/* Messages */
+.msg-error,.msg-success{
+  border-radius:14px;padding:12px 16px;font-size:13px;
+  margin-bottom:16px;display:none;line-height:1.4;
+}
+.msg-error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#fca5a5}
+.msg-success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);color:#86efac}
+.msg-error.show,.msg-success.show{display:block}
+
+/* Loading */
+.loading{display:none;align-items:center;justify-content:center;gap:8px;padding:12px;font-size:13px;color:#94a3b8}
 .loading.show{display:flex}
-.spinner{width:16px;height:16px;border:2px solid rgba(148,163,184,0.2);border-top-color:#14b8a6;border-radius:50%;animation:spin 0.8s linear infinite}
+.spinner{width:16px;height:16px;border:2px solid rgba(148,163,184,0.15);border-top-color:#14b8a6;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#forgotPanel{display:none}
-#forgotPanel.show{display:block}
+
+/* Create account form */
+.create-form{display:none}
+.consent-box{
+  margin:16px 0;padding:14px;
+  background:rgba(20,184,166,0.04);
+  border:1px solid rgba(20,184,166,0.1);
+  border-radius:14px;
+}
+.consent-label{
+  display:flex;align-items:flex-start;gap:10px;
+  cursor:pointer;font-size:12px;color:#94a3b8;line-height:1.6;
+}
+.consent-label input{margin-top:4px;flex-shrink:0;accent-color:#14b8a6}
+.consent-label a{color:#2dd4bf;text-decoration:none}
+.consent-label a:hover{text-decoration:underline}
+.consent-label strong{color:#e2e8f0}
+
+/* Forgot panel */
+.forgot-panel{display:none}
+.forgot-panel.show{display:block}
+.forgot-title{font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+.forgot-sub{font-size:13px;color:#94a3b8;margin-bottom:20px}
+.back-btn{
+  width:100%;padding:13px;border-radius:100px;font-size:14px;font-weight:600;
+  cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);
+  color:#94a3b8;margin-top:10px;transition:all 0.2s;
+}
+.back-btn:hover{background:rgba(255,255,255,0.08);color:#f1f5f9}
+
+/* Responsive */
+@media(max-height:700px){
+  .logo{margin-bottom:24px}
+  .logo h1{font-size:28px}
+  .encryption{margin-top:16px}
+}
 </style>
 </head>
 <body>
-<div class="card">
+
+<div class="glow"></div>
+
+<div class="container">
   <div class="logo">
-    <div class="logo-icon"><i class="fa-solid fa-heart-pulse"></i></div>
-    <h1>Health<span>Agent</span></h1>
-    <p>AI-powered healthcare navigation</p>
+    <h1><span>Health</span>Agent</h1>
+    <p>Your AI healthcare companion</p>
   </div>
 
-  <!-- Main panels -->
+  <!-- Sign In (default) -->
   <div id="authPanel">
-    <div class="tabs">
-      <button class="tab active" id="tabSignIn" onclick="showTab('signin')">Sign In</button>
-      <button class="tab" id="tabCreate" onclick="showTab('create')">Create Account</button>
-    </div>
+    <div id="errorMsg" class="msg-error"></div>
+    <div id="successMsg" class="msg-success"></div>
+    <div class="loading" id="loadingIndicator"><div class="spinner"></div>Please wait</div>
 
-    <div id="errorMsg" class="error-msg"></div>
-    <div id="successMsg" class="success-msg"></div>
-    <div class="loading" id="loadingIndicator"><div class="spinner"></div>Please wait…</div>
-
-    <!-- Sign In -->
     <div id="signinForm">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input id="siEmail" class="form-input" type="email" placeholder="your@email.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <div style="position:relative">
-          <input id="siPassword" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
-          <button type="button" onclick="togglePw('siPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:4px" title="Show password"><i class="fa-solid fa-eye"></i></button>
+      <div class="auth-card">
+        <div class="field-group">
+          <i class="fa-solid fa-envelope field-icon"></i>
+          <input id="siEmail" class="field-input has-icon" type="email" placeholder="Email" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input id="siPassword" class="field-input has-icon" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:44px">
+          <button type="button" class="pw-toggle" onclick="togglePw('siPassword',this)" title="Show password"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
-      <div class="forgot-link"><a onclick="showForgot()">Forgot password?</a></div>
-      <button class="btn-primary" onclick="doSignIn()"><i class="fa-solid fa-right-to-bracket" style="margin-right:8px"></i>Sign In</button>
+      <div class="forgot"><a onclick="showForgot()">Forgot password?</a></div>
+      <button class="btn btn-teal" onclick="doSignIn()">Sign In</button>
+
+      <div class="divider">or</div>
+      <button class="btn btn-apple"><span class="apple-logo"><i class="fa-brands fa-apple"></i></span> Sign in with Apple</button>
+      <button class="btn btn-google"><i class="fa-brands fa-google"></i> Sign in with Google</button>
     </div>
 
     <!-- Create Account -->
-    <div id="createForm" style="display:none">
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input id="regName" class="form-input" type="text" placeholder="Your full name" autocomplete="name">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input id="regEmail" class="form-input" type="email" placeholder="your@email.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <div style="position:relative">
-          <input id="regPassword" class="form-input" type="password" placeholder="Min 8 characters" autocomplete="new-password" style="padding-right:44px">
-          <button type="button" onclick="togglePw('regPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:4px" title="Show password"><i class="fa-solid fa-eye"></i></button>
+    <div id="createForm" class="create-form">
+      <div class="auth-card">
+        <div class="field-group">
+          <i class="fa-solid fa-user field-icon"></i>
+          <input id="regName" class="field-input has-icon" type="text" placeholder="Full name" autocomplete="name">
+        </div>
+        <div class="field-group">
+          <i class="fa-solid fa-envelope field-icon"></i>
+          <input id="regEmail" class="field-input has-icon" type="email" placeholder="Email" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input id="regPassword" class="field-input has-icon" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" class="pw-toggle" onclick="togglePw('regPassword',this)" title="Show password"><i class="fa-solid fa-eye"></i></button>
         </div>
       </div>
-      <div style="margin:12px 0;padding:12px;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.15);border-radius:10px">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#94a3b8;line-height:1.5">
-          <input type="checkbox" id="consentCheck" style="margin-top:3px;flex-shrink:0;accent-color:#14b8a6">
-          <span>I agree to the <a href="/terms" target="_blank" style="color:#2dd4bf">Terms of Service</a> and <a href="/privacy" target="_blank" style="color:#2dd4bf">Privacy Policy</a>. I understand Health Agent uses AI to assist with healthcare navigation and is <strong style="color:#f1f5f9">not a substitute for professional medical advice</strong>. Health data is processed with de-identification protections under <a href="/privacy#hipaa" target="_blank" style="color:#2dd4bf">HIPAA safeguards</a>.</span>
+      <div class="consent-box">
+        <label class="consent-label">
+          <input type="checkbox" id="consentCheck">
+          <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand Health Agent uses AI and is <strong>not a substitute for medical advice</strong>.</span>
         </label>
       </div>
-      <button class="btn-primary" onclick="doRegister()"><i class="fa-solid fa-user-plus" style="margin-right:8px"></i>Create Account</button>
+      <button class="btn btn-teal" onclick="doRegister()">Create Account</button>
+    </div>
+
+    <div class="footer-links">
+      <a id="toggleLink" onclick="toggleAuth()">Create an account</a>
     </div>
   </div>
 
-  <!-- Forgot Password Panel -->
-  <div id="forgotPanel">
-    <div style="margin-bottom:16px">
-      <div style="font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px">Reset Password</div>
-      <div style="font-size:12px;color:#94a3b8">Enter your email and we'll send a reset link.</div>
+  <!-- Forgot Password -->
+  <div id="forgotPanel" class="forgot-panel">
+    <div class="forgot-title">Reset Password</div>
+    <div class="forgot-sub">Enter your email and we'll send a reset link.</div>
+    <div id="forgotError" class="msg-error"></div>
+    <div id="forgotSuccess" class="msg-success"></div>
+    <div class="auth-card">
+      <div class="field-group">
+        <i class="fa-solid fa-envelope field-icon"></i>
+        <input id="forgotEmail" class="field-input has-icon" type="email" placeholder="Email" autocomplete="email">
+      </div>
     </div>
-    <div id="forgotError" class="error-msg"></div>
-    <div id="forgotSuccess" class="success-msg"></div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input id="forgotEmail" class="form-input" type="email" placeholder="your@email.com">
-    </div>
-    <button class="btn-primary" onclick="doForgot()"><i class="fa-solid fa-envelope" style="margin-right:8px"></i>Send Reset Link</button>
-    <button class="btn-secondary" onclick="showAuth()">Back to Sign In</button>
+    <button class="btn btn-teal" onclick="doForgot()" style="margin-top:16px">Send Reset Link</button>
+    <button class="back-btn" onclick="showAuth()"><i class="fa-solid fa-arrow-left" style="margin-right:6px"></i>Back to Sign In</button>
   </div>
 
-  <div class="features">
-    <div class="feature"><i class="fa-solid fa-lock"></i>HIPAA-compliant</div>
-    <div class="feature"><i class="fa-solid fa-brain"></i>AI-powered</div>
-    <div class="feature"><i class="fa-solid fa-camera"></i>Scan documents</div>
-    <div class="feature"><i class="fa-solid fa-bell"></i>Smart alerts</div>
-  </div>
+  <div class="encryption"><i class="fa-solid fa-shield-halved"></i>Protected by end-to-end encryption</div>
 </div>
 
 <script>
-function showTab(tab) {
-  document.getElementById('signinForm').style.display = tab==='signin'?'block':'none';
-  document.getElementById('createForm').style.display = tab==='create'?'block':'none';
-  document.getElementById('tabSignIn').classList.toggle('active', tab==='signin');
-  document.getElementById('tabCreate').classList.toggle('active', tab==='create');
+let currentView = 'signin';
+
+function toggleAuth() {
+  if (currentView === 'signin') {
+    currentView = 'create';
+    document.getElementById('signinForm').style.display = 'none';
+    document.getElementById('createForm').style.display = 'block';
+    document.getElementById('toggleLink').textContent = 'Already have an account? Sign in';
+  } else {
+    currentView = 'signin';
+    document.getElementById('signinForm').style.display = 'block';
+    document.getElementById('createForm').style.display = 'none';
+    document.getElementById('toggleLink').textContent = 'Create an account';
+  }
   clearMessages();
 }
+
 function showForgot() {
-  document.getElementById('authPanel').style.display='none';
+  document.getElementById('authPanel').style.display = 'none';
   document.getElementById('forgotPanel').classList.add('show');
 }
 function showAuth() {
-  document.getElementById('authPanel').style.display='block';
+  document.getElementById('authPanel').style.display = 'block';
   document.getElementById('forgotPanel').classList.remove('show');
 }
 function clearMessages() {
-  ['errorMsg','successMsg','forgotError','forgotSuccess'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){el.classList.remove('show');el.textContent=''}
+  ['errorMsg','successMsg','forgotError','forgotSuccess'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('show'); el.textContent = ''; }
   });
 }
-function showError(msg, id='errorMsg') {
-  const el=document.getElementById(id);
-  if(el){el.textContent=msg;el.classList.add('show')}
+function showError(msg, id = 'errorMsg') {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
 }
-function showSuccess(msg, id='successMsg') {
-  const el=document.getElementById(id);
-  if(el){el.textContent=msg;el.classList.add('show')}
+function showSuccess(msg, id = 'successMsg') {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
 }
 function setLoading(show) {
-  document.getElementById('loadingIndicator').classList.toggle('show',show);
+  document.getElementById('loadingIndicator').classList.toggle('show', show);
 }
-
-async function doSignIn() {
-  clearMessages();
-  const email=document.getElementById('siEmail').value.trim();
-  const password=document.getElementById('siPassword').value;
-  if(!email||!password){showError('Email and password required.');return}
-  setLoading(true);
-  try {
-    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-    const data=await res.json();
-    if(!res.ok||data.error){showError(data.error||'Sign in failed.');return}
-    localStorage.setItem('ha_token',data.token);
-    localStorage.setItem('ha_user',JSON.stringify(data.user||{}));
-    document.cookie='ha_token='+data.token+';path=/;max-age=86400';
-    window.location.href='/';
-  } catch(e){showError('Connection error. Please try again.')}
-  finally{setLoading(false)}
-}
-
-async function doRegister() {
-  clearMessages();
-  const name=document.getElementById('regName').value.trim();
-  const email=document.getElementById('regEmail').value.trim();
-  const password=document.getElementById('regPassword').value;
-  if(!email||!password){showError('Email and password required.');return}
-  if(password.length<8){showError('Password must be at least 8 characters.');return}
-  if(!document.getElementById('consentCheck').checked){showError('Please agree to the Terms of Service and Privacy Policy.');return}
-  setLoading(true);
-  try {
-    const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
-    const data=await res.json();
-    if(!res.ok||data.error){showError(data.error||'Registration failed.');return}
-    showSuccess('Account created! Signing you in…');
-    setTimeout(async()=>{
-      const r2=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-      const d2=await r2.json();
-      if(d2.token){localStorage.setItem('ha_token',d2.token);document.cookie='ha_token='+d2.token+';path=/;max-age=86400';window.location.href='/'}
-    },1000);
-  } catch(e){showError('Connection error. Please try again.')}
-  finally{setLoading(false)}
-}
-
-async function doForgot() {
-  const email=document.getElementById('forgotEmail').value.trim();
-  if(!email){showError('Email required.','forgotError');return}
-  try {
-    const res=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
-    const data=await res.json();
-    showSuccess(data.message||'Reset link sent if that email exists.','forgotSuccess');
-  } catch(e){showError('Connection error.','forgotError')}
-}
-
-// Enter key support
 function togglePw(id, btn) {
   const input = document.getElementById(id);
   const icon = btn.querySelector('i');
@@ -235,10 +319,61 @@ function togglePw(id, btn) {
   }
 }
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){
-    if(document.getElementById('forgotPanel').classList.contains('show'))doForgot();
-    else if(document.getElementById('createForm').style.display!=='none')doRegister();
+async function doSignIn() {
+  clearMessages();
+  const email = document.getElementById('siEmail').value.trim();
+  const password = document.getElementById('siPassword').value;
+  if (!email || !password) { showError('Email and password required.'); return; }
+  setLoading(true);
+  try {
+    const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const data = await res.json();
+    if (!res.ok || data.error) { showError(data.error || 'Sign in failed.'); return; }
+    localStorage.setItem('ha_token', data.token);
+    localStorage.setItem('ha_user', JSON.stringify(data.user || {}));
+    document.cookie = 'ha_token=' + data.token + ';path=/;max-age=86400';
+    window.location.href = '/';
+  } catch (e) { showError('Connection error. Please try again.'); }
+  finally { setLoading(false); }
+}
+
+async function doRegister() {
+  clearMessages();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!email || !password) { showError('Email and password required.'); return; }
+  if (password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+  if (!document.getElementById('consentCheck').checked) { showError('Please agree to the Terms of Service and Privacy Policy.'); return; }
+  setLoading(true);
+  try {
+    const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
+    const data = await res.json();
+    if (!res.ok || data.error) { showError(data.error || 'Registration failed.'); return; }
+    showSuccess('Account created! Signing you in...');
+    setTimeout(async () => {
+      const r2 = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const d2 = await r2.json();
+      if (d2.token) { localStorage.setItem('ha_token', d2.token); document.cookie = 'ha_token=' + d2.token + ';path=/;max-age=86400'; window.location.href = '/'; }
+    }, 1000);
+  } catch (e) { showError('Connection error. Please try again.'); }
+  finally { setLoading(false); }
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { showError('Email required.', 'forgotError'); return; }
+  try {
+    const res = await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    const data = await res.json();
+    showSuccess(data.message || 'Reset link sent if that email exists.', 'forgotSuccess');
+  } catch (e) { showError('Connection error.', 'forgotError'); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('forgotPanel').classList.contains('show')) doForgot();
+    else if (currentView === 'create') doRegister();
     else doSignIn();
   }
 });
