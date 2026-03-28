@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Caregiver Community — Health Agent</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.topbar{background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(148,163,184,0.12);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:17px;font-weight:800;color:#2dd4bf}
+.topbar h1 span{color:#f1f5f9}
+.back-btn{color:#64748b;text-decoration:none;font-size:14px}
+.container{max-width:600px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0 16px;-webkit-overflow-scrolling:touch}
+.tab{padding:8px 16px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid rgba(148,163,184,0.15);background:transparent;color:#94a3b8;transition:all .2s}
+.tab.active{background:rgba(20,184,166,0.15);color:#2dd4bf;border-color:rgba(20,184,166,0.3)}
+.new-post-btn{width:100%;padding:14px;background:rgba(20,184,166,0.1);border:1px dashed rgba(20,184,166,0.3);border-radius:14px;color:#2dd4bf;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px;text-align:center}
+.post-card{background:rgba(30,41,59,0.6);border:1px solid rgba(148,163,184,0.1);border-radius:14px;padding:16px;margin-bottom:12px}
+.post-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.post-author{font-size:12px;color:#64748b}
+.post-category{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:100px;background:rgba(20,184,166,0.1);color:#14b8a6}
+.post-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px;cursor:pointer}
+.post-title:hover{color:#2dd4bf}
+.post-body{font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:12px}
+.post-footer{display:flex;align-items:center;gap:16px;font-size:12px;color:#64748b}
+.post-action{cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .2s}
+.post-action:hover{color:#2dd4bf}
+.post-action.upvoted{color:#2dd4bf}
+.reply-card{background:rgba(15,23,42,0.5);border-left:2px solid rgba(20,184,166,0.2);border-radius:0 10px 10px 0;padding:12px;margin:8px 0 8px 16px;font-size:13px}
+.reply-author{font-size:11px;color:#64748b;margin-bottom:4px}
+.reply-body{color:#94a3b8;line-height:1.5}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:#1e293b;border:1px solid rgba(148,163,184,0.15);border-radius:20px;padding:24px;width:100%;max-width:500px}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:16px;color:#f1f5f9}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(148,163,184,0.15);border-radius:10px;color:#f1f5f9;font-size:14px;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:rgba(20,184,166,0.4)}
+.field textarea{min-height:100px;resize:vertical}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.modal-actions button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none}
+.btn-post{background:#14b8a6;color:#0f172a}
+.btn-cancel{background:rgba(148,163,184,0.1);color:#94a3b8}
+.reply-input{display:flex;gap:8px;margin-top:12px}
+.reply-input input{flex:1;padding:8px 12px;background:#0f172a;border:1px solid rgba(148,163,184,0.12);border-radius:10px;color:#f1f5f9;font-size:13px;outline:none}
+.reply-input button{padding:8px 16px;background:#14b8a6;color:#0f172a;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.empty{text-align:center;padding:40px;color:#475569;font-size:14px}
+.disclaimer{text-align:center;font-size:11px;color:#475569;padding:20px;border-top:1px solid rgba(148,163,184,0.08);margin-top:20px}
+</style>
+</head>
+<body>
+<div class="topbar">
+<a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+<h1>Caregiver<span> Community</span></h1>
+<div style="width:50px"></div>
+</div>
+
+<div class="container">
+<div class="tabs" id="tabs"></div>
+<button class="new-post-btn" onclick="openNewPost()"><i class="fa-solid fa-plus" style="margin-right:6px"></i>Ask a Question or Share a Tip</button>
+<div id="posts"></div>
+<div class="disclaimer">
+This is a caregiver support community. Never share patient names, addresses, or insurance numbers.<br>
+Share experiences, not medical records. Be kind — everyone here is fighting a hard battle.
+</div>
+</div>
+
+<!-- New Post Modal -->
+<div class="modal-bg" id="newPostModal">
+<div class="modal">
+<h2>Share with the Community</h2>
+<div class="field">
+<label>Category</label>
+<select id="postCategory">
+<option value="caregiving">Caregiving</option>
+<option value="medications">Medications</option>
+<option value="insurance">Insurance</option>
+<option value="medicare">Medicare</option>
+<option value="doctors">Doctors</option>
+<option value="pharmacy">Pharmacy</option>
+<option value="billing">Billing</option>
+<option value="specialists">Specialists</option>
+<option value="lab-results">Lab Results</option>
+<option value="tips">Tips & Tricks</option>
+<option value="emotional-support">Emotional Support</option>
+</select>
+</div>
+<div class="field">
+<label>Your Display Name (anonymous OK)</label>
+<input id="postName" value="Anonymous Caregiver" placeholder="How you want to appear">
+</div>
+<div class="field">
+<label>Title</label>
+<input id="postTitle" placeholder="e.g. Has anyone dealt with Medicare denying Xdemvy?">
+</div>
+<div class="field">
+<label>Details</label>
+<textarea id="postBody" placeholder="Share your experience, question, or tip. Don't include patient names or personal info."></textarea>
+</div>
+<div class="modal-actions">
+<button class="btn-cancel" onclick="closeNewPost()">Cancel</button>
+<button class="btn-post" onclick="submitPost()">Post</button>
+</div>
+</div>
+</div>
+
+<script>
+const token = localStorage.getItem('ha_token');
+const headers = {'Content-Type':'application/json'};
+if(token) headers['Authorization'] = 'Bearer ' + token;
+
+let currentCategory = 'all';
+let allPosts = [];
+
+async function loadPosts(category) {
+  currentCategory = category || 'all';
+  const params = category && category !== 'all' ? '?category=' + category : '';
+  const res = await fetch('/api/community/posts' + params, {headers});
+  const data = await res.json();
+  allPosts = data.posts || [];
+  renderTabs(data.categories || []);
+  renderPosts(allPosts);
+}
+
+function renderTabs(categories) {
+  const el = document.getElementById('tabs');
+  el.innerHTML = '<div class="tab ' + (currentCategory === 'all' ? 'active' : '') + '" onclick="loadPosts(\'all\')">All</div>' +
+    categories.map(c => '<div class="tab ' + (currentCategory === c ? 'active' : '') + '" onclick="loadPosts(\'' + c + '\')">' + c.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase()) + '</div>').join('');
+}
+
+function renderPosts(posts) {
+  const el = document.getElementById('posts');
+  if (!posts.length) { el.innerHTML = '<div class="empty">No posts yet. Be the first to share!</div>'; return; }
+  el.innerHTML = posts.map(p => `
+    <div class="post-card" id="post-${p.id}">
+      <div class="post-header">
+        <span class="post-author">${esc(p.displayName)} · ${timeAgo(p.createdAt)}</span>
+        <span class="post-category">${p.category}</span>
+      </div>
+      <div class="post-title" onclick="toggleReplies('${p.id}')">${esc(p.title)}</div>
+      <div class="post-body">${esc(p.body)}</div>
+      <div class="post-footer">
+        <span class="post-action" onclick="upvote('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.upvotes}</span>
+        <span class="post-action" onclick="toggleReplies('${p.id}')"><i class="fa-solid fa-comment"></i> ${p.replies?.length || 0}</span>
+        <span><i class="fa-solid fa-eye"></i> ${p.viewCount || 0}</span>
+      </div>
+      <div id="replies-${p.id}" style="display:none">
+        ${(p.replies||[]).map(r => `
+          <div class="reply-card">
+            <div class="reply-author">${esc(r.displayName)} · ${timeAgo(r.createdAt)}</div>
+            <div class="reply-body">${esc(r.body)}</div>
+          </div>`).join('')}
+        <div class="reply-input">
+          <input id="reply-input-${p.id}" placeholder="Share your experience...">
+          <button onclick="submitReply('${p.id}')">Reply</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleReplies(postId) {
+  const el = document.getElementById('replies-' + postId);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function upvote(postId) {
+  await fetch('/api/community/posts/' + postId + '/upvote', {method:'POST',headers});
+  loadPosts(currentCategory);
+}
+
+async function submitReply(postId) {
+  const input = document.getElementById('reply-input-' + postId);
+  if (!input.value.trim()) return;
+  await fetch('/api/community/posts/' + postId + '/reply', {
+    method:'POST', headers,
+    body: JSON.stringify({ body: input.value, displayName: 'Anonymous Caregiver' })
+  });
+  input.value = '';
+  loadPosts(currentCategory);
+}
+
+function openNewPost() { document.getElementById('newPostModal').classList.add('open'); }
+function closeNewPost() { document.getElementById('newPostModal').classList.remove('open'); }
+
+async function submitPost() {
+  const title = document.getElementById('postTitle').value.trim();
+  const body = document.getElementById('postBody').value.trim();
+  const category = document.getElementById('postCategory').value;
+  const displayName = document.getElementById('postName').value.trim() || 'Anonymous Caregiver';
+  if (!title || !body) return;
+  await fetch('/api/community/posts', {
+    method:'POST', headers,
+    body: JSON.stringify({ title, body, category, displayName })
+  });
+  closeNewPost();
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postBody').value = '';
+  loadPosts(currentCategory);
+}
+
+function timeAgo(date) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return Math.floor(seconds/60) + 'm ago';
+  if (seconds < 86400) return Math.floor(seconds/3600) + 'h ago';
+  if (seconds < 604800) return Math.floor(seconds/86400) + 'd ago';
+  return new Date(date).toLocaleDateString();
+}
+
+function esc(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+loadPosts();
+</script>
+</body>
+</html>

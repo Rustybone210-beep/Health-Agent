@@ -3413,6 +3413,120 @@ Return as JSON: ALERTS:[{"alert":"description","timeframe":"when","action":"what
   }
 });
 
+// Insurance Appeal Auto-Generator
+app.post('/api/appeal/generate', async (req, res) => {
+  const appealGen = require('./tools/appeal-generator');
+  const { claimId, denialCode, denialReason, serviceDate, providerName, procedureCode, diagnosisCode, urgency } = req.body;
+  const currentPatientId = getCurrentPatientId();
+  const patient = getAllPatientsRaw().find(p => p.id === currentPatientId) || {};
+
+  // Get claim if exists
+  let claim = {};
+  if (claimId) {
+    try {
+      const insuranceClaims = require('./tools/insurance-claims');
+      const claims = insuranceClaims.getClaims(currentPatientId);
+      claim = claims.find(c => c.id === claimId) || {};
+    } catch(e) {}
+  }
+
+  // Merge provided details with claim data
+  if (denialReason) claim.denialReason = denialReason;
+  if (providerName) claim.providerName = providerName;
+  if (serviceDate) claim.serviceDate = serviceDate;
+  if (!claim.insuranceName) claim.insuranceName = patient.insurance?.primary || '';
+  if (!claim.memberId) claim.memberId = patient.insurance?.memberId || '';
+
+  // Generate the base appeal package
+  const appealPackage = appealGen.buildAppealPackage(claim, patient, {
+    denialCode, denialReason, serviceDate, providerName, procedureCode, diagnosisCode, urgency
+  });
+
+  // AI-enhance the medical necessity argument
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: `Write a compelling medical necessity argument for an insurance appeal. Be specific and cite clinical guidelines.
+
+Patient: ${patient.name || 'Patient'}, Age: ${patient.dob ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / 31557600000) : 'unknown'}
+Conditions: ${(patient.conditions || []).join(', ') || 'not listed'}
+Medications: ${(patient.medications || []).map(m => m.name).join(', ') || 'not listed'}
+Procedure/Service: ${procedureCode || 'not specified'} — ${providerName || 'provider'}
+Denial reason: ${denialReason || denialCode || 'not specified'}
+Diagnosis: ${diagnosisCode || 'not specified'}
+
+Write 2-3 paragraphs explaining why this service is medically necessary for THIS specific patient. Reference clinical practice guidelines where applicable. Be persuasive but factual.` }]
+    });
+    appealPackage.aiMedicalNecessity = response.content?.[0]?.text || '';
+  } catch(e) {
+    appealPackage.aiMedicalNecessity = '';
+  }
+
+  res.json({ success: true, appeal: appealPackage });
+});
+
+// Get denial code lookup
+app.get('/api/appeal/denial-codes', (req, res) => {
+  const appealGen = require('./tools/appeal-generator');
+  res.json({ codes: appealGen.DENIAL_CODE_REBUTTALS });
+});
+
+// Get Medicare appeal levels
+app.get('/api/appeal/medicare-levels', (req, res) => {
+  const appealGen = require('./tools/appeal-generator');
+  res.json({ levels: appealGen.getMedicareAppealLevels() });
+});
+
+// ─── Caregiver Community ───────────────────────────────────
+const community = require('./tools/community');
+
+app.get('/api/community/posts', (req, res) => {
+  const { category, sort, limit, offset } = req.query;
+  res.json(community.getPosts({ category, sort, limit: parseInt(limit) || 20, offset: parseInt(offset) || 0 }));
+});
+
+app.get('/api/community/posts/:id', (req, res) => {
+  const post = community.getPost(req.params.id);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  res.json({ post });
+});
+
+app.post('/api/community/posts', (req, res) => {
+  const { category, title, body, displayName } = req.body;
+  if (!title || !body) return res.status(400).json({ error: 'Title and body required' });
+  const userId = req.userSession?.userId || 'anonymous';
+  const post = community.createPost({ userId, displayName, category, title, body });
+  res.json({ success: true, post });
+});
+
+app.post('/api/community/posts/:id/reply', (req, res) => {
+  const { body, displayName } = req.body;
+  if (!body) return res.status(400).json({ error: 'Reply body required' });
+  const userId = req.userSession?.userId || 'anonymous';
+  const reply = community.addReply(req.params.id, { userId, displayName, body });
+  if (!reply) return res.status(404).json({ error: 'Post not found' });
+  res.json({ success: true, reply });
+});
+
+app.post('/api/community/posts/:id/upvote', (req, res) => {
+  const userId = req.userSession?.userId || 'anonymous';
+  const post = community.upvotePost(req.params.id, userId);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  res.json({ success: true, upvotes: post.upvotes });
+});
+
+app.post('/api/community/posts/:postId/replies/:replyId/upvote', (req, res) => {
+  const userId = req.userSession?.userId || 'anonymous';
+  const reply = community.upvoteReply(req.params.postId, req.params.replyId, userId);
+  if (!reply) return res.status(404).json({ error: 'Not found' });
+  res.json({ success: true, upvotes: reply.upvotes });
+});
+
+app.get('/community', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'community.html'));
+});
+
 app.get('/landing', (_req, res) => {
   res.sendFile(require('path').join(__dirname, 'public', 'landing.html'));
 });
