@@ -217,7 +217,30 @@ body{
   <!-- STEP 3: Conditions, Meds, Allergies -->
   <div class="step" id="step3">
     <div class="step-title">Medical Info</div>
-    <div class="step-sub">Add what you know. You can scan documents later to fill in more.</div>
+    <div class="step-sub">Scan a prescription bottle, upload a med list, or type it in. The AI reads everything for you.</div>
+
+    <!-- Scan/Upload options -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div class="scan-area" onclick="triggerMedScan('camera')" style="padding:20px 12px">
+        <div class="scan-icon" style="font-size:20px"><i class="fa-solid fa-camera"></i></div>
+        <div class="scan-text" style="font-size:13px">Scan Rx Bottle</div>
+        <div class="scan-sub" style="font-size:11px">Point at the label</div>
+      </div>
+      <div class="scan-area" onclick="triggerMedScan('file')" style="padding:20px 12px">
+        <div class="scan-icon" style="font-size:20px"><i class="fa-solid fa-file-arrow-up"></i></div>
+        <div class="scan-text" style="font-size:13px">Upload Med List</div>
+        <div class="scan-sub" style="font-size:11px">Photo, PDF, or chart</div>
+      </div>
+    </div>
+
+    <div id="medScanResult"></div>
+    <div class="msg ok" id="step3ScanOk"></div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:#475569;font-size:12px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+      <span>or type manually</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+    </div>
 
     <div class="field"><label>Conditions</label><input id="patConditions" placeholder="Hypertension, Diabetes, Dry Eye..."></div>
     <div class="field"><label>Medications</label><input id="patMeds" placeholder="Lisinopril 10mg, Metformin 500mg..."></div>
@@ -239,6 +262,8 @@ body{
 </div>
 
 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleScan(this)">
+<input type="file" id="medFileInput" accept="image/*,application/pdf" style="display:none" onchange="handleMedScan(this)">
+<input type="file" id="medCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMedScan(this)">
 
 <script>
 const token = localStorage.getItem('ha_token');
@@ -397,6 +422,97 @@ async function finishSetup() {
 
 function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
 function hideMsg(id) { document.getElementById(id).classList.remove('show'); }
+
+// Med scan functions
+function triggerMedScan(type) {
+  if (type === 'camera') document.getElementById('medCameraInput').click();
+  else document.getElementById('medFileInput').click();
+}
+
+async function handleMedScan(input) {
+  if (!input.files || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  showMsg('step3ScanOk', 'Scanning... AI is reading your document');
+
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: formData
+    });
+    const data = await res.json();
+    hideMsg('step3ScanOk');
+
+    if (data.extracted) {
+      const ext = data.extracted;
+      const docs = ext.documents || [ext];
+      let meds = [];
+      let conditions = [];
+      let allergies = [];
+      let pharmacy = '';
+      let pharmacyPhone = '';
+
+      docs.forEach(doc => {
+        // Extract medications
+        if (doc.medication_name) meds.push(doc.medication_name + ' ' + (doc.dosage || doc.strength || ''));
+        if (doc.medications) {
+          if (Array.isArray(doc.medications)) meds.push(...doc.medications.map(m => typeof m === 'string' ? m : m.name + ' ' + (m.dose || '')));
+          else meds.push(doc.medications);
+        }
+        // Extract conditions
+        if (doc.conditions) {
+          if (Array.isArray(doc.conditions)) conditions.push(...doc.conditions);
+          else conditions.push(doc.conditions);
+        }
+        if (doc.diagnosis) conditions.push(doc.diagnosis);
+        // Extract allergies
+        if (doc.allergies) {
+          if (Array.isArray(doc.allergies)) allergies.push(...doc.allergies);
+          else allergies.push(doc.allergies);
+        }
+        // Extract pharmacy
+        if (doc.pharmacy_name) pharmacy = doc.pharmacy_name;
+        if (doc.pharmacy_phone) pharmacyPhone = doc.pharmacy_phone;
+      });
+
+      // Merge with existing values
+      const existingMeds = document.getElementById('patMeds').value;
+      const existingConds = document.getElementById('patConditions').value;
+      const existingAllergies = document.getElementById('patAllergies').value;
+
+      if (meds.length) {
+        const allMeds = existingMeds ? existingMeds + ', ' + meds.join(', ') : meds.join(', ');
+        document.getElementById('patMeds').value = allMeds;
+      }
+      if (conditions.length) {
+        const allConds = existingConds ? existingConds + ', ' + conditions.join(', ') : conditions.join(', ');
+        document.getElementById('patConditions').value = allConds;
+      }
+      if (allergies.length) {
+        const allAlg = existingAllergies ? existingAllergies + ', ' + allergies.join(', ') : allergies.join(', ');
+        document.getElementById('patAllergies').value = allAlg;
+      }
+      if (pharmacy && !document.getElementById('patPharmacy').value) document.getElementById('patPharmacy').value = pharmacy;
+      if (pharmacyPhone && !document.getElementById('patPharmPhone').value) document.getElementById('patPharmPhone').value = pharmacyPhone;
+
+      // Show what was found
+      let resultHtml = '<div class="card-preview" style="margin-bottom:12px"><h3 style="font-size:12px;font-weight:600;color:#14b8a6;margin-bottom:8px"><i class="fa-solid fa-check-circle" style="margin-right:4px"></i>Extracted from scan</h3>';
+      if (meds.length) resultHtml += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px"><strong style="color:#f1f5f9">Medications:</strong> ' + meds.join(', ') + '</div>';
+      if (conditions.length) resultHtml += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px"><strong style="color:#f1f5f9">Conditions:</strong> ' + conditions.join(', ') + '</div>';
+      if (allergies.length) resultHtml += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px"><strong style="color:#f1f5f9">Allergies:</strong> ' + allergies.join(', ') + '</div>';
+      if (pharmacy) resultHtml += '<div style="font-size:12px;color:#94a3b8"><strong style="color:#f1f5f9">Pharmacy:</strong> ' + pharmacy + '</div>';
+      resultHtml += '<div style="font-size:11px;color:#475569;margin-top:8px">Review and edit below, then scan more or continue.</div></div>';
+
+      document.getElementById('medScanResult').innerHTML += resultHtml;
+    } else {
+      showMsg('step3ScanOk', 'Document saved. You can scan more or type manually below.');
+    }
+  } catch (e) {
+    showMsg('step3Err', 'Scan failed: ' + e.message);
+  }
+  input.value = '';
+}
 </script>
 </body>
 </html>
