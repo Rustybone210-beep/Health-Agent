@@ -486,10 +486,11 @@ app.post('/api/chat', async (req, res) => {
     pendingCallRequest = null;
     return res.json({ reply: 'Call cancelled.' });
   }
-  const currentPatientId = patientId || getCurrentPatientId();
+  const userId = req.userSession?.userId || null;
+  const currentPatientId = patientId || getCurrentPatientId(userId);
   // Track interaction for adaptive learning
-  try { if(req.userSession?.userId) adaptiveAgent.trackInteraction(req.userSession.userId, currentPatientId, 'chat', message?.substring(0,50)); } catch(e){}
-  const patients = getAllPatients();
+  try { if(userId) adaptiveAgent.trackInteraction(userId, currentPatientId, 'chat', message?.substring(0,50)); } catch(e){}
+  const patients = userId ? getPatientsForUser(userId) : getAllPatientsRaw();
   const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
   conversationHistory.push({ role: 'user', content: message });
   // HIPAA PHI audit log
@@ -599,8 +600,9 @@ app.post('/api/chat', async (req, res) => {
 // ─── Upload / Vision ───────────────────────────────────────
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const currentPatientId = getCurrentPatientId();
-  const patients = getAllPatients();
+  const uploadUserId = req.userSession?.userId || null;
+  const currentPatientId = getCurrentPatientId(uploadUserId);
+  const patients = uploadUserId ? getPatientsForUser(uploadUserId) : getAllPatientsRaw();
   const patient = patients.find((p) => p.id === currentPatientId) || patients[0] || {};
   try {
     const filePath = req.file.path;
