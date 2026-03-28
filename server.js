@@ -173,12 +173,26 @@ function addNotification(type, title, message, patientId = null, dueDate = null)
   return notif;
 }
 // ─── Patient helpers ───────────────────────────────────────
-function getCurrentPatientId() {
-  const data = safeReadJson(CURRENT_PATIENT_FILE, { patientId: 'maria-fields' });
-  return data.patientId || 'maria-fields';
+// Per-user current patient tracking
+const userCurrentPatient = {};
+
+function getCurrentPatientId(userId) {
+  // Per-user patient tracking
+  if (userId && userCurrentPatient[userId]) return userCurrentPatient[userId];
+  // Fallback to file for backward compatibility (single-user mode)
+  const data = safeReadJson(CURRENT_PATIENT_FILE, { patientId: null });
+  return data.patientId || null;
 }
-function setCurrentPatientId(id) {
+function setCurrentPatientId(id, userId) {
+  if (userId) userCurrentPatient[userId] = id;
   safeWriteJson(CURRENT_PATIENT_FILE, { patientId: id });
+}
+// Get patients filtered by user ownership
+function getPatientsForUser(userId) {
+  const all = getAllPatientsRaw();
+  if (!userId) return all;
+  // Return patients owned by this user, or unowned (legacy) patients for the admin
+  return all.filter(p => p.ownerId === userId || !p.ownerId);
 }
 function getAllPatientsRaw() {
   try {
@@ -317,26 +331,23 @@ app.post('/api/notifications/add', (req, res) => {
 app.get('/api/patients', (req, res) => {
   try {
     const userId = req.userSession?.userId || null;
-    const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
-    const filtered = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
-    const patients = (filtered && filtered.length > 0) ? filtered : allRaw;
+    const patients = getPatientsForUser(userId);
     res.json({ patients });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.get('/api/patients/current', (req, res) => {
   try {
     const userId = req.userSession?.userId || null;
-    const allRaw = typeof getAllPatientsUnfiltered === 'function' ? getAllPatientsUnfiltered() : getAllPatients();
-    const filtered = userId ? allRaw.filter(p => !p.ownerId || p.ownerId === userId) : allRaw;
-    const patients = (filtered && filtered.length > 0) ? filtered : allRaw;
-    const currentId = getCurrentPatientId();
+    const patients = getPatientsForUser(userId);
+    const currentId = getCurrentPatientId(userId);
     const current = patients.find(p => p.id === currentId) || patients[0] || null;
     res.json({ currentId: current?.id || null, patient: current });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/patients/switch', (req, res) => {
+  const userId = req.userSession?.userId || null;
   const { patientId } = req.body;
-  setCurrentPatientId(patientId);
+  setCurrentPatientId(patientId, userId);
   conversationHistory = [];
   res.json({ success: true, patientId });
 });
